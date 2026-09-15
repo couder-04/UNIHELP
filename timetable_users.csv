@@ -123,7 +123,7 @@ roll_num,name,role,student_group
 2501ME74,Gandu Siva Krishna,student,Group - 4
 2501EC17,Garvit Sharma,student,Group - 4
 2501EC30,Gouda Sreeshanth,student,Group - 4
-2501CS84,Goutam Kumar Ghosal,student,Group - 4
+2501CS89,Goutam Kumar Ghosal,student,Group - 4
 2501EC49,Guguloth Akhil,student,Group - 4
 2501CS45,Guguloth Arun,student,Group - 4
 2501ME33,Hardik Bhatia,student,Group - 4
@@ -400,7 +400,7 @@ roll_num,name,role,student_group
 2502ST01,Abhash Chandra Thakur,student,Group 13
 2501CB49,Abhi Raj,student,Group 13
 2503ES03,Abhijeet Singh,student,Group 13
-2501AI45,Abhilash A Kulkarni,student,Group 13
+2501AI50,Abhilash A Kulkarni,student,Group 13
 2502PC02,Abhinav Das,student,Group 13
 2501CB13,Abhinav B,student,Group 13
 2502PC09,Abhineet Kumar,student,Group 13
@@ -622,7 +622,7 @@ roll_num,name,role,student_group
 2503ME15,Parchani Meet Prahlad,student,Group 19
 2501CE34,Parmar Kashyap Noghanbhai,student,Group 19
 2501CT27,Parth Shudeep Bilaye,student,Group 19
-2501CS09,Parth Tomar,student,Group 19
+2501CS24,Parth Tomar,student,Group 19
 2501CE05,Parul,student,Group 19
 2503ME14,Patel Arya Prakashbhai,student,Group 20
 2503ME04,Patil Shantanu Abhay,student,Group 20
@@ -1418,7 +1418,7 @@ roll_num,name,role,student_group
 2602CS01,kakkerla pranay,student,G-18
 2602CS02,BODAPATI VEERA VENKATA RAVI,student,G-19
 2602CS03,Ram Prasannaa R,student,G-20
-2602CS04,Aarav Sharma,student,G-21
+2501CS09,Aarav Sharma,student,G-21
 2602CS05,Dev Asati,student,G-22
 2602CS06,somya tikwani,student,G-23
 2602CS07,MUNIZA PARVIN,student,G-24

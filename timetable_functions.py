@@ -47,7 +47,7 @@ def ensure_schema() -> None:
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS people (
-            roll_num VARCHAR(32) PRIMARY KEY,
+            roll_num TEXT PRIMARY KEY,
             name VARCHAR(128),
             role VARCHAR(32)
         )

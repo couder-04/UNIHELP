@@ -161,11 +161,11 @@ The timetable section creates `people`, `courses`, `rooms`, and `timetable`, and
 
 These keys are inserted by `unihelp_databases.sql` (campus_agent / complaints / organization_agent sections):
 
-| Key | Role | Name | UUID (`roll_number`) |
+| Key | Role | Name | `roll_number` (TEXT) |
 | --- | --- | --- | --- |
-| `student-demo` | student | Aarav Sharma | `3a63c6fe-18be-4110-8bfc-02f8538eaaab` |
-| `faculty-demo` | faculty | Priya Patel | `271875d6-51ca-4236-9d13-3d43c25d0320` |
-| `admin-demo` | admin | Rohan Verma | `3af87d28-f359-4494-9dbe-f6d765b40d8b` |
+| `student-demo` | student | Aarav Sharma | `2501CS09` |
+| `faculty-demo` | faculty | Priya Patel | `2501AI45` |
+| `admin-demo` | admin | Rohan Verma | `2501CS84` |
 
 Replace them before any shared or production use.
 
@@ -174,20 +174,20 @@ To add your own user later:
 ```sql
 -- campus_agent
 INSERT INTO users (authentication_key, role, names, roll_number)
-VALUES ('my-secret-key', 'student', 'Your Name', '11111111-1111-1111-1111-111111111111');
+VALUES ('my-secret-key', 'student', 'Your Name', '2501CS99');
 
 -- complaints (id MUST equal campus_agent.users.roll_number)
 INSERT INTO users (id, authentication_key, role, names, roll_number, hierarchy_level, is_active)
 VALUES (
-  '11111111-1111-1111-1111-111111111111',
+  '2501CS99',
   'my-secret-key', 'student', 'Your Name',
-  '11111111-1111-1111-1111-111111111111',
+  '2501CS99',
   'student', TRUE
 );
 
 -- organization_agent (attendance people.roll_num is text)
 INSERT INTO people (roll_num, name, role)
-VALUES ('11111111-1111-1111-1111-111111111111', 'Your Name', 'student');
+VALUES ('2501CS99', 'Your Name', 'student');
 
 -- timetable (people.roll_num is text; optional student_group e.g. 'G-10')
 INSERT INTO people (roll_num, name, role, student_group)

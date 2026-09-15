@@ -56,9 +56,9 @@ SELECT 'CREATE DATABASE timetable'            WHERE NOT EXISTS (SELECT FROM pg_d
 -- Authentication database (AUTH_DB_NAME). The A2A entry point looks up
 -- authentication_key here before any planning or tool calls.
 --
--- roll_number is a UUID. The same UUID must exist as:
---   complaints.users.id
---   organization_agent.people.roll_num  (as text)
+-- roll_number is TEXT (IIT Patna-style, e.g. 2501CS09). It must match:
+--   complaints.users.id / complaints.users.roll_number
+--   organization_agent.people.roll_num
 --
 -- Run inside the dedicated `campus_agent` database.
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS users (
     authentication_key VARCHAR PRIMARY KEY,
     role VARCHAR NOT NULL,
     names TEXT NOT NULL,
-    roll_number UUID UNIQUE NOT NULL,
+    roll_number TEXT UNIQUE NOT NULL,
     CONSTRAINT users_role_check
         CHECK (LOWER(role) IN ('student', 'faculty', 'admin'))
 );
@@ -78,21 +78,24 @@ INSERT INTO users (authentication_key, role, names, roll_number) VALUES
         'student-demo',
         'student',
         'Aarav Sharma',
-        '3a63c6fe-18be-4110-8bfc-02f8538eaaab'
+        '2501CS09'
     ),
     (
         'faculty-demo',
         'faculty',
         'Priya Patel',
-        '271875d6-51ca-4236-9d13-3d43c25d0320'
+        '2501AI45'
     ),
     (
         'admin-demo',
         'admin',
         'Rohan Verma',
-        '3af87d28-f359-4494-9dbe-f6d765b40d8b'
+        '2501CS84'
     )
-ON CONFLICT (authentication_key) DO NOTHING;
+ON CONFLICT (authentication_key) DO UPDATE
+SET role = EXCLUDED.role,
+    names = EXCLUDED.names,
+    roll_number = EXCLUDED.roll_number;
 
 COMMIT;
 
@@ -526,16 +529,38 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- Users (identity lookup for students by roll number, staff by email)
 -- ------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     authentication_key VARCHAR,
     role VARCHAR,
     names TEXT,
-    roll_number UUID UNIQUE,
+    roll_number TEXT UNIQUE,
     email VARCHAR,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     hierarchy_level VARCHAR,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+-- Keep complaints.users.id aligned with roll_number (campus roll, not UUID).
+CREATE OR REPLACE FUNCTION users_set_roll_number_to_id()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.id IS NULL OR btrim(NEW.id) = '' THEN
+        NEW.id := NEW.roll_number;
+    END IF;
+    IF NEW.roll_number IS NULL OR btrim(NEW.roll_number) = '' THEN
+        NEW.roll_number := NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_users_roll_number_to_id ON users;
+CREATE TRIGGER trg_users_roll_number_to_id
+BEFORE INSERT OR UPDATE ON users
+FOR EACH ROW EXECUTE FUNCTION users_set_roll_number_to_id();
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_roll_number_eq_id;
+ALTER TABLE users ADD CONSTRAINT users_roll_number_eq_id CHECK (roll_number = id);
 
 -- ------------------------------------------------------------------
 -- Drop workflow tables that the simplified agent no longer uses.
@@ -564,14 +589,14 @@ BEGIN
         CREATE TABLE complaints_simplified (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             complaint_number VARCHAR(32) NOT NULL UNIQUE,
-            user_id UUID NOT NULL REFERENCES users(id),
+            user_id TEXT NOT NULL REFERENCES users(id),
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             category VARCHAR(20) NOT NULL,
             status VARCHAR(32) NOT NULL DEFAULT 'PENDING_VERIFICATION',
-            verified_by UUID REFERENCES users(id),
+            verified_by TEXT REFERENCES users(id),
             verified_at TIMESTAMPTZ,
-            completed_by UUID REFERENCES users(id),
+            completed_by TEXT REFERENCES users(id),
             completed_at TIMESTAMPTZ,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ,
@@ -627,14 +652,14 @@ $$;
 CREATE TABLE IF NOT EXISTS complaints (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     complaint_number VARCHAR(32) NOT NULL UNIQUE,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id TEXT NOT NULL REFERENCES users(id),
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     category VARCHAR(20) NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'PENDING_VERIFICATION',
-    verified_by UUID REFERENCES users(id),
+    verified_by TEXT REFERENCES users(id),
     verified_at TIMESTAMPTZ,
-    completed_by UUID REFERENCES users(id),
+    completed_by TEXT REFERENCES users(id),
     completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ,
@@ -655,7 +680,7 @@ CREATE TABLE IF NOT EXISTS complaints (
 CREATE TABLE IF NOT EXISTS complaint_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     complaint_id UUID NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
-    actor_id UUID REFERENCES users(id),
+    actor_id TEXT REFERENCES users(id),
     actor_role VARCHAR NOT NULL,
     action VARCHAR NOT NULL,
     from_status VARCHAR,
@@ -727,41 +752,106 @@ FOR EACH ROW
 WHEN (NEW.status = 'COMPLETED')
 EXECUTE FUNCTION prune_old_completed_complaints();
 
--- Demo identities. `id` must match campus_agent.users.roll_number because
--- the executor passes that UUID as the complaint user identifier.
+-- If an older restore stored user identity as UUID, convert it to TEXT so
+-- campus roll numbers like 2501CS09 can be the user id.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'users'
+          AND column_name = 'id'
+          AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE users DROP CONSTRAINT IF EXISTS users_roll_number_eq_id;
+        ALTER TABLE complaint_history DROP CONSTRAINT IF EXISTS complaint_history_actor_id_fkey;
+        ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_completed_by_fkey;
+        ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_user_id_fkey;
+        ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_verified_by_fkey;
+
+        ALTER TABLE users ALTER COLUMN id DROP DEFAULT;
+        ALTER TABLE users ALTER COLUMN id TYPE TEXT USING id::text;
+
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'complaints' AND column_name = 'user_id'
+        ) THEN
+            ALTER TABLE complaints ALTER COLUMN user_id TYPE TEXT USING user_id::text;
+            ALTER TABLE complaints ALTER COLUMN verified_by TYPE TEXT USING verified_by::text;
+            ALTER TABLE complaints ALTER COLUMN completed_by TYPE TEXT USING completed_by::text;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'complaint_history' AND column_name = 'actor_id'
+        ) THEN
+            ALTER TABLE complaint_history ALTER COLUMN actor_id TYPE TEXT USING actor_id::text;
+        END IF;
+
+        ALTER TABLE complaints
+            ADD CONSTRAINT complaints_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
+        ALTER TABLE complaints
+            ADD CONSTRAINT complaints_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES users(id);
+        ALTER TABLE complaints
+            ADD CONSTRAINT complaints_completed_by_fkey FOREIGN KEY (completed_by) REFERENCES users(id);
+        ALTER TABLE complaint_history
+            ADD CONSTRAINT complaint_history_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES users(id);
+
+        ALTER TABLE users ADD CONSTRAINT users_roll_number_eq_id CHECK (roll_number = id);
+    END IF;
+END
+$$;
+
+-- Demo identities. `id` must match campus_agent.users.roll_number (IIT-style
+-- text, not UUID) because the executor passes that string as the identifier.
+UPDATE users SET id = '2501CS09', roll_number = '2501CS09', names = 'Aarav Sharma', role = 'student'
+WHERE authentication_key = 'student-demo';
+UPDATE users SET id = '2501AI45', roll_number = '2501AI45', names = 'Priya Patel', role = 'faculty'
+WHERE authentication_key = 'faculty-demo';
+UPDATE users SET id = '2501CS84', roll_number = '2501CS84', names = 'Rohan Verma', role = 'admin'
+WHERE authentication_key = 'admin-demo';
+
 INSERT INTO users (id, authentication_key, role, names, roll_number, email, hierarchy_level, is_active)
 VALUES
     (
-        '3a63c6fe-18be-4110-8bfc-02f8538eaaab',
+        '2501CS09',
         'student-demo',
         'student',
         'Aarav Sharma',
-        '3a63c6fe-18be-4110-8bfc-02f8538eaaab',
+        '2501CS09',
         'aarav.sharma@example.edu',
         'student',
         TRUE
     ),
     (
-        '271875d6-51ca-4236-9d13-3d43c25d0320',
+        '2501AI45',
         'faculty-demo',
         'faculty',
         'Priya Patel',
-        '271875d6-51ca-4236-9d13-3d43c25d0320',
+        '2501AI45',
         'priya.patel@example.edu',
         'faculty',
         TRUE
     ),
     (
-        '3af87d28-f359-4494-9dbe-f6d765b40d8b',
+        '2501CS84',
         'admin-demo',
         'admin',
         'Rohan Verma',
-        '3af87d28-f359-4494-9dbe-f6d765b40d8b',
+        '2501CS84',
         'rohan.verma@example.edu',
         'admin',
         TRUE
     )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET authentication_key = EXCLUDED.authentication_key,
+    role = EXCLUDED.role,
+    names = EXCLUDED.names,
+    roll_number = EXCLUDED.roll_number,
+    email = EXCLUDED.email,
+    hierarchy_level = EXCLUDED.hierarchy_level,
+    is_active = EXCLUDED.is_active;
 
 COMMIT;
 
@@ -794,7 +884,7 @@ DROP TABLE IF EXISTS courses CASCADE;
 DROP TABLE IF EXISTS people CASCADE;
 
 CREATE TABLE people (
-    roll_num VARCHAR(64) PRIMARY KEY,
+    roll_num TEXT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     role VARCHAR(32) NOT NULL,
     CONSTRAINT people_role_check
@@ -805,25 +895,25 @@ CREATE TABLE courses (
     code VARCHAR(32) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     professor_name VARCHAR(255) NOT NULL,
-    professor_roll VARCHAR(64) NOT NULL REFERENCES people(roll_num),
+    professor_roll TEXT NOT NULL REFERENCES people(roll_num),
     department VARCHAR(128) NOT NULL DEFAULT 'CSE',
     min_attendance_percent INTEGER NOT NULL DEFAULT 75,
     planned_sessions INTEGER NOT NULL DEFAULT 40
 );
 
 CREATE TABLE enrollments (
-    student_roll VARCHAR(64) NOT NULL REFERENCES people(roll_num),
+    student_roll TEXT NOT NULL REFERENCES people(roll_num),
     course_code VARCHAR(32) NOT NULL REFERENCES courses(code),
     PRIMARY KEY (student_roll, course_code)
 );
 
 CREATE TABLE attendance (
-    student_roll VARCHAR(64) NOT NULL REFERENCES people(roll_num),
+    student_roll TEXT NOT NULL REFERENCES people(roll_num),
     course_code VARCHAR(32) NOT NULL REFERENCES courses(code),
     session_date DATE NOT NULL,
     attendance_status VARCHAR(32) NOT NULL,
     marked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    marked_by_roll VARCHAR(64) NOT NULL REFERENCES people(roll_num),
+    marked_by_roll TEXT NOT NULL REFERENCES people(roll_num),
     PRIMARY KEY (student_roll, course_code, session_date),
     CONSTRAINT attendance_status_check
         CHECK (LOWER(attendance_status) IN ('present', 'absent', 'late', 'excused'))
@@ -848,31 +938,31 @@ INSERT INTO people (roll_num, name, role) VALUES
 
 -- Campus-agent identities (users.roll_number as text).
 INSERT INTO people (roll_num, name, role) VALUES
-    ('3a63c6fe-18be-4110-8bfc-02f8538eaaab', 'Aarav Sharma', 'student'),
-    ('271875d6-51ca-4236-9d13-3d43c25d0320', 'Priya Patel', 'faculty'),
-    ('3af87d28-f359-4494-9dbe-f6d765b40d8b', 'Rohan Verma', 'admin');
+    ('2501CS09', 'Aarav Sharma', 'student'),
+    ('2501AI45', 'Priya Patel', 'faculty'),
+    ('2501CS84', 'Rohan Verma', 'admin');
 
 INSERT INTO courses (
     code, name, professor_name, professor_roll,
     department, min_attendance_percent, planned_sessions
 ) VALUES
     ('CS101', 'Algorithms', 'Priya Patel',
-     '271875d6-51ca-4236-9d13-3d43c25d0320', 'CSE', 75, 40),
+     '2501AI45', 'CSE', 75, 40),
     ('CS102', 'Data Structures', 'Priya Patel',
-     '271875d6-51ca-4236-9d13-3d43c25d0320', 'CSE', 75, 40),
+     '2501AI45', 'CSE', 75, 40),
     ('MA201', 'Linear Algebra', 'Priya Patel',
-     '271875d6-51ca-4236-9d13-3d43c25d0320', 'CSE', 75, 40),
+     '2501AI45', 'CSE', 75, 40),
     ('PHY101', 'Physics', 'Priya Patel',
-     '271875d6-51ca-4236-9d13-3d43c25d0320', 'CSE', 75, 40),
+     '2501AI45', 'CSE', 75, 40),
     ('HS101', 'Communication', 'Priya Patel',
-     '271875d6-51ca-4236-9d13-3d43c25d0320', 'CSE', 75, 40);
+     '2501AI45', 'CSE', 75, 40);
 
 INSERT INTO enrollments (student_roll, course_code)
 SELECT student_roll, course_code
 FROM (
     VALUES
         ('S-100'),
-        ('3a63c6fe-18be-4110-8bfc-02f8538eaaab')
+        ('2501CS09')
 ) AS students(student_roll)
 CROSS JOIN (
     VALUES ('CS101'), ('CS102'), ('MA201'), ('PHY101'), ('HS101')
@@ -893,12 +983,12 @@ SELECT
             THEN 'A-100'
         WHEN student_roll = 'S-100'
             THEN 'E-100'
-        ELSE '271875d6-51ca-4236-9d13-3d43c25d0320'
+        ELSE '2501AI45'
     END
 FROM (
     VALUES
         ('S-100'),
-        ('3a63c6fe-18be-4110-8bfc-02f8538eaaab')
+        ('2501CS09')
 ) AS students(student_roll)
 CROSS JOIN (
     VALUES
@@ -970,7 +1060,7 @@ DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS people CASCADE;
 
 CREATE TABLE people (
-    roll_num VARCHAR(32) PRIMARY KEY,
+    roll_num TEXT PRIMARY KEY,
     name VARCHAR(128) NOT NULL,
     role VARCHAR(32) NOT NULL,            -- 'student', 'faculty', 'admin', 'guest'
     student_group VARCHAR(64)             -- e.g., 'G1', 'G21' (NULL for faculty/2nd years)
@@ -980,7 +1070,7 @@ CREATE TABLE courses (
     code VARCHAR(32) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     professor_name VARCHAR(128),
-    professor_roll VARCHAR(32),           -- Links to people.roll_num
+    professor_roll TEXT,                  -- Links to people.roll_num
     department VARCHAR(32) NOT NULL,
     min_attendance_percent INT DEFAULT 75,
     planned_sessions INT DEFAULT 40
@@ -1013,11 +1103,13 @@ CREATE UNIQUE INDEX uq_timetable_course_day_start
 
 INSERT INTO people (roll_num, name, role) VALUES
     ('A-001', 'Super Admin', 'admin'),
+    ('2501CS84', 'Rohan Verma', 'admin'),
     ('F-CS01', 'Dr. CS Head', 'faculty'),
     ('F-CB01', 'Dr. CBE Head', 'faculty'),
     ('F-CE01', 'Dr. Civil Head', 'faculty'),
     ('F-MA01', 'Dr. Maths Head', 'faculty'),
-    ('F-PH01', 'Dr. Physics Head', 'faculty');
+    ('F-PH01', 'Dr. Physics Head', 'faculty'),
+    ('2501AI45', 'Priya Patel', 'faculty');
 
 INSERT INTO courses (code, name, professor_name, professor_roll, department) VALUES
     ('MA1101', 'Calculus and Linear Algebra', 'Dr. Maths Head', 'F-MA01', 'MA'),

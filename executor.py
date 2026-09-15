@@ -327,7 +327,7 @@ The specialized agents perform the actual operations.
 
     def _call_complaint_agent(self, request, user_metadata):
         # ComplaintAgent uses (role, user_identifier). roll_number is the
-        # user's UUID (campus_agent.users.roll_number = complaints.users.id).
+        # user's id string (campus_agent.users.roll_number = complaints.users.id).
         # Staff email lookup still works when an email is present.
         role = user_metadata.get("role", "")
         user_identifier = user_metadata.get("roll_number") or user_metadata.get("name")

@@ -72,7 +72,7 @@ def _resolve_user(user_identifier: str):
     Resolve a user identifier to internal DB user data.
 
     Public API accepts:
-      - student/staff roll number (stored as UUID, equal to users.id)
+      - student/staff roll number (stored as TEXT, equal to users.id)
       - staff/faculty email
 
     Returns:
@@ -90,8 +90,8 @@ def _resolve_user(user_identifier: str):
             SELECT id, COALESCE(hierarchy_level, role), roll_number, email
             FROM users
             WHERE (
-                roll_number::text = LOWER(%s)
-                OR id::text = LOWER(%s)
+                LOWER(roll_number) = LOWER(%s)
+                OR LOWER(id) = LOWER(%s)
             )
               AND is_active = TRUE
             LIMIT 1
@@ -338,7 +338,7 @@ def get_complaint(complaint_number: str, user_identifier: str = None):
             """
             SELECT c.complaint_number, c.title, c.description, c.category, c.status,
                    c.created_at, c.verified_at, c.completed_at, c.user_id,
-                   COALESCE(u.email, u.roll_number::text) AS reporter
+                   COALESCE(u.email, u.roll_number) AS reporter
             FROM complaints c
             JOIN users u ON u.id = c.user_id
             WHERE c.complaint_number = %s
@@ -413,7 +413,7 @@ def list_complaints(
             f"""
             SELECT c.complaint_number, c.title, c.description, c.category, c.status,
                    c.created_at, c.verified_at, c.completed_at,
-                   COALESCE(u.email, u.roll_number::text) AS reporter
+                   COALESCE(u.email, u.roll_number) AS reporter
             FROM complaints c
             JOIN users u ON u.id = c.user_id
             {where_sql}
@@ -639,7 +639,7 @@ def run_complaint_lifecycle_tests():
 
     print("1. Creating complaint...")
     res_create = create_complaint(
-        user_identifier="3a63c6fe-18be-4110-8bfc-02f8538eaaab",
+        user_identifier="2501CS09",
         title="Cold lunch in CV Raman mess",
         description="Lunch was served cold today in CV Raman hostel.",
         category="mess",
@@ -652,7 +652,7 @@ def run_complaint_lifecycle_tests():
 
     print("\n2. Duplicate create should be rejected...")
     res_dup = create_complaint(
-        user_identifier="3a63c6fe-18be-4110-8bfc-02f8538eaaab",
+        user_identifier="2501CS09",
         title="Cold lunch in CV Raman mess",
         description="Lunch was served cold today in CV Raman hostel.",
         category="mess",
@@ -660,12 +660,12 @@ def run_complaint_lifecycle_tests():
     print(json.dumps(res_dup, indent=2, default=str))
 
     print(f"\n3. Verifying {comp_num} as faculty...")
-    res_verify = verify_complaint(comp_num, "271875d6-51ca-4236-9d13-3d43c25d0320")
+    res_verify = verify_complaint(comp_num, "2501AI45")
     print(json.dumps(res_verify, indent=2, default=str))
 
     print("\n4. Duplicate while in PROGRESS should still be rejected...")
     res_dup2 = create_complaint(
-        user_identifier="3a63c6fe-18be-4110-8bfc-02f8538eaaab",
+        user_identifier="2501CS09",
         title="Cold lunch in CV Raman mess",
         description="Lunch was served cold today in CV Raman hostel.",
         category="mess",
@@ -673,7 +673,7 @@ def run_complaint_lifecycle_tests():
     print(json.dumps(res_dup2, indent=2, default=str))
 
     print(f"\n5. Completing {comp_num} as admin...")
-    res_complete = complete_complaint(comp_num, "3af87d28-f359-4494-9dbe-f6d765b40d8b")
+    res_complete = complete_complaint(comp_num, "2501CS84")
     print(json.dumps(res_complete, indent=2, default=str))
 
 
