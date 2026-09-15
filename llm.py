@@ -14,10 +14,12 @@ from __future__ import annotations
 import json
 import logging
 import threading
+import time
 from typing import Any, Iterable, Optional
 
 from openai import OpenAI
 
+import metrics
 from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 
 logger = logging.getLogger(__name__)
@@ -205,32 +207,38 @@ def chat_create(
             body.pop("prompt_cache_key", None)
         return client.chat.completions.create(**body)
 
+    started = time.perf_counter()
     try:
-        response = _send(mode)
-    except Exception as exc:
-        if not _looks_like_cache_param_error(exc):
-            raise
-        next_mode = "key_only" if mode == "full" else "plain"
-        logger.warning(
-            "LLM cache fields rejected (%s); retrying in %s mode: %s",
-            mode,
-            next_mode,
-            exc,
-        )
-        with _mode_lock:
-            _cache_mode = next_mode
         try:
-            response = _send(next_mode)
-        except Exception as exc2:
-            if next_mode == "plain" or not _looks_like_cache_param_error(exc2):
+            response = _send(mode)
+        except Exception as exc:
+            if not _looks_like_cache_param_error(exc):
                 raise
+            next_mode = "key_only" if mode == "full" else "plain"
             logger.warning(
-                "LLM cache key rejected; retrying without cache API fields: %s",
-                exc2,
+                "LLM cache fields rejected (%s); retrying in %s mode: %s",
+                mode,
+                next_mode,
+                exc,
             )
             with _mode_lock:
-                _cache_mode = "plain"
-            response = _send("plain")
+                _cache_mode = next_mode
+            try:
+                response = _send(next_mode)
+            except Exception as exc2:
+                if next_mode == "plain" or not _looks_like_cache_param_error(exc2):
+                    raise
+                logger.warning(
+                    "LLM cache key rejected; retrying without cache API fields: %s",
+                    exc2,
+                )
+                with _mode_lock:
+                    _cache_mode = "plain"
+                response = _send("plain")
+    finally:
+        latency_ms = (time.perf_counter() - started) * 1000
 
     _log_cache_usage(cache_key, response)
+    logger.info("LLM [%s] took %.2fs", cache_key, latency_ms / 1000)
+    metrics.record_llm_call(cache_key, response, latency_ms)
     return response

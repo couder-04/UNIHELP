@@ -17,6 +17,7 @@ BUS_DB_NAME = os.getenv("BUS_DB_NAME", "bus_schedule")
 COMPLAINTS_DB_NAME = os.getenv("COMPLAINTS_DB_NAME", "complaints")
 ATTENDANCE_DB_NAME = os.getenv("ATTENDANCE_DB_NAME", "organization_agent")
 NOTICE_DB_NAME = os.getenv("NOTICE_DB_NAME", "notice_board")
+TIMETABLE_DB_NAME = os.getenv("TIMETABLE_DB_NAME", "timetable")
 
 # --- LLM (secret via environment) ---
 # Never hardcode the API key. Set LLM_API_KEY in your environment / .env file.

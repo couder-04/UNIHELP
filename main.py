@@ -23,10 +23,15 @@ from a2a.types import (
     Part,
     Role,
 )
+from pathlib import Path
+
 from starlette.applications import Starlette
+from starlette.responses import FileResponse, JSONResponse
+from starlette.routing import Route
 import uvicorn
 
 import db
+import metrics
 from authenticator import authenticate
 from planner import Planner
 from executor import Executor
@@ -116,6 +121,11 @@ agent_card = AgentCard(
                 "   - View campus notices\n"
                 "   - Faculty/admin publish notices\n"
                 "   - Faculty/admin archive expired notices\n\n"
+                "7. Timetable services:\n"
+                "   - Personal and weekly class timetables\n"
+                "   - Next class, classes on a given day, and free slots\n"
+                "   - Course lookup and lecture/lab rooms\n"
+                "   - Faculty/admin add, update, or delete class slots\n\n"
 
                 "INVOCATION:\n"
                 "1. Send an A2A v1.0 JSON-RPC request.\n"
@@ -164,6 +174,7 @@ agent_card = AgentCard(
                 "room booking",
                 "attendance",
                 "notice",
+                "timetable",
                 "planning",
                 "authentication",
                 "authorization",
@@ -196,7 +207,12 @@ agent_card = AgentCard(
                     "metadata.authentication_key='<caller credential>'"
                 ),
                 (
-                    "Submit a mess, bus, complaint, room booking, attendance, or notice request "
+                    "SendMessage example: "
+                    "message.parts[0].text='What is my class timetable today?'; "
+                    "metadata.authentication_key='<caller credential>'"
+                ),
+                (
+                    "Submit a mess, bus, complaint, room booking, attendance, notice, or timetable request "
                     "using the caller's authentication_key in request-level "
                     "metadata."
                 ),
@@ -206,7 +222,7 @@ agent_card = AgentCard(
 )
 
 
-# PERFORMANCE FIX: Planner/Executor (and, via Executor.__init__, all six
+# PERFORMANCE FIX: Planner/Executor (and, via Executor.__init__, all seven
 # sub-agents plus their OpenAI clients and tool-schema lists) used to be
 # constructed fresh inside every single request. None of them hold
 # per-request mutable state — user identity is passed in per call — so they
@@ -230,6 +246,48 @@ _executor = Executor()
 # (keep MAX_CONCURRENT_REQUESTS <= DB_POOL_MAX_SIZE in db.py).
 MAX_CONCURRENT_REQUESTS = 8
 _request_semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+_GUI_DIR = Path(__file__).resolve().parent / "gui"
+
+
+def _run_authenticated_request(user_input, authentication_key):
+    """Authenticate, plan, and execute. Time/token flags are recorded here."""
+    user = authenticate(authentication_key)
+
+    if user is None:
+        return "ERROR: KEY NOT FOUND", None
+
+    now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
+    user_metadata = {
+        "role": user["role"],
+        "name": user["name"],
+        "roll_number": user["roll_number"],
+        "Time and Date": now_ist.strftime(
+            "%A, %Y-%m-%d %H:%M:%S IST"
+        ),
+    }
+    logger.info(
+        "Request state role=%s name=%s roll=%s time=%s",
+        user_metadata["role"],
+        user_metadata["name"],
+        user_metadata["roll_number"],
+        user_metadata["Time and Date"],
+    )
+
+    with metrics.request_scope(
+        user_name=user["name"],
+        user_role=user["role"],
+        roll_number=user["roll_number"],
+        query=user_input,
+    ) as rec:
+        started = time.time()
+
+        with metrics.task_timer("planner"):
+            plan = _planner.create_plan(user_input)
+        logger.info("Planner took %.2fs", time.time() - started)
+
+        result = _executor.execute(user_input, plan, user_metadata)
+        logger.info("Total took %.2fs", time.time() - started)
+        return result, rec
 
 
 class OrganizationAgent(AgentExecutor):
@@ -246,39 +304,11 @@ class OrganizationAgent(AgentExecutor):
 
         async with _request_semaphore:
             try:
-                user = await asyncio.to_thread(authenticate, authentication_key)
-
-                if user is None:
-                    result = "ERROR: KEY NOT FOUND"
-                else:
-                    now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
-                    user_metadata = {
-                        "role": user["role"],
-                        "name": user["name"],
-                        "roll_number": user["roll_number"],
-                        "Time and Date": now_ist.strftime(
-                            "%A, %Y-%m-%d %H:%M:%S IST"
-                        ),
-                    }
-                    logger.info(
-                        "Request state role=%s name=%s roll=%s time=%s",
-                        user_metadata["role"],
-                        user_metadata["name"],
-                        user_metadata["roll_number"],
-                        user_metadata["Time and Date"],
-                    )
-
-                    started = time.time()
-
-                    plan = await asyncio.to_thread(
-                        _planner.create_plan, user_input
-                    )
-                    logger.info("Planner took %.2fs", time.time() - started)
-
-                    result = await asyncio.to_thread(
-                        _executor.execute, user_input, plan, user_metadata
-                    )
-                    logger.info("Total took %.2fs", time.time() - started)
+                result, _rec = await asyncio.to_thread(
+                    _run_authenticated_request,
+                    user_input,
+                    authentication_key,
+                )
 
             except Exception:
                 # Previously any exception (e.g. the planner's json.loads
@@ -313,7 +343,59 @@ request_handler = DefaultRequestHandler(
     agent_card=agent_card,
 )
 
-routes = []
+async def _gui_index(request):
+    return FileResponse(_GUI_DIR / "index.html")
+
+
+async def _api_metrics(request):
+    return JSONResponse(metrics.snapshot())
+
+
+async def _api_metrics_reset(request):
+    metrics.reset()
+    return JSONResponse({"ok": True})
+
+
+async def _api_ask(request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    message = (body.get("message") or "").strip()
+    authentication_key = body.get("authentication_key") or ""
+    if not message:
+        return JSONResponse({"error": "message is required"}, status_code=400)
+
+    async with _request_semaphore:
+        try:
+            result, rec = await asyncio.to_thread(
+                _run_authenticated_request,
+                message,
+                authentication_key,
+            )
+        except Exception:
+            logger.exception("GUI request failed")
+            return JSONResponse(
+                {
+                    "error": (
+                        "The request could not be completed due to an "
+                        "internal error. Please try again."
+                    )
+                },
+                status_code=500,
+            )
+
+    return JSONResponse({"result": result, "request": rec})
+
+
+routes = [
+    Route("/", _gui_index),
+    Route("/gui", _gui_index),
+    Route("/api/metrics", _api_metrics),
+    Route("/api/metrics/reset", _api_metrics_reset, methods=["POST"]),
+    Route("/api/ask", _api_ask, methods=["POST"]),
+]
 
 routes.extend(
     create_agent_card_routes(agent_card)

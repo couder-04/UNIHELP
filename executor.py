@@ -1,5 +1,6 @@
 import json
 
+import metrics
 from llm import cached_system_message, chat_create, get_client
 from mess_agent_1 import MessAgent
 from Bus_agent import BusAgent
@@ -7,6 +8,7 @@ from complaint_agent import ComplaintAgent
 from room_booking_agent import RoomBookingAgent
 from attendance_agent import AttendanceAgent
 from Notice_agent import NoticeAgent
+from timetable_agent import TimetableAgent
 
 
 class Executor:
@@ -16,7 +18,7 @@ You are the Executor Agent of the IIT Patna Organization Management Agent.
 
 Your ONLY job is to execute the structured plan created by the Planner.
 
-The system currently supports six specialized agents:
+The system currently supports seven specialized agents:
 
 1. mess_agent
    Handles:
@@ -60,7 +62,14 @@ The system currently supports six specialized agents:
    - Publishing notices (faculty/admin)
    - Archiving expired notices (faculty/admin)
 
-You have access to these six specialized agents through tools.
+7. timetable_agent
+   Handles:
+   - Personal and weekly class timetables
+   - Next class, classes on a given day, free slots
+   - Course lookup and lecture/lab rooms
+   - Faculty/admin add, update, or delete class slots
+
+You have access to these seven specialized agents through tools.
 
 EXECUTION RULES:
 
@@ -72,7 +81,8 @@ EXECUTION RULES:
 - For a task assigned to "room_booking", use room_booking_agent.
 - For a task assigned to "attendance", use attendance_agent.
 - For a task assigned to "notice", use notice_agent.
-- Do not perform mess, bus, complaint, room booking, attendance, or notice operations yourself.
+- For a task assigned to "timetable", use timetable_agent.
+- Do not perform mess, bus, complaint, room booking, attendance, notice, or timetable operations yourself.
 - Do not invent information.
 - Pass the Planner's request to the appropriate specialized agent.
 - Pass the authenticated user metadata to the specialized agent.
@@ -102,6 +112,7 @@ The specialized agents perform the actual operations.
         self.room_booking_agent = RoomBookingAgent()
         self.attendance_agent = AttendanceAgent()
         self.notice_agent = NoticeAgent()
+        self.timetable_agent = TimetableAgent()
         self.tools = [
             self._mess_tool(),
             self._bus_tool(),
@@ -109,6 +120,7 @@ The specialized agents perform the actual operations.
             self._room_booking_tool(),
             self._attendance_tool(),
             self._notice_tool(),
+            self._timetable_tool(),
         ]
 
     def _mess_tool(self):
@@ -273,6 +285,34 @@ The specialized agents perform the actual operations.
             }
         }
 
+    def _timetable_tool(self):
+        return {
+            "type": "function",
+            "function": {
+                "name": "timetable_agent",
+                "description": (
+                    "Execute a task using the IIT Patna Timetable Agent. "
+                    "Use this for class timetables, next class, classes on "
+                    "a given day, free slots, course lookup, lecture/lab "
+                    "rooms, and faculty/admin add, update, or delete of "
+                    "class slots."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "request": {
+                            "type": "string",
+                            "description": (
+                                "The complete request that should be "
+                                "given to the Timetable Agent."
+                            )
+                        }
+                    },
+                    "required": ["request"]
+                }
+            }
+        }
+
     def _call_mess_agent(self, request, user_metadata):
         return self.mess_agent.chat(
             request,
@@ -309,6 +349,12 @@ The specialized agents perform the actual operations.
 
     def _call_notice_agent(self, request, user_metadata):
         return self.notice_agent.chat(
+            request,
+            user_metadata
+        )
+
+    def _call_timetable_agent(self, request, user_metadata):
+        return self.timetable_agent.chat(
             request,
             user_metadata
         )
@@ -378,40 +424,53 @@ Execute the plan.
                     }
 
                 elif tool_name == "mess_agent":
-                    result = self._call_mess_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("mess"):
+                        result = self._call_mess_agent(
+                            request,
+                            user_metadata
+                        )
 
                 elif tool_name == "bus_agent":
-                    result = self._call_bus_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("bus"):
+                        result = self._call_bus_agent(
+                            request,
+                            user_metadata
+                        )
 
                 elif tool_name == "complaint_agent":
-                    result = self._call_complaint_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("complaint"):
+                        result = self._call_complaint_agent(
+                            request,
+                            user_metadata
+                        )
 
                 elif tool_name == "room_booking_agent":
-                    result = self._call_room_booking_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("room_booking"):
+                        result = self._call_room_booking_agent(
+                            request,
+                            user_metadata
+                        )
 
                 elif tool_name == "attendance_agent":
-                    result = self._call_attendance_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("attendance"):
+                        result = self._call_attendance_agent(
+                            request,
+                            user_metadata
+                        )
 
                 elif tool_name == "notice_agent":
-                    result = self._call_notice_agent(
-                        request,
-                        user_metadata
-                    )
+                    with metrics.task_timer("notice"):
+                        result = self._call_notice_agent(
+                            request,
+                            user_metadata
+                        )
+
+                elif tool_name == "timetable_agent":
+                    with metrics.task_timer("timetable"):
+                        result = self._call_timetable_agent(
+                            request,
+                            user_metadata
+                        )
 
                 else:
                     result = {

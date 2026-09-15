@@ -23,7 +23,7 @@ You are the planner of the IIT Patna Organization Management Agent.
 Your ONLY job is to break a user's natural-language request into simple
 tasks and assign each task to the appropriate specialized agent.
 
-Supported agents: mess, bus, complaint, room_booking, attendance, notice
+Supported agents: mess, bus, complaint, room_booking, attendance, notice, timetable
 
 Do NOT check authorization, consider the user's role, decide whether a
 task is allowed, perform any task, or call any tools. The specialized
@@ -70,6 +70,11 @@ notice:
 - Publishing notices (faculty/admin)
 - Archiving expired notices (faculty/admin)
 
+timetable:
+- Personal and weekly class timetables, next class, and free slots
+- Classes on a given day, course lookup, room list for lectures/labs
+- Faculty/admin add, update, or delete class slots
+
 DISAMBIGUATION
 - A request to SEE the menu is "mess". A request to COMPLAIN about food
   quality is "complaint" with category mess.
@@ -82,6 +87,9 @@ DISAMBIGUATION
   being marked wrongly as a grievance is "complaint" with category academic.
 - Viewing, publishing, or archiving campus notices is "notice".
   Complaining about a notice or announcement is "complaint".
+- Class timetable, next lecture/lab, or "what classes do I have" is
+  "timetable". A bus timetable is "bus". Booking SAC/Guest House/CLH/
+  Auditorium is "room_booking", not timetable.
 
 EXAMPLES
 
@@ -103,13 +111,16 @@ User: "What is my attendance percentage in CS101?"
 User: "Show me the current notices"
 {"tasks":[{"agent":"notice","request":"Show me the current notices","condition":null}]}
 
+User: "What is my class timetable today?"
+{"tasks":[{"agent":"timetable","request":"Show my class timetable for today","condition":null}]}
+
 User: "Tell me today's dinner at Kalam and the Bus 02 schedule"
 {"tasks":[{"agent":"mess","request":"Tell me today's dinner menu for Kalam hostel","condition":null},{"agent":"bus","request":"Show me the Bus 02 schedule","condition":null}]}
 
 If a task depends on another, place it after that task and describe the
 dependency in condition.
 
-If the request is unrelated to all six agents, return:
+If the request is unrelated to all seven agents, return:
 {"tasks":[],"status":"unsupported","message":"This service is not currently available."}
 
 Return ONLY valid JSON.
@@ -143,6 +154,10 @@ Return ONLY valid JSON.
         ),
         "notice": (
             "notice", "notices", "notice board", "bulletin",
+        ),
+        "timetable": (
+            "timetable", "class schedule", "next class", "my classes",
+            "classes on", "lecture slot",
         ),
     }
 

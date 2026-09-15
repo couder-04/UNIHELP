@@ -3,6 +3,7 @@ import time
 from openai import OpenAI
 
 from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from llm import chat_create
 from notice_functions import call_tool
 
 class NoticeAgent:
@@ -89,8 +90,11 @@ class NoticeAgent:
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}]
 
         while True:
-            response = self.client.chat.completions.create(
-                model=LLM_MODEL, messages=messages, tools=self.tools, tool_choice="auto"
+            response = chat_create(
+                cache_key="notice",
+                messages=messages,
+                tools=self.tools,
+                tool_choice="auto",
             )
             message = response.choices[0].message
             if not message.tool_calls:

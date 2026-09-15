@@ -1,0 +1,1539 @@
+roll_num,name,role,student_group
+2501CS36,Abhirup Dhara,student,Group - 1
+2501ES11,Abhishek Raj Kumar,student,Group - 1
+2501ES21,Abhishek Jhuria,student,Group - 1
+2501ME16,Abhishek Dwivedi,student,Group - 1
+2501ME60,Adamya Raj Singh,student,Group - 1
+2501EC15,Adarsh Singh,student,Group - 1
+2501EC16,Adarsh Kumar,student,Group - 1
+2501MC01,Addicharla Sumanth Ra,student,Group - 1
+2501MC35,Adi Singh,student,Group - 1
+2501MC30,Aditi Yadav,student,Group - 1
+2501EE03,Aditya Pravin Gadewar,student,Group - 1
+2501MC27,Aditya Kumar,student,Group - 1
+2501ME22,Aditya Raj,student,Group - 1
+2501MM29,Aditya Prakash,student,Group - 1
+2501CS74,Aditya Raj,student,Group - 1
+2501CS30,Affan Mushtaque,student,Group - 1
+2501ES19,Ajay Singh Prajapati,student,Group - 1
+2501ME11,Ajitesh Singh,student,Group - 1
+2501EC46,Akarshan Kumar Yadav,student,Group - 1
+2501EE21,Akash Bairwa,student,Group - 1
+2501ME34,Akash Moharana,student,Group - 1
+2501ME05,Akshay Pratap Singh,student,Group - 1
+2501CS37,Akshay Kulkarni,student,Group - 1
+2501ME25,Allu Bharath Kumar,student,Group - 1
+2501EC13,Alok Sharma,student,Group - 1
+2501EE20,Alvin Kuriakose,student,Group - 1
+2501ME06,Aman Goswami,student,Group - 1
+2501CS52,Aman Gautam,student,Group - 1
+2501ME71,Amit Kumar,student,Group - 1
+2501CS69,Amit Sunil Ahirrao,student,Group - 1
+2501ES13,Amitabh Anand,student,Group - 1
+2501EE30,Anamitra Mandal,student,Group - 1
+2501MM42,Anand Kumar Verma,student,Group - 1
+2501EE42,Anas Hadi,student,Group - 2
+2501CS59,Angel Mahi Sharma,student,Group - 2
+2501ME63,Anirban Dutta,student,Group - 2
+2501PH19,Anirudh Karthikeyan,student,Group - 2
+2501EE35,Ankit Raj,student,Group - 2
+2501ME81,Ankit Kumar,student,Group - 2
+2501ME55,Ankit Raj Choudhary,student,Group - 2
+2501ES05,Ankush Senapati,student,Group - 2
+2501EC48,Anmol Gupta,student,Group - 2
+2501CS82,Ansh Motghare,student,Group - 2
+2501EC14,Anshika,student,Group - 2
+2501MM04,Anshika Sharma,student,Group - 2
+2501PH08,Anshita Meena,student,Group - 2
+2501MM39,Anshul Kumar,student,Group - 2
+2501MM36,Anubhav Ranjan Singh,student,Group - 2
+2501CS40,Anuj Omprakash Pupal,student,Group - 2
+2501ME19,Anurag Patel,student,Group - 2
+2501ES09,Anushka Gupta,student,Group - 2
+2501CS34,Anushka Nayak,student,Group - 2
+2501CS32,Anushtup Kumar,student,Group - 2
+2501EC06,Anvesh Shekhar,student,Group - 2
+2501ME27,Arit Raj,student,Group - 2
+2501PH03,Aritro Ghosh,student,Group - 2
+2501MC23,Armaan,student,Group - 2
+2501MC32,Armaan Gautam,student,Group - 2
+2501EE31,Arnav Kumar,student,Group - 2
+2501MM16,Aruku Mahendra Babu,student,Group - 2
+2501PH28,Arunya Guha,student,Group - 2
+2501ES15,Aryan Manoj Pakhare,student,Group - 2
+2501EC09,Aryan Verma,student,Group - 2
+2501EC44,Aryan Kumar,student,Group - 2
+2501MC07,Aryan Jariyal,student,Group - 2
+2501ME04,Aryan Ajay Kadu,student,Group - 2
+2501CS44,Aryan Kumar,student,Group - 3
+2501EE01,Ashutosh Kumar,student,Group - 3
+2501EC01,Atharav Khandelwal,student,Group - 3
+2501ME75,Athmakuru Bharadwaj,student,Group - 3
+2501EC50,Atul Kumar,student,Group - 3
+2501MC33,Atul Kumar,student,Group - 3
+2501MM07,Atul Kumar Jha,student,Group - 3
+2501EE33,Avala Koushik Ram,student,Group - 3
+2501PH37,Avala Venkata Hemant,student,Group - 3
+2501MC31,Ayaan Mustafa,student,Group - 3
+2501EC23,Ayanambakam Poojitha,student,Group - 3
+2501PH24,Ayush Kumar,student,Group - 3
+2501MM19,Ayush Garg,student,Group - 3
+2501PH38,Badavath Madhulatha,student,Group - 3
+2501ME82,Banavath Ramesh,student,Group - 3
+2501MC20,Bandi Harshini Reddy,student,Group - 3
+2501PH36,Banothu Somanna,student,Group - 3
+2501MC17,Banshidhar Singh,student,Group - 3
+2501ME42,Battula Sreeja,student,Group - 3
+2501CS55,Bedabrata Ghosh,student,Group - 3
+2501ME57,Bellana Karthik,student,Group - 3
+2501MM40,Bhaskar Gangopadhya,student,Group - 3
+2501MM32,Bhavishya Verma,student,Group - 3
+2501CS48,Bikesh Loonaich,student,Group - 3
+2501ME44,Boyina Chenchu Lokes,student,Group - 3
+2501EC11,Chaitanya Savarn,student,Group - 3
+2501MC11,Chaitanya Singh Chauh,student,Group - 3
+2501MM03,Chaitanya Manrai,student,Group - 3
+2501EC32,Challa Sowmya Reddy,student,Group - 3
+2501EE39,Chavan Swaraj Amit,student,Group - 3
+2501PH07,Chenche Shankara Su,student,Group - 3
+2501ME29,Chinmay Choudhury,student,Group - 3
+2501CS50,Chinthareddy Varun Te,student,Group - 3
+2501ME41,Chirag,student,Group - 4
+2501ME21,Dain Joseph Jaison,student,Group - 4
+2501EC27,Darsigunta Ruthwik,student,Group - 4
+2501PH25,Davala Bhuvana Karthi,student,Group - 4
+2501PH26,David Pratap Singh,student,Group - 4
+2501MM37,Deepali Meena,student,Group - 4
+2501ME26,Deepanshu Dash,student,Group - 4
+2501PH29,Dekka Nivas,student,Group - 4
+2501EC36,Devalla Neeharika Laks,student,Group - 4
+2501ME15,Deveshwar Jha,student,Group - 4
+2501MM25,Dhanush .U.V,student,Group - 4
+2501EC40,Dhruv Nagar,student,Group - 4
+2501ES22,Divya Choudhary,student,Group - 4
+2501MC28,Divya Thakur,student,Group - 4
+2501MM10,Divyansh Kaushik,student,Group - 4
+2501EC34,Drishtaant Roy,student,Group - 4
+2501ME65,Durgesh Raj,student,Group - 4
+2501ME77,Dushyant,student,Group - 4
+2501MM43,Eslavath Likhitha,student,Group - 4
+2501CS54,Gade Chandan,student,Group - 4
+2501PH21,Gamit Marlon Maheshb,student,Group - 4
+2501CS33,Gandhe Sahasra,student,Group - 4
+2501ME74,Gandu Siva Krishna,student,Group - 4
+2501EC17,Garvit Sharma,student,Group - 4
+2501EC30,Gouda Sreeshanth,student,Group - 4
+2501CS84,Goutam Kumar Ghosal,student,Group - 4
+2501EC49,Guguloth Akhil,student,Group - 4
+2501CS45,Guguloth Arun,student,Group - 4
+2501ME33,Hardik Bhatia,student,Group - 4
+2501EE11,Harsh Kumar Singh,student,Group - 4
+2501MC43,Harsh Diwan,student,Group - 4
+2501EC07,Harshil Jain,student,Group - 4
+2501CS39,Harshil Chukkala,student,Group - 4
+2501ME03,Harshit Tyagi,student,Group - 5
+2501MC08,Harshvardhan Pradhan,student,Group - 5
+2501EE18,Het Jayesh Patel,student,Group - 5
+2501EC29,Himanshi Maheshwari,student,Group - 5
+2501EE40,Himanshu Verma,student,Group - 5
+2501PH33,Himesh Katare,student,Group - 5
+2501MC25,Hiten Bansal,student,Group - 5
+2501ME50,Hrishikesh Kaustubh M,student,Group - 5
+2501CS57,Ishan Kumar,student,Group - 5
+2501CS67,Ishan Srivastava,student,Group - 5
+2501CS78,Ishan Alam,student,Group - 5
+2501PH06,Jadhav Vedant Rajesh,student,Group - 5
+2501CS38,Jakkula Udayasree,student,Group - 5
+2501CS31,Jangiti Sathwik Kumar,student,Group - 5
+2501MM15,Jarpula Rakesh Naik,student,Group - 5
+2501EC39,Jayant Kumar,student,Group - 5
+2501MM34,Jayendra Singh,student,Group - 5
+2501EE41,Joginapally Aman Rao,student,Group - 5
+2501PH05,Johaan Peter Thekkan,student,Group - 5
+2501EC12,Jonnalagadda Akshitha,student,Group - 5
+2501EC20,Kakara Ishanth,student,Group - 5
+2501ME68,Kalakota Anirudh Redd,student,Group - 5
+2501CS58,Kalathiya Priyank Palak,student,Group - 5
+2501MC13,Kanika Nath,student,Group - 5
+2501ES14,Kanishk Manral,student,Group - 5
+2501PH13,Karri Akshara,student,Group - 5
+2501PH32,Kashvi Mehta,student,Group - 5
+2501CS43,Kasireddy Sri Charan,student,Group - 5
+2501CS77,Katravath Vinod,student,Group - 5
+2501ME78,Kaustuv Pyne,student,Group - 5
+2501EE09,Kavyansh Gupta,student,Group - 5
+2501MM28,Keshav Prabhat Mahar,student,Group - 5
+2501ES10,Khushi Verma,student,Group - 5
+2501EE08,Khyati Aggarwal,student,Group - 6
+2501EC41,Killo Balaram,student,Group - 6
+2501CS70,Kimidi Pardhiv,student,Group - 6
+2501EE14,Kirti Nandan,student,Group - 6
+2501PH35,Kirti Chandra,student,Group - 6
+2501ME14,Kodati Yogitha,student,Group - 6
+2501MM26,Koganti Yeswanth,student,Group - 6
+2501MC16,Kolluru Bhanu Narasim,student,Group - 6
+2501ME47,Kommineni Ganesh,student,Group - 6
+2501ME46,Krish Aggarwal,student,Group - 6
+2501MM09,Krish Kumar,student,Group - 6
+2501PH04,Krishna Mule,student,Group - 6
+2501MC46,Krishna Sharma,student,Group - 6
+2501MC47,Krishna Kanaujiya,student,Group - 6
+2501CS87,Kuldeep Kumar Roy,student,Group - 6
+2501ME62,Kumar Lakshya Sahoo,student,Group - 6
+2501PH17,Kummetha Sai Darshan,student,Group - 6
+2501EC35,Kuna Hariprasad,student,Group - 6
+2501CS60,Kunal Raj,student,Group - 6
+2501EE17,Kushe Samarth Rajend,student,Group - 6
+2501MM41,Lakshya Tiwari,student,Group - 6
+2501MM38,Laveti Sai Deepak,student,Group - 6
+2501EE27,Lavudya Akshaya,student,Group - 6
+2501CS88,Lutta Ananya,student,Group - 6
+2501ME79,M U Sri Varaha Manika,student,Group - 6
+2501MM06,M Sai Sujan Reddy,student,Group - 6
+2501MC38,Maddineni Sandeep,student,Group - 6
+2501PH31,Maddirala Bhanu Kiran,student,Group - 6
+2501EC25,Mahendra Seervi,student,Group - 6
+2501EE06,Mahi Garg,student,Group - 6
+2501ME01,Mahi Garg,student,Group - 6
+2501ME08,Maloth Supriya,student,Group - 6
+2501EC21,Malothu Divya,student,Group - 6
+2501ME35,Manas Dubey,student,Group - 7
+2501ME66,Manasi S,student,Group - 7
+2501MM33,Manda Ashrith Narayan,student,Group - 7
+2501PH22,Manish,student,Group - 7
+2501MC26,Manisha Kumari,student,Group - 7
+2501ME52,Mansi,student,Group - 7
+2501MC39,Mantra Khandelwal,student,Group - 7
+2501MC09,Mayank Patel,student,Group - 7
+2501ME30,Mayank Phate,student,Group - 7
+2501ME49,Megavath Vikas,student,Group - 7
+2501CS41,Mekala Uday Kiran,student,Group - 7
+2501ME39,Mitali Vinaykumar Ingal,student,Group - 7
+2501MM20,Mohak Dave,student,Group - 7
+2501EC10,Mohammad Amaan,student,Group - 7
+2501PH18,Mohammad Owais Ans,student,Group - 7
+2501CS80,Mohit Kumar,student,Group - 7
+2501CS83,Mohit Peswani,student,Group - 7
+2501ME40,Moon Srivastava,student,Group - 7
+2501PH20,Muhammed Rehaan Sh,student,Group - 7
+2501CS49,Mukka Anjani Koumudh,student,Group - 7
+2501CS65,Mylavarapu Vivek,student,Group - 7
+2501EE44,Nathan Joseph Manada,student,Group - 7
+2501ME80,Navdeep Singh,student,Group - 7
+2501ME28,Nawal Kishor,student,Group - 7
+2501CS63,Neeradi Thanmai,student,Group - 7
+2501ME61,Neeraj Kumar,student,Group - 7
+2501CS66,Nelluri Sai Sri Harsha,student,Group - 7
+2501CS68,Nihal Saini,student,Group - 7
+2501EE05,Nihit Raj,student,Group - 7
+2501PH34,Nikhil,student,Group - 7
+2501ME12,Niranjan H Nair,student,Group - 7
+2501MM17,Nishant Chaudhary,student,Group - 7
+2501ME24,Nishtha Tripathy,student,Group - 7
+2501MM21,Ojal Arun Tembhurne,student,Group - 8
+2501EE36,Ojas Abhay Sakharkar,student,Group - 8
+2501CS51,Ojasvee Vatsa,student,Group - 8
+2501ES18,Om Kumar,student,Group - 8
+2501ME07,Omkar Prakash Mainka,student,Group - 8
+2501MC42,Omshi Arora,student,Group - 8
+2501MM24,Pachava Shalini,student,Group - 8
+2501MM31,Pal Soni Dineshkumar,student,Group - 8
+2501EC47,Palak Banshiwal,student,Group - 8
+2501ME02,Palleti Venkata Vajra D,student,Group - 8
+2501EC24,Pardeep Dahiya,student,Group - 8
+2501MM02,Parijat Ghosh,student,Group - 8
+2501CS72,Parnapalli Avulannagar,student,Group - 8
+2501EC18,Patel Prishu Sanjaybha,student,Group - 8
+2501MC36,Patel Om Prakashkuma,student,Group - 8
+2501EE12,Pattamsetti Mahalaksh,student,Group - 8
+2501MC14,Pattapagalu Sakshi Go,student,Group - 8
+2501ES01,Pawani Mittal,student,Group - 8
+2501ES17,Perumalla Neha,student,Group - 8
+2501CS56,Pinakpani Mandal,student,Group - 8
+2501CS29,Pola Hymavathi,student,Group - 8
+2501EC38,Ponnana Likitha,student,Group - 8
+2501ME13,Pothu Yuva Varshitha,student,Group - 8
+2501MC37,Prabhudutta Prusti,student,Group - 8
+2501EE07,Prakash Bhagat,student,Group - 8
+2501EC26,Prakhar Kumar,student,Group - 8
+2501ME09,Pranav Kumar,student,Group - 8
+2501CS46,Pranay Bansal,student,Group - 8
+2501ME73,Prashant Kumar,student,Group - 8
+2501MC34,Pratyaksh Kumar,student,Group - 8
+2501CS76,Pratyay Garg,student,Group - 8
+2501EC33,Prince Agrawal,student,Group - 8
+2501ME53,Prity Kumari,student,Group - 8
+2501EE38,Priya Sharma,student,Group - 9
+2501EE28,Priya Bharti,student,Group - 9
+2501EE25,Purma Keerthana,student,Group - 9
+2501ME83,Rachapally Pradeep,student,Group - 9
+2501PH23,Rahul Yadav,student,Group - 9
+2501MC40,Rahul Dhebana,student,Group - 9
+2501ME72,Rahul Kumar Bharti,student,Group - 9
+2501CS61,Rahul Kumar,student,Group - 9
+2501MC45,Raipelly Shiva Kumar,student,Group - 9
+2501EC28,Rajendra Choudhary,student,Group - 9
+2501CS35,Rajiv Kumar Karn,student,Group - 9
+2501EE15,Ramavath Mukesh,student,Group - 9
+2501ME59,Rapthadu Ranjith Kuma,student,Group - 9
+2501ES08,Rathod Govardhan,student,Group - 9
+2501ME64,Rathod Dheeraj,student,Group - 9
+2501CS64,Ravi Raj Prasad,student,Group - 9
+2501MM22,Ravvala Nani,student,Group - 9
+2501EE23,Rentala Rajesh,student,Group - 9
+2501EE34,Rhut,student,Group - 9
+2501EE37,Riddhima Bharti,student,Group - 9
+2501EC05,Rishabh Pandey,student,Group - 9
+2501EC43,Risita Bharti,student,Group - 9
+2501MC04,Ritesh Arora,student,Group - 9
+2501MM18,Ritika Verma,student,Group - 9
+2501EE24,Rohit Kumar,student,Group - 9
+2501EE45,Rohit Raj,student,Group - 9
+2501PH11,Rohit David Paul,student,Group - 9
+2501PH10,Ronak Jakhar,student,Group - 9
+2501ES04,Rounak Rajput,student,Group - 9
+2501PH15,Rudraneel Shee,student,Group - 9
+2501ME10,Rudransh Mittal,student,Group - 9
+2501ES20,Rushan Raza,student,Group - 9
+2501MC44,Sachin Kumar,student,Group - 9
+2501ME18,Sai Ganesh Namballa,student,Group - 10
+2501MM05,Sakshi Lata Kumari,student,Group - 10
+2501ME36,Samarth Jain,student,Group - 10
+2501EC02,Sameer Kumar,student,Group - 10
+2501MM23,Sandupatla Goutham,student,Group - 10
+2501ME20,Sanidhya Panchal,student,Group - 10
+2501EC22,Sankalp Singh,student,Group - 10
+2501MM35,Sanyam Gocher,student,Group - 10
+2501PH30,Sara Khan,student,Group - 10
+2501MC06,Sarthak,student,Group - 10
+2501MC12,Sarvesh Manish Malpa,student,Group - 10
+2501MC19,Saspara Jahan Ashokb,student,Group - 10
+2501ME37,Saumya Tyagi,student,Group - 10
+2501EC04,Saurabh Negi,student,Group - 10
+2501PH16,Shaik Jabeer Sulthan,student,Group - 10
+2501ME56,Shikhar,student,Group - 10
+2501MM27,Shikhar Nayak,student,Group - 10
+2501CS73,Shinde Siddham Subha,student,Group - 10
+2501MC05,Shitiz,student,Group - 10
+2501ES02,Shivam Agarwal,student,Group - 10
+2501CS42,Shivam Kapoor,student,Group - 10
+2501CS62,Shivam Kumar,student,Group - 10
+2501CS81,Shivank Man,student,Group - 10
+2501EC03,Shivansh Kumar Bhakt,student,Group - 10
+2501PH02,Shreyas Saraswatipras,student,Group - 10
+2501EC45,Shubham Kumar Kachh,student,Group - 10
+2501MC24,Shubhanshu Kumar,student,Group - 10
+2501MM01,Shubhojit Halder,student,Group - 10
+2501CS86,Smruti Ranjan Sahu,student,Group - 10
+2501ME51,Sneha Raj,student,Group - 10
+2501PH14,Snehardra Das,student,Group - 10
+2501CS47,Somu Nitin Deeraj Anja,student,Group - 10
+2501MC03,Soumyabrata Das,student,Group - 10
+2501EE16,Souranil Patra,student,Group - 11
+2501EE04,Sourav Mondal,student,Group - 11
+2501MC22,Sreedhar Naik Dumava,student,Group - 11
+2501MC21,Srushti Kawdewar,student,Group - 11
+2501MM12,Subhash Pandey,student,Group - 11
+2501ES07,Sudhanshu Bajpai,student,Group - 11
+2501MC29,Sufta Parveen,student,Group - 11
+2501EE43,Suhaas Sanshi,student,Group - 11
+2501MC10,Sumedha Shreya,student,Group - 11
+2501EE29,Sumit Kumar,student,Group - 11
+2501EC37,Sumit Patil,student,Group - 11
+2501ME38,Sunayana Patra,student,Group - 11
+2501ME58,Surakshi Pal,student,Group - 11
+2501MM11,Susankit Kumar Jha,student,Group - 11
+2501ME32,Suyash Jha,student,Group - 11
+2501ME45,Tamajit Karak,student,Group - 11
+2501MM14,Tanish Prakash,student,Group - 11
+2501ME17,Tanishq Manoj Bartakk,student,Group - 11
+2501EE22,Tanmay Wankhade,student,Group - 11
+2501MC41,Tanvi Mishra,student,Group - 11
+2501EE19,Tejas Pokale,student,Group - 11
+2501PH09,Tejeswin R,student,Group - 11
+2501ME76,Tejomurtula Sai Rama,student,Group - 11
+2501ME23,Tharun Siva Balaji N,student,Group - 11
+2501MM30,Thirunithi S,student,Group - 11
+2501ME43,Thonduru Rohith Reddy,student,Group - 11
+2501MC48,Thoudoju Hasini,student,Group - 11
+2501EE10,Tisrisu Ojha,student,Group - 11
+2501EE13,Upam Kumar,student,Group - 11
+2501MC02,Utkarsh Pandey,student,Group - 11
+2501ME67,Vaddeboina Akshay,student,Group - 11
+2501MM13,Vaibhav Kumar,student,Group - 11
+2501MC18,Vanam Shashi Haran R,student,Group - 11
+2501ME54,Vandana Jayanth,student,Group - 12
+2501PH12,Varkatam Akshaya,student,Group - 12
+2501ES16,Vasu Nagar,student,Group - 12
+2501EC42,Vedant Ramsagar Sury,student,Group - 12
+2501ME31,Velagala Harsha Sri Sa,student,Group - 12
+2501EC08,Vikas Kumar,student,Group - 12
+2501CS85,Vikki Kumar,student,Group - 12
+2501EE26,Vineet Kumar Singh,student,Group - 12
+2501EC31,Vinukonda Navadeep,student,Group - 12
+2501ME70,Vishal Chopra,student,Group - 12
+2501CS71,Vishesh Agrawal,student,Group - 12
+2501CS79,Vittal Das A,student,Group - 12
+2501MM08,Vivaan Viraj Gosalia,student,Group - 12
+2501PH01,Vivanshu Chauhan,student,Group - 12
+2501ES06,Yash Jhamb,student,Group - 12
+2501EE02,Yash Aggarwal,student,Group - 12
+2501CS53,Yash Trivedi,student,Group - 12
+2501ME69,Yashi Chandra,student,Group - 12
+2501ES12,Yashvardhan Singh Sh,student,Group - 12
+2501MC15,Yashvardhan Agarwal,student,Group - 12
+2501EC19,Yatharth Singhal,student,Group - 12
+2501CS75,Yenninti Laxman,student,Group - 12
+2501ES03,Yogender Singh,student,Group - 12
+2501PH27,Yogesh Kumar,student,Group - 12
+2501EE32,Yogitha G Choudhary,student,Group - 12
+2501ME48,Yuktartha,student,Group - 12
+2501CS21,Shristi Kumari,student,Group - 12
+2501CS10,Shushant,student,Group - 12
+2501CS23,Suzal,student,Group - 12
+2501CS06,Tata Jayanth Naga Sai,student,Group - 12
+2501CS22,Vijayanagaram Sreethi,student,Group - 12
+2501AI21,Aahan Nayak,student,Group 13
+2501CB23,Aarsh Jain,student,Group 13
+2503ME07,Aarushi Bhargava,student,Group 13
+2501CS07,Aayush Raj,student,Group 13
+2502ST01,Abhash Chandra Thakur,student,Group 13
+2501CB49,Abhi Raj,student,Group 13
+2503ES03,Abhijeet Singh,student,Group 13
+2501AI45,Abhilash A Kulkarni,student,Group 13
+2502PC02,Abhinav Das,student,Group 13
+2501CB13,Abhinav B,student,Group 13
+2502PC09,Abhineet Kumar,student,Group 13
+2501CB33,Abhishek Bansal,student,Group 13
+2501CE55,Abhishek Meena,student,Group 13
+2501AI03,Adarsh Jha,student,Group 13
+2501AI40,Adarsh Das,student,Group 13
+2503CB01,Adarsh Choudhary,student,Group 13
+2501CT28,Adarsh Kumar Gupta,student,Group 13
+2501CE64,Adarsh Kumar,student,Group 13
+2501CT23,Aditya Amit Patil,student,Group 13
+2501CE02,Aditya Kumar Sharma,student,Group 13
+2501CE16,Aditya Mishra,student,Group 13
+2501CS19,Aditya Kumar,student,Group 13
+2501CB58,Adwait Vats,student,Group 13
+2501CB42,Ahan Bhattacharjee,student,Group 13
+2501AI35,Ajitesh Irij,student,Group 13
+2503ME10,Amaan Zilani,student,Group 13
+2501AI46,Aman Raj,student,Group 13
+2502ST04,Aman Kumar,student,Group 13
+2501CB39,Aman Saroj,student,Group 13
+2501CE29,Aman Pandey,student,Group 13
+2501CE42,Aman Verma,student,Group 13
+2502VL10,Ambidi Ramachandra Pranil,student,Group 13
+2503CB02,Amoolya Sharan,student,Group 13
+2501CE53,Anamika Dangi,student,Group 14
+2501CB14,Angaj Sahil Sarjerao,student,Group 14
+2503CS04,Aniska Saha,student,Group 14
+2502MT09,Ankit Meena,student,Group 14
+2501CT02,Ankit Singh,student,Group 14
+2501CT34,Ankit Kumar Meena,student,Group 14
+2501CT04,Ankush Raj,student,Group 14
+2501CT25,Anmol Sharma,student,Group 14
+2501CE69,Anmol Kumar,student,Group 14
+2503MM02,Annepu Koushal Bharadwaj,student,Group 14
+2501CB34,Anser Ayaan,student,Group 14
+2501AI11,Ansh Sharma,student,Group 14
+2502CM02,Anshu Gupta,student,Group 14
+2501CB62,Anshu Vishwakarma,student,Group 14
+2501CT17,Anshul Shailesh Kulkarni,student,Group 14
+2501AI05,Anubhav Kumar,student,Group 14
+2502MT02,Anumolu Tarun Sai,student,Group 14
+2501CB37,Anupam Sharma,student,Group 14
+2501CE40,Aradhya,student,Group 14
+2501CB06,Archit Shanker,student,Group 14
+2501CT24,Archit Prashant Thakur,student,Group 14
+2501CT07,Arihant,student,Group 14
+2502CS01,Arnav Rastogi,student,Group 14
+2501CE38,Arush Gaur,student,Group 14
+2502VL06,Aryan Chandrashekhar Tidke,student,Group 14
+2503EE01,Aryan Jain,student,Group 14
+2501CB26,Aryan Dev,student,Group 14
+2503MC02,Atharva Raj Singh,student,Group 14
+2501CB41,Avdhesh Meena,student,Group 14
+2501AI27,Avni Agarwal,student,Group 14
+2503ME03,Ayush Modi,student,Group 14
+2501CE60,Ayush Pathak,student,Group 14
+2501CS20,Ayush Anand,student,Group 14
+2501AI07,Badavath Anand,student,Group 15
+2502CS02,Baibhaw Kumar,student,Group 15
+2501CE68,Banavath Ramakrishna Naik,student,Group 15
+2503MM01,Banothu Tejesh,student,Group 15
+2501CS27,Bartika Kumar,student,Group 15
+2503ME12,Baviskar Vrushikesh Mahesh,student,Group 15
+2501AI42,Belli Abhinandhan Goud,student,Group 15
+2501AI02,Bhavesh Lokesh Agarwal,student,Group 15
+2501CT38,Bhukya Archana,student,Group 15
+2501CS11,Bhukya Pavan Kumar,student,Group 15
+2502VL03,Bhuwan Khokhar,student,Group 15
+2501CB16,Bibhas Bikash Biswas,student,Group 15
+2501CB32,Biki Barman,student,Group 15
+2503ES05,Biswajit Patgiri,student,Group 15
+2501CB60,Biswas Mayank Pradyut,student,Group 15
+2503ME09,Borkar Prathamesh,student,Group 15
+2503ES02,Bothin Verma Vallabhaneni,student,Group 15
+2501CB51,Boyina Sadvika,student,Group 15
+2501CT19,Charit Aggarwal,student,Group 15
+2502MT04,Chayan Sharma,student,Group 15
+2502CM07,Chenda Trishal,student,Group 15
+2501CE21,Chetla Pawan Kumar,student,Group 15
+2501CE18,Chhitij Meena,student,Group 15
+2501CB46,Chilmakuri Charan,student,Group 15
+2502MT05,Chindam Shravya Patel,student,Group 15
+2503MC01,Chinmayee Santosh Patil,student,Group 15
+2501AI04,Chintalapudi Satyam,student,Group 15
+2503CE02,Chippa Vaishnavi,student,Group 15
+2501CS15,Chitra Sandilya,student,Group 15
+2503ES04,Chodisetty Likitha Vaibhava Aasrith,student,Group 15
+2501CS03,Choudavarapu Snehan,student,Group 15
+2503ME11,D Rushi Kesav,student,Group 15
+2502CS05,Daksh Mittal,student,Group 15
+2501CE37,Dakshit Golia,student,Group 16
+2503PH03,Deepak Kumar,student,Group 16
+2502GT02,Deepayan Pramanick,student,Group 16
+2503EC04,Devaansh Jaiswal,student,Group 16
+2501AI25,Devansh Yadav,student,Group 16
+2501AI38,Devesh Yadav,student,Group 16
+2501CB24,Dhadse Omesh Vasantrao,student,Group 16
+2503CB05,Dheeraj Kumar,student,Group 16
+2501CT18,Dhriti Singh,student,Group 16
+2501CB22,Dhruv Arvind Ganatra,student,Group 16
+2501CB19,Dhruv Agnihotri,student,Group 16
+2503EC01,Dhruvi Patel,student,Group 16
+2501CE09,Dhruvi Sharma,student,Group 16
+2501CT14,Dhruviben Patel,student,Group 16
+2501CB03,Dia Halder,student,Group 16
+2503CS03,Digvijay Suresh Zarekar,student,Group 16
+2502ST08,Dilav Rajpurohith,student,Group 16
+2502ST09,Divya Kumari,student,Group 16
+2502ST05,Divyansh Dubey,student,Group 16
+2501CE52,Divyansh Kumar,student,Group 16
+2501CT31,Dushyant Saraswat,student,Group 16
+2502MT10,Eklavya Kumar,student,Group 16
+2502VL04,Elka Dharshilnandan Reddy,student,Group 16
+2501CB04,Emin Philip Saji,student,Group 16
+2503CT01,Esha Dildeep,student,Group 16
+2502GT08,Eslavath Anil,student,Group 16
+2501CT13,Fulara Mayank Jaiprakash,student,Group 16
+2502ST07,Gandeti Pavan Akhilesh,student,Group 16
+2501AI34,Gatik Solanki,student,Group 16
+2501CB40,Gaurav Sukhadia,student,Group 16
+2501CS26,Gaurav Choudhury,student,Group 16
+2503EE04,Granth Mewara,student,Group 16
+2501CT09,Guda Manaswini,student,Group 16
+2502VL05,Gudala Varshith,student,Group 17
+2503CS05,Guguloth Venu Kumar,student,Group 17
+2501CS28,Gunturu Srikanth,student,Group 17
+2501CB47,Hariom Singh,student,Group 17
+2501CE25,Harmeet Singh,student,Group 17
+2502PC01,Harshil Tyagi,student,Group 17
+2501CE31,Harshit Kumar,student,Group 17
+2502GT07,Heer Viral Shah,student,Group 17
+2501CB31,Hemant Kumar Bairwa,student,Group 17
+2502CM05,Indrashis Mondal,student,Group 17
+2501CT05,Ishan Srivastava,student,Group 17
+2502MT01,Ishika Agarwal,student,Group 17
+2501CB01,J Samrutha,student,Group 17
+2503EC03,Jadhav Nagesh Gajanan,student,Group 17
+2502VL07,Janhavi Singh,student,Group 17
+2501CE62,Jannarapu Arun Kumar,student,Group 17
+2501CB07,Jarpula Murali,student,Group 17
+2501CE57,Jina Sorang,student,Group 17
+2501AI29,Jitesh Kumar,student,Group 17
+2502MC07,K Vishnu Vardhan Reddy,student,Group 17
+2501CB05,Kajal Batra,student,Group 17
+2501CT08,Kamlesh Choudhary,student,Group 17
+2501AI24,Kanisha Jain,student,Group 17
+2501CB11,Karishma,student,Group 17
+2501CE43,Kartan Anish Kumar,student,Group 17
+2501AI31,Kartik Vijaywergiya,student,Group 17
+2502CS04,Kartik Jitendra Tetwar,student,Group 17
+2501CT16,Kartik Chawla,student,Group 17
+2501AI41,Kasina Sandilya Sruthi,student,Group 17
+2501CE46,Kasle Janhavi Santosh,student,Group 17
+2501AI39,Katta Vishal Reddy,student,Group 17
+2501CB10,Katuri Vanshika,student,Group 17
+2501CB29,Kavya Gupta,student,Group 17
+2501CT22,Kesanapalli Sanjana,student,Group 18
+2502GT03,Keshav Vyas,student,Group 18
+2501CS14,Keshav Jha,student,Group 18
+2501CE12,Khushi Mittal,student,Group 18
+2501AI09,Kolagatla Venkata Surya Pratap Re,student,Group 18
+2501CE33,Kole Pranitha,student,Group 18
+2502PC06,Komal Prasad,student,Group 18
+2501CE48,Komal Kumari,student,Group 18
+2502CS07,Kondala Rushi Teja,student,Group 18
+2501CS25,Kotollu Neharika,student,Group 18
+2502CM06,Kotra Lohitha,student,Group 18
+2501AI36,Krish Jain,student,Group 18
+2502PC08,Krish Singh,student,Group 18
+2502CM04,Krish Kakkar,student,Group 18
+2501CE54,Krish Prakash,student,Group 18
+2501AI20,Krishna Bansal,student,Group 18
+2501CE61,Krishna Chaurasia,student,Group 18
+2501AI33,Kuchipudi Preethi Prasastha,student,Group 18
+2502MC04,Kuldeep Choudhary,student,Group 18
+2501CS02,Kummara Jyothi Prajwal,student,Group 18
+2502VL09,Kuracha Tejaswini,student,Group 18
+2501CT29,Maanya Manoj Agrawal,student,Group 18
+2501CB48,Mada Akeera Sri Varshan,student,Group 18
+2501CB43,Madhur Srivastava,student,Group 18
+2502CS08,Mahak Banyala,student,Group 18
+2503ES01,Maharnab Samadder,student,Group 18
+2501CT10,Mahi Dinesh Borkar,student,Group 18
+2502MC09,Maloth Lokesh,student,Group 18
+2501CT21,Manak Ram,student,Group 18
+2501CE45,Manan Choudhary,student,Group 18
+2501CB08,Manav Rathore,student,Group 18
+2501CS12,Manish Sharma,student,Group 18
+2501CE66,Mankhush Kumar Meena,student,Group 18
+2502PC04,Mary Irene,student,Group 19
+2502CM08,Matta Hemanthkumar,student,Group 19
+2503EE05,Mayank Chauhan,student,Group 19
+2503AI01,Mayookh Ghosh Chowdhury,student,Group 19
+2501AI19,Meduri Nishanth,student,Group 19
+2503CS02,Meer Riteshkumar Kapadia,student,Group 19
+2501CS04,Megh Dhaval Parikh,student,Group 19
+2501CE03,Mehul Tushar Parmar,student,Group 19
+2502PC05,Milind Kumar Gautam,student,Group 19
+2501CT30,Mitesh Tak,student,Group 19
+2502CS09,Mohd Shuaib,student,Group 19
+2502PC07,Mohd Modassir Ibrahmi,student,Group 19
+2502MC02,Molleti Mohana Rupa,student,Group 19
+2501AI13,Muppidi Sohan,student,Group 19
+2501CE14,Nakka Nikhil,student,Group 19
+2501AI06,Nandini,student,Group 19
+2501CB21,Nasreen Fatima,student,Group 19
+2503AI02,Navin Prabhakar,student,Group 19
+2501CT35,Neeraj Kumar Meena,student,Group 19
+2501CE65,Nikashwal Niteshkumar Girrajprasa,student,Group 19
+2501CT32,Nilesh Mazumdar,student,Group 19
+2503MC04,Nirmal Kumar,student,Group 19
+2501AI48,Nirvair Singh,student,Group 19
+2501AI08,Nunavath Vignesh,student,Group 19
+2503MC05,Onik Chouhan,student,Group 19
+2501CB20,Oshi Malviya,student,Group 19
+2501CE59,Padu Rilla,student,Group 19
+2501AI17,Panchakarla Balaji Ram,student,Group 19
+2503ME15,Parchani Meet Prahlad,student,Group 19
+2501CE34,Parmar Kashyap Noghanbhai,student,Group 19
+2501CT27,Parth Shudeep Bilaye,student,Group 19
+2501CS09,Parth Tomar,student,Group 19
+2501CE05,Parul,student,Group 19
+2503ME14,Patel Arya Prakashbhai,student,Group 20
+2503ME04,Patil Shantanu Abhay,student,Group 20
+2503AI04,Patlory Sri Sai Hasini,student,Group 20
+2501AI15,Pendyala Goutham,student,Group 20
+2501CS01,Peruru Snigdha Reddy,student,Group 20
+2502MT03,Phalaksh G,student,Group 20
+2501CB45,Pilli Sri Vaishnavi,student,Group 20
+2501CE11,Pillutla Prem Vardhan,student,Group 20
+2501AI01,Piyush Kumar,student,Group 20
+2501AI47,Piyush Kumar,student,Group 20
+2502ST02,Piyush Kumar Kushwaha,student,Group 20
+2501CE51,Piyush Balhara,student,Group 20
+2501CE28,Piyush Tholiya,student,Group 20
+2501AI43,Polireddy Uday Kumar,student,Group 20
+2503PH04,Poodari Shivani,student,Group 20
+2503EE02,Poojan Dave,student,Group 20
+2503ME08,Potanapalli Thanmayi,student,Group 20
+2502MC10,Pragati Sharma,student,Group 20
+2501CE17,Pranav Mishra,student,Group 20
+2501CS05,Pranjal Kukreja,student,Group 20
+2501CS17,Prashant Kumar,student,Group 20
+2503CE01,Pratham Kukreja,student,Group 20
+2501AI28,Pratyaksha Prasad,student,Group 20
+2502CS06,Pratyush Singh,student,Group 20
+2501AI37,Prince Mahich,student,Group 20
+2503CE05,Pritam Raj,student,Group 20
+2501CB02,Priyanshi Patel,student,Group 20
+2501CT12,Purusottam Mohanty,student,Group 20
+2501CB12,Pushpendra Sharma,student,Group 20
+2501CE01,Rachit Singh Rathore,student,Group 20
+2501CB57,Raghvendra Meena,student,Group 20
+2501AI10,Ragi Khushal,student,Group 20
+2501CE26,Rahul,student,Group 20
+2501CE23,Rahul Kumar,student,Group 21
+2502MC06,Raj Aryan,student,Group 21
+2502MC05,Raj Hans,student,Group 21
+2501CB56,Raj Aryan,student,Group 21
+2501CE63,Rajnandani Keval Krishna Singh,student,Group 21
+2501CE49,Rakshita R,student,Group 21
+2502PC03,Rashi Ranjan,student,Group 21
+2501AI18,Ratan Kumar Mahato,student,Group 21
+2501CE58,Raunak Jha,student,Group 21
+2501CB50,Raushan Kumar,student,Group 21
+2501CE32,Ravi Ranjan Kumar,student,Group 21
+2501CB54,Riddhi Patel,student,Group 21
+2501CE08,Rishik Arya,student,Group 21
+2501CT01,Rishikesh Yadav,student,Group 21
+2503MM04,Rishit Sharabh,student,Group 21
+2503CT03,Rishu Kumar,student,Group 21
+2503MC03,Ritesh Thakur,student,Group 21
+2501CS08,Ritesh,student,Group 21
+2501AI22,Riya Raj,student,Group 21
+2503MM03,Riya Kedia,student,Group 21
+2501CE10,Rupansh Dawer,student,Group 21
+2503PH02,S Ragul Raagav,student,Group 21
+2501CB35,S Aditya,student,Group 21
+2501CE19,Saanvi Priyadarshini Rahash Mudul,student,Group 21
+2501CS18,Sabavath Aishwarya Chouhan,student,Group 21
+2501CB55,Sachin,student,Group 21
+2501CS16,Sachin Gautam,student,Group 21
+2501CT20,Sahil Choudhary,student,Group 21
+2502MT06,Sai Siddarth Tatireddy,student,Group 21
+2501CB38,Sai Subrat Jena,student,Group 21
+2501CB44,Sakala Sathwik,student,Group 21
+2501CT36,Saksham Kori,student,Group 22
+2501CE24,Samar Kumar,student,Group 22
+2501CE35,Sambhav Gujral,student,Group 22
+2501CB15,Samit Sardar,student,Group 22
+2501AI32,Samriddhi,student,Group 22
+2502GT09,Samridh Chaitanya,student,Group 22
+2502ST03,Sandeep Raj,student,Group 22
+2501CB53,Sanket Yadav Jadhav,student,Group 22
+2501CB09,Saptarshi Bose,student,Group 22
+2501CB52,Sarthak Anusimi,student,Group 22
+2501CB61,Satish Kumar Yadav,student,Group 22
+2501CE36,Satwika Sah,student,Group 22
+2501CT06,Satyam Kumar,student,Group 22
+2501CE47,Saurabh,student,Group 22
+2501CE56,Shailendra Meena,student,Group 22
+2501CB28,Shantanu Sardar,student,Group 22
+2502GT04,Shatakshi Singh,student,Group 22
+2501AI16,Shaurya Ranjan Singh,student,Group 22
+2502VL02,Shaurya Sharma,student,Group 22
+2503ME02,Shaurya Bhardwaj,student,Group 22
+2503CE06,Shivam Gupta,student,Group 22
+2501CE50,Shivani Parmar,student,Group 22
+2501CE30,Shivansh Pandey,student,Group 22
+2501CE20,Shivansh Srivastava,student,Group 22
+2502CM01,Shivdas Aditi Nilesh,student,Group 22
+2501CB64,Shorya Pratap Singh,student,Group 22
+2503PH01,Shourya Sharma,student,Group 22
+2501AI30,Shreejeet Singh,student,Group 22
+2501CS13,Shreya Kumari,student,Group 22
+2502CS03,Shubham,student,Group 22
+2501CE27,Shubham Kumar Mishra,student,Group 23
+2501CT03,Siddharth Kashyap,student,Group 23
+2501CB59,Snehadip Ghosh,student,Group 23
+2501CE15,Sonu Kumar,student,Group 23
+2501AI12,Soumya Pathak,student,Group 23
+2503CS01,Sourav Bhakat,student,Group 23
+2502ST06,Sreeja Yarasi,student,Group 23
+2501CE44,Srikakulapu Bhuvan Chandra,student,Group 23
+2501AI44,Srinath Kalvala,student,Group 23
+2503ME13,Srishti Khargonkar,student,Group 23
+2502MC08,Staines Cherian Pramod,student,Group 23
+2502GT01,Suchir Kumar Singh,student,Group 23
+2501CT15,Sundram Kumar,student,Group 23
+2502MC01,Sunit Das,student,Group 23
+2501CE04,Suryansh Rajnish Rai,student,Group 23
+2501CB30,Swarnava Kundu,student,Group 23
+2501CT33,Tangella Rakesh Reddy,student,Group 23
+2501CE41,Tanish Garg,student,Group 23
+2501CB63,Taniya Kumari Gupta,student,Group 23
+2501CE06,Tanmoy Pradhan,student,Group 23
+2501CE22,Taparshi Das,student,Group 23
+2502GT05,Tarun Pratap Kushwaha,student,Group 23
+2503ME01,Tarush Mohan,student,Group 23
+2501AI14,Tejas Mittal,student,Group 23
+2503CB03,Tejveer,student,Group 23
+2503EC02,Thanda Sahruday,student,Group 23
+2501CT37,Togarwad Disha Satish,student,Group 23
+2501CE07,Tribhuvnesh Sharma,student,Group 23
+2501CE67,Uday Singh Meena,student,Group 23
+2502GT06,Ujesha Bhavsar,student,Group 23
+2502MC03,Ujjwal Gupta,student,Group 24
+2501AI23,Utkarsh Ranjan,student,Group 24
+2501CE39,Utkarsh Rao,student,Group 24
+2501CB25,Vaanya Verma,student,Group 24
+2503ME05,Vaarunya Tomer,student,Group 24
+2501CB36,Vadavelli Kamali Harshitha,student,Group 24
+2501CB65,Vadithya Upendar,student,Group 24
+2501CB17,Vaibhav Sanjay Bhagure,student,Group 24
+2501CB27,Vaishnav Krishna Durgasi,student,Group 24
+2503CE04,Vandrasi Varun,student,Group 24
+2501CB18,Vansh Khurana,student,Group 24
+2501CE13,Varnika Srivastava,student,Group 24
+2503CT02,Ved Pal,student,Group 24
+2503CE03,Veesam Srivastav,student,Group 24
+2503EE03,Vidushi Singh,student,Group 24
+2502PC10,Vijeth R Hiremath,student,Group 24
+2501AI26,Vineet Arora,student,Group 24
+2502MT08,Vishesh Singh,student,Group 24
+2502CM03,Vivan,student,Group 24
+2502ST10,Vivek Kumar,student,Group 24
+2503EE06,Vivek Kumar,student,Group 24
+2501CT26,Yadav Rohit Sanju,student,Group 24
+2502MT07,Yadavendra Raj,student,Group 24
+2501CT11,Yajat Laad,student,Group 24
+2503ME06,Yarramsetti Charan Teja,student,Group 24
+2502VL08,Yash Vinay Gangwani,student,Group 24
+2503AI03,Yash,student,Group 24
+2503CB04,Yash Madhok,student,Group 24
+2501AI49,Yashashwani Dixit,student,Group 24
+2502VL01,Zain Ahmad,student,Group 24
+2601AI01,NUKALA VENKATA CHANDRAHAS,student,G-01
+2601AI02,ANNAMANANI ASHWADH,student,G-02
+2601AI03,YERUVA PRAHARSHINI,student,G-03
+2601AI04,Kanak Agrawal,student,G-04
+2601AI05,Bhavya Rathi,student,G-05
+2601AI06,JATOTHU SAI CHAITANYA,student,G-06
+2601AI07,Aryan Gautam,student,G-07
+2601AI08,ADITYA PARMAR,student,G-08
+2601AI09,Priyanshu,student,G-09
+2601AI10,Radhika,student,G-10
+2601AI11,Aanya Choudhary,student,G-11
+2601AI12,Mayank Sharma,student,G-12
+2601AI13,Mereddy Neha Reddy,student,G-01
+2601AI14,Harshit Kumar,student,G-02
+2601AI15,MULKALA VASHISTA,student,G-03
+2601AI16,ADITI VERMA,student,G-04
+2601AI17,GUDALA YOZAN BABU,student,G-05
+2601AI18,Saujanya Singh,student,G-06
+2601AI19,POTNURU MURALI SRI KRISHNA,student,G-07
+2601AI20,Yash,student,G-08
+2601AI21,GUNDU HARDIK,student,G-09
+2601AI22,MODADUGU VENKATA SAI SIVA,student,G-10
+2601AI23,Abhikshit Singh,student,G-11
+2601AI24,Viraj Singh,student,G-12
+2601AI25,ADITYA THAKUR,student,G-01
+2601AI26,Samyaraj Pal,student,G-02
+2601AI27,OMDEEP SARKAR,student,G-03
+2601AI28,PATEL LOKESH,student,G-04
+2601AI29,Rahane Anish Sanjay,student,G-05
+2601AI30,VANAPALLI YASASWINI,student,G-06
+2601AI31,MAMIDI VISHNU VARDHAN,student,G-07
+2601AI32,Kandibanda Nehal,student,G-08
+2601AI33,LAKAVATH SANTHOSH,student,G-09
+2601AI34,Kuldeep Vaghamshi,student,G-10
+2601AI35,ANUBHAV HIMATSINGKA,student,G-11
+2601AI36,Sachin Prakash,student,G-12
+2601AI37,Voni srivalli,student,G-01
+2601AI38,AMARA DURGA VENKATA DHEERAJ,student,G-02
+2601AI39,Kratarth Shrivastava,student,G-03
+2601AI40,Kesugani Pranay Dev Maharaj,student,G-04
+2601AI41,GUMPU PUNEETH SASANK,student,G-05
+2601AI42,Kollu Venkata Abhinash,student,G-06
+2601AI43,PARLAPALLI SURYA SRIKAR REDDY,student,G-07
+2601AI44,Tokalwad Parth Anand,student,G-08
+2601AI45,ANUSHKA GUPTA,student,G-09
+2601AI46,PALAKONDA RITVIKREDDY,student,G-10
+2601AI47,ASHISH KUMAR,student,G-11
+2601AI48,Kada Darshan,student,G-12
+2601AI49,YEPPARIKA TEJASWANTH,student,G-01
+2601AI50,Sarthak Kumar,student,G-02
+2601AI51,Gargi,student,G-03
+2601CB01,SHORYA SHARMA,student,G-01
+2601CB02,Aditi Kumari,student,G-02
+2601CB03,Animesh Kumar Jha,student,G-03
+2601CB04,Rathod Rithesh,student,G-04
+2601CB05,Siriki Hemanth,student,G-05
+2601CB06,Anshul Tyagi,student,G-06
+2601CB07,KOTA MANIDEEP,student,G-07
+2601CB08,Adarsh Mohanty,student,G-08
+2601CB09,MANASH KACHARI,student,G-09
+2601CB10,KRISHNA SARDAR,student,G-10
+2601CB11,Jeetesh kumar sahu,student,G-11
+2601CB12,UTKARSH YADAV,student,G-12
+2601CB13,Ishan Saraswat,student,G-01
+2601CB14,Tej Pratap,student,G-02
+2601CB15,Dipesh Prajapat,student,G-03
+2601CB16,Shreyas Gaurav Tarway,student,G-04
+2601CB17,Shourya Pandey,student,G-05
+2601CB18,Ishita Singh,student,G-06
+2601CB19,ABHINABA GHOSH,student,G-07
+2601CB20,Agniva Biswas,student,G-08
+2601CB21,Jharana Lathigara,student,G-09
+2601CB22,Adway Vijay Shinde,student,G-10
+2601CB23,UJWAL KUMAR JHA,student,G-11
+2601CB24,Ayush Gupta,student,G-12
+2601CB25,Tanushka Sharma,student,G-01
+2601CB26,Swarit Srivastava,student,G-02
+2601CB27,Sameer Kardam,student,G-03
+2601CB28,Yadlapalli Sahiti,student,G-04
+2601CB29,Gaurav Agnihotri,student,G-05
+2601CB30,MOHAMMAD IBRAHIM,student,G-06
+2601CB31,Samarth Pratap Singh,student,G-07
+2601CB32,SATYAM KUMAR KASHYAP,student,G-08
+2601CB33,Ranveer Raj,student,G-09
+2601CB34,Yogeshwar Singh,student,G-10
+2601CB35,Abhay Yadav,student,G-11
+2601CB36,Nikhil Sonkar,student,G-12
+2601CB37,OMRAJ KUMAR,student,G-01
+2601CB38,Khushi Kishor Paulbudhe,student,G-02
+2601CB39,Satyam Kumar,student,G-03
+2601CB40,Tanay Sanghvi,student,G-04
+2601CB41,WATHORE HARSH DATTA,student,G-05
+2601CB42,ABHINAV SINGH,student,G-06
+2601CB43,Ayush Raj,student,G-07
+2601CB44,Soham Ghosh,student,G-08
+2601CB45,Aditya Gupta,student,G-09
+2601CB46,Shobhit airan,student,G-10
+2601CB47,Nasir Raza,student,G-11
+2601CB48,JITIN KUMAR,student,G-12
+2601CB49,Shubhi Jain,student,G-01
+2601CB50,Pushpraj Nigwal,student,G-02
+2601CB51,AKULA ANJANA SOWMYA,student,G-03
+2601CB52,Shagun Singh,student,G-04
+2601CB53,NIKHIL,student,G-05
+2601CB54,Pintu Mondal,student,G-06
+2601CB55,Varahi Rohit Pardeshi,student,G-07
+2601CB56,MUDAVATH DIVYA,student,G-08
+2601CB57,Sharad Rajesh Namdeo,student,G-09
+2601CB58,Umesh Soni,student,G-10
+2601CB59,ILLA RAMYA,student,G-11
+2601CB60,lohit s,student,G-12
+2601CB61,Ankit Kumar Subai,student,G-04
+2601CB62,SAMPATHI MAYANK,student,G-05
+2601CB63,Gyanvi Priya,student,G-06
+2601CB64,Peddaram Sahasra Vardhini,student,G-07
+2601CB65,gangapatnam shyam abhishek,student,G-08
+2601CB66,GUGULOTH SHEKAR,student,G-09
+2601CB67,Kevlani Yash Manishbhai,student,G-10
+2601CE01,Om Parth,student,G-01
+2601CE02,Mahi Agrawal,student,G-02
+2601CE03,Nishant Singh,student,G-03
+2601CE04,KURVA ABHISHEK,student,G-04
+2601CE05,VIPIN KUMAR,student,G-05
+2601CE06,Priyamgaurvi,student,G-06
+2601CE07,Pratham Singla,student,G-07
+2601CE08,Animesh Shukla,student,G-08
+2601CE09,KISHAN KUMAR,student,G-09
+2601CE10,Anupam Jha,student,G-10
+2601CE11,HARSH PRATAP SINGH,student,G-11
+2601CE12,Aarju,student,G-12
+2601CE13,Chetan Singh,student,G-01
+2601CE14,Anand Kumar,student,G-02
+2601CE15,Snigdh Arindam,student,G-03
+2601CE16,ARPIT MISHRA,student,G-04
+2601CE17,VIVEK GOYAL,student,G-05
+2601CE18,Arya Deshmukh,student,G-06
+2601CE19,GAJENDRA KUMAR JAT,student,G-07
+2601CE20,Rahul Nagora,student,G-08
+2601CE21,Harsh Saini,student,G-09
+2601CE22,Dharamveer pingoliya,student,G-10
+2601CE23,Dasu Jayasree,student,G-11
+2601CE24,SAUMYA SHARMA,student,G-12
+2601CE25,RISHABH SINGH,student,G-01
+2601CE26,AMEYA PRAVIN KAMAT,student,G-02
+2601CE27,SARTHAK KUMAR DHIR SAMANTA,student,G-03
+2601CE28,TAMMIREDDI PRANATHI,student,G-04
+2601CE29,Prashant meena,student,G-05
+2601CE30,Rakesh Jangid,student,G-06
+2601CE31,Vivek meena,student,G-07
+2601CE32,SUDHANSHU SANJAY AJGAONKAR,student,G-08
+2601CE33,ATUL BARWAL,student,G-09
+2601CE34,SABAVAT AISHWARYA,student,G-10
+2601CE35,VAIBHAV ANAND,student,G-11
+2601CE36,Sarvjeet Kumar,student,G-12
+2601CE37,aanya verma,student,G-01
+2601CE38,Aryan Rai,student,G-02
+2601CE39,Wriddhi Adhya,student,G-03
+2601CE40,Pritam Kumar Siddhant,student,G-04
+2601CE41,Balajii Jha,student,G-05
+2601CE42,Aditya Singh,student,G-06
+2601CE43,MOHAMMAD KAMRAN,student,G-07
+2601CE44,SHIVAM RAJ,student,G-08
+2601CE45,PRADIP KUMAR,student,G-09
+2601CE46,Harsh Sharma,student,G-10
+2601CE47,Shreya Kumari,student,G-11
+2601CE48,GURRAM AKSHARA,student,G-12
+2601CE49,Vaibhav Pankaj,student,G-01
+2601CE50,Shaik Arbaaz Ahmed,student,G-02
+2601CE51,Ahon Pansa,student,G-03
+2601CE52,VANKUDOTH RAMCHARAN,student,G-04
+2601CE53,Harshit Mangal,student,G-05
+2601CE54,Mahi Khera,student,G-06
+2601CE55,Deepak Singh,student,G-07
+2601CE56,Lokesh yadav,student,G-08
+2601CE57,Abhijeet Kumar,student,G-09
+2601CE58,Anurag Jha,student,G-10
+2601CE59,Jatin,student,G-11
+2601CE60,GAURAV KUMAR,student,G-12
+2601CE61,YOGENDRA KUMAR RAWAT,student,G-11
+2601CE62,Aman Kumar,student,G-12
+2601CE63,Rohit dulariya,student,G-01
+2601CE64,Tholisaku sruthi,student,G-02
+2601CS01,VADTHYAVATH BHUVANENDRA NAIK,student,G-01
+2601CS02,Gajendra Sarathe,student,G-02
+2601CS03,Daksh Joshi,student,G-03
+2601CS04,Aryan Raj,student,G-04
+2601CS05,Jakkampudi Tanuj,student,G-05
+2601CS06,Aditya Negi,student,G-06
+2601CS07,Khushi Agrawal,student,G-07
+2601CS08,Shubhkarmandeep Singh,student,G-08
+2601CS09,Parminder Mittal,student,G-09
+2601CS10,Vankunavath Shashank Indra tej,student,G-10
+2601CS11,YOGYTA VERMA,student,G-11
+2601CS12,Mohammad Husain,student,G-12
+2601CS13,varanasi abhiram,student,G-01
+2601CS14,SHIVAM SAHOO,student,G-02
+2601CS15,Narottam Singh Sikarwar,student,G-03
+2601CS16,Biswajit Sahoo,student,G-04
+2601CS17,Gotam,student,G-05
+2601CS18,Vekariya Smit Naranbhai,student,G-06
+2601CS19,GAJIBELLI PUSHPA VAMSI,student,G-07
+2601CS20,Garv Singh Gaharwar,student,G-08
+2601CS21,ANKIT MISHRA,student,G-09
+2601CS22,KALLURU DEEKSHITHA REDDY,student,G-10
+2601CS23,Shristy Kumari,student,G-11
+2601CS24,JADHAV PRAJYOT,student,G-12
+2601CS25,BHUJUTI BILVIKA,student,G-01
+2601CS26,Pratik Rajabapu Kesbhat,student,G-02
+2601CS27,Talasani Rithwik Reddy,student,G-03
+2601CS28,JESWANTH C S,student,G-04
+2601CS29,PATIBANDLA AKASH,student,G-05
+2601CS30,MUDOKULAM JAIKISHAN NAIK,student,G-06
+2601CS31,Utkarsh Raj,student,G-07
+2601CS32,K Rahul Kumar reddy,student,G-08
+2601CS33,Aditya Singh,student,G-09
+2601CS34,kuluri venkata sai kaushik,student,G-10
+2601CS35,NERALWAR CHAANAKYA DAAMAN,student,G-11
+2601CS36,Avinash Shakya,student,G-12
+2601CS37,Grisha Garg,student,G-01
+2601CS38,Rishabh Rai,student,G-02
+2601CS39,kurupudi sai sathvika,student,G-03
+2601CS40,RAGHAV JESANI,student,G-04
+2601CS41,V VARUNKUMAR,student,G-05
+2601CS42,Krishna Kumar,student,G-06
+2601CS43,Dhruv,student,G-07
+2601CS44,Poura Venkata Bhavesh,student,G-08
+2601CS45,Aditya Kashyap,student,G-09
+2601CS46,Darshana Rawatale,student,G-10
+2601CS47,PRAMOD YADAV,student,G-11
+2601CS48,Karan Rajput,student,G-12
+2601CS49,LAPSHETWAR SHIVAM PRADIP,student,G-01
+2601CS50,Abhishek Kumar,student,G-02
+2601CS51,KOTTISA NIKHITH,student,G-03
+2601CS52,Shivansh Tripathi,student,G-04
+2601CS53,Ayushman Ghatak,student,G-05
+2601CS54,harsh patel,student,G-06
+2601CS55,kethireddy Nagapuneeth Reddy,student,G-07
+2601CS56,Suhani Gulati,student,G-08
+2601CS57,Vemu Manjula,student,G-09
+2601CS58,AAMANA KHATOON,student,G-10
+2601CS59,KATRODIYA PRINCE BIPIN,student,G-11
+2601CS60,Yashas Prasanna,student,G-12
+2601CS61,Dhondre Soniya Ganesh,student,G-01
+2601CS62,UTKARSHA RAVINDRA KAKULATE,student,G-02
+2601CS63,NAVNEET KUMAR NITIN,student,G-03
+2601CS64,Noor Jamali,student,G-04
+2601CS65,Yellapu Akhila,student,G-05
+2601CS66,PERUMALLA ABHIJITH,student,G-06
+2601CS67,AMBATI KEERTHI PRANAVI,student,G-07
+2601CS68,Debrup Roy,student,G-08
+2601CS69,SRIVALLY PERUMANDLA,student,G-09
+2601CS70,Anmol Kumar Sah,student,G-10
+2601CS71,DAKARAPU SAIJEETH,student,G-11
+2601CS72,Atishay Jain,student,G-12
+2601CS73,Nihal Shoju,student,G-01
+2601CS74,Utkarsh Raj,student,G-02
+2601CS75,Aman Kumar,student,G-03
+2601CS76,Devesh Kumar,student,G-04
+2601CS77,Prerak,student,G-05
+2601CS78,SHRISHANT KUMAR,student,G-06
+2601CS79,Tirth Sorthiya,student,G-07
+2601CS80,Indukuri Kishore Reddy,student,G-08
+2601CS81,Mukiri Saatwik,student,G-09
+2601CS82,UMESH KUMAR SAINI,student,G-10
+2601CS83,Ashish Kumar,student,G-11
+2601CS84,Krish,student,G-12
+2601CS85,Chaitanaya Nathalia,student,G-03
+2601CS86,Kanad Laxman Kumavat,student,G-04
+2601CS87,Vaibhav,student,G-05
+2601CS88,Ramavath Vinay,student,G-06
+2601CT01,Shaurya Gupta,student,G-01
+2601CT02,Arpit Ravikiran Raut,student,G-02
+2601CT03,AKSHIT SHARMA,student,G-03
+2601CT04,Prince,student,G-04
+2601CT05,Aarya Pankaj Patil,student,G-05
+2601CT06,Mandhani Netal Radheshyam,student,G-06
+2601CT07,Raj Gupta,student,G-07
+2601CT08,Amey Mittal,student,G-08
+2601CT09,Nitya Bansal,student,G-09
+2601CT10,Manya Dhirawat,student,G-10
+2601CT11,Ananya Kumari,student,G-11
+2601CT12,Prince Choudhary,student,G-12
+2601CT13,MANE KANISHK RAJARAM,student,G-01
+2601CT14,Kashvi Verma,student,G-02
+2601CT15,Riyansh,student,G-03
+2601CT16,ARCHIT TULSYAN,student,G-04
+2601CT17,Mayank Jangid,student,G-05
+2601CT18,S Kavisan,student,G-06
+2601CT19,Brijesh Nishad,student,G-07
+2601CT20,RAHUL SINGH,student,G-08
+2601CT21,Ritesh kumar,student,G-09
+2601CT22,Karan kumar,student,G-10
+2601CT23,Arnav Agrawal,student,G-11
+2601CT24,Devansh Bansal,student,G-12
+2601CT25,Aman Kumar,student,G-01
+2601CT26,HARSHIT CHANDRA SHARMA,student,G-02
+2601CT27,Peddabomma Hari Hara Teja,student,G-03
+2601CT28,madhav sharma,student,G-04
+2601CT29,Yukta Singh,student,G-05
+2601CT30,ASHU ANAND,student,G-06
+2601CT31,DHARAVATH DEEPANVITHA,student,G-07
+2601CT32,Tanav,student,G-08
+2601CT33,Korra Arun,student,G-09
+2601CT34,HIMESH GHOSLIYA,student,G-10
+2601CT35,Siddatapu Ajay kumar,student,G-11
+2601CT36,Arnav Thakare,student,G-12
+2601EC01,Fatima Bint Kashif,student,G-01
+2601EC02,Girivardhan A R,student,G-02
+2601EC03,Asif Uddaulah,student,G-03
+2601EC04,Srirup Saha,student,G-04
+2601EC05,MANE SAI KRISHNA,student,G-05
+2601EC06,Shlok Kumar,student,G-06
+2601EC07,BONDUGULA LIKITH SAI,student,G-07
+2601EC08,Lingam Rohit,student,G-08
+2601EC09,AMULA SAHITHI,student,G-09
+2601EC10,Dev Pathak,student,G-10
+2601EC11,HARSHIT SINGH,student,G-11
+2601EC12,VALLURI JEEVANAHARIKA,student,G-12
+2601EC13,Prince Sharma,student,G-01
+2601EC14,Garima,student,G-02
+2601EC15,ALLU SAI JAGAN,student,G-03
+2601EC16,KASHYAP CHANDRASHEKHAR BAGDE,student,G-04
+2601EC17,Natte Charan Sai Teja,student,G-05
+2601EC18,Kartikeya Kumar Srivastava,student,G-06
+2601EC19,Vedansh Tandon,student,G-07
+2601EC20,Deepanshu Jangir,student,G-08
+2601EC21,PEDADA YUVA SAMAIKYA,student,G-09
+2601EC22,Aman Anand,student,G-10
+2601EC23,Swarali Sarang Bhola,student,G-11
+2601EC24,Jaybir Swami,student,G-12
+2601EC25,shaik sohel akthar,student,G-01
+2601EC26,Yuvraj Singh,student,G-02
+2601EC27,Srinaina Gowru,student,G-03
+2601EC28,THREENENDER BHUKYA,student,G-04
+2601EC29,Anirudh G,student,G-05
+2601EC30,Damor Prant Narendrasinh,student,G-06
+2601EC31,MALLIKA LOKESH,student,G-07
+2601EC32,Panthangi Abhishek,student,G-08
+2601EC33,Ramhungneile Nriame,student,G-09
+2601EC34,MARDALA YOGI PRATHAP,student,G-10
+2601EC35,TANETI VENKATA RAMA KANTH,student,G-11
+2601EC36,SUYASH SRIVASTAVA,student,G-12
+2601EC37,Abhivadan Srivastava,student,G-07
+2601EC38,PIYUSH KUMAR,student,G-08
+2601EC39,Shubh Laxmi,student,G-09
+2601EC40,Buyyala Rishitha,student,G-10
+2601EC41,Suyash Verma,student,G-11
+2601EC42,Gavva Abhiram Reddy,student,G-12
+2601EC43,Krishna Sharma,student,G-01
+2601EC44,Shivansh Kumar,student,G-02
+2601EC45,SHAH VRAJ KETUL,student,G-03
+2601EC46,KOMAL KUMARI,student,G-04
+2601EE01,Satya Kumar Shubham,student,G-13
+2601EE02,MEHUL KUMAR,student,G-14
+2601EE03,Mankhush,student,G-15
+2601EE04,Bhagat Anushka Satyaprakash,student,G-16
+2601EE05,Purnim Raj,student,G-17
+2601EE06,Shreyansh Agarwal,student,G-18
+2601EE07,Ayush Narayan,student,G-19
+2601EE08,Ayush Raj,student,G-20
+2601EE09,PRATYUSH SHARMA,student,G-21
+2601EE10,Brajendra Kumar,student,G-22
+2601EE11,Shashank Vardhan,student,G-23
+2601EE12,Mukund Madhav B,student,G-24
+2601EE13,Prajeeth Batchu,student,G-13
+2601EE14,Rudra Pratap Prajapat,student,G-14
+2601EE15,Sumit Sarkar,student,G-15
+2601EE16,Alok Raj,student,G-16
+2601EE17,SREEMAN BURAM,student,G-17
+2601EE18,SUBHAM GHOSH,student,G-18
+2601EE19,MANDADI SIRIJA,student,G-19
+2601EE20,Anushree Gupta,student,G-20
+2601EE21,Naitik Gupta,student,G-21
+2601EE22,Raj Shekhar,student,G-22
+2601EE23,Pratyusha Maji,student,G-23
+2601EE24,AMBALA ATHRIJ,student,G-24
+2601EE25,Gugulothu Ram charan,student,G-13
+2601EE26,Samir Kumar,student,G-14
+2601EE27,Abhigyan Singh,student,G-15
+2601EE28,Abhayanand Kumar,student,G-16
+2601EE29,Ranveer Singh,student,G-17
+2601EE30,BODA RAM CHARAN,student,G-18
+2601EE31,Harsh Singh Sisodiya,student,G-19
+2601EE32,Paridhi Agrawal,student,G-20
+2601EE33,Ryan Mathew,student,G-21
+2601EE34,NANDANI GUPTA,student,G-22
+2601EE35,Ritisha Dutta,student,G-23
+2601EE36,KOKKALLA SAI PAVAN TEJ,student,G-24
+2601EE37,KODAVATH HARSHAVARDHAN,student,G-13
+2601EE38,JAMALAPURAPU SREE SAI DHARAHAAS,student,G-14
+2601EE39,AMIT KUMAR,student,G-15
+2601EE40,BHOSALE SAKSHAM SANJAYKUMAR,student,G-16
+2601EE41,Atul Rai,student,G-17
+2601EE42,KALE SNEHA ZELAJI,student,G-18
+2601EE43,Keerthan B T,student,G-19
+2601EE44,Lakavath Anirvinya,student,G-20
+2601EE45,Prokash Mondal,student,G-21
+2601EE46,SHAIK NOUSHEER,student,G-22
+2601ES01,Ashutosh anand Shivjee Singh,student,G-13
+2601ES02,Rahul Shukla,student,G-14
+2601ES03,Ashish Raj,student,G-15
+2601ES04,PARTH VIVEK JAISWAL,student,G-16
+2601ES05,Maloth Parimala,student,G-17
+2601ES06,GOWTHAM A N,student,G-18
+2601ES07,PRANAVA PRADHAN,student,G-19
+2601ES08,RAKSHITA JANU,student,G-20
+2601ES09,Arnav Vijay Wakode,student,G-21
+2601ES10,Somnath Majhi,student,G-22
+2601ES11,Yajat Guliyani,student,G-23
+2601ES12,Mukul Athwal,student,G-24
+2601ES13,Atharva Manoj Deshmukh,student,G-23
+2601ES14,Didde Ramya,student,G-24
+2601ES15,Aman Kumar Thakur,student,G-13
+2601ES16,Charvi Chandrashekhar Marathe,student,G-14
+2601ES17,ABHISHEK V SINGH,student,G-15
+2601ES18,Dev Tiwari,student,G-16
+2601ES19,Yadnya Namit Satam,student,G-17
+2601ES20,Jayshri Agarwal,student,G-18
+2601ES21,Jayansh Poonia,student,G-19
+2601ES22,PRADYUMAN SINGH SHEKHAWAT,student,G-20
+2601ES23,DHONDI JUGGE PRATHEEK,student,G-21
+2601MC01,Verushka Mamodia,student,G-13
+2601MC02,HARISH ATTRI,student,G-14
+2601MC03,ABHIJEET KUMAR SINGH,student,G-15
+2601MC04,chandrachur mondal,student,G-16
+2601MC05,LAKSHYA MALKHEDE,student,G-17
+2601MC06,SAKSHAM MITTAL,student,G-18
+2601MC07,Incharaa Shivaprakash,student,G-19
+2601MC08,PARTH SAHU,student,G-20
+2601MC09,Anubhu Das,student,G-21
+2601MC10,MAHESH HOTA,student,G-22
+2601MC11,Arkaprabho Sau,student,G-23
+2601MC12,REHAN RIAZAHMAD MULLA,student,G-24
+2601MC13,Chirag kumar,student,G-13
+2601MC14,Shreyasi,student,G-14
+2601MC15,Devangana Aneesh,student,G-15
+2601MC16,Satvik Deorah,student,G-16
+2601MC17,Deepak Kumar,student,G-17
+2601MC18,Abhishek Meena,student,G-18
+2601MC19,Rachit Shah,student,G-19
+2601MC20,Yash Purushottam Sawsakade,student,G-20
+2601MC21,Prateek Daga,student,G-21
+2601MC22,Yogita,student,G-22
+2601MC23,MURAPAKA CHANDRA SEKHAR,student,G-23
+2601MC24,MADHAVARAM SAHARSH,student,G-24
+2601MC25,Nallapu Tanish,student,G-13
+2601MC26,Gaurav Singh Maurya,student,G-14
+2601MC27,Arshad Umar Khan,student,G-15
+2601MC28,Tejas Babhale,student,G-16
+2601MC29,Kumar Naman,student,G-17
+2601MC30,Prince Saxena,student,G-18
+2601MC31,SATYAM,student,G-19
+2601MC32,Varun,student,G-20
+2601MC33,Sourabh Kumar,student,G-21
+2601MC34,Rehan Ansari,student,G-22
+2601MC35,SURAGALA SATHWIK,student,G-23
+2601MC36,Geetika Bhagat,student,G-24
+2601MC37,Banoth Sidharth,student,G-13
+2601MC38,ISHAN MITTAL,student,G-14
+2601MC39,Addala Suhani,student,G-15
+2601MC40,YASH PRASAD,student,G-16
+2601MC41,Aayush Paikaray,student,G-17
+2601MC42,BANAVATH BHAVITHA,student,G-18
+2601MC43,Nityasha Rajput,student,G-19
+2601MC44,Mothukupally Nihal Reddy,student,G-20
+2601MC45,Tadi Bhargava Siva Durga,student,G-21
+2601MC46,Shivansh Kumar Gupta,student,G-22
+2601MC47,Md Taha Hussain,student,G-23
+2601MC48,Ayush Kumar,student,G-24
+2601MC49,Lovedev,student,G-22
+2601MC50,Lakshmi Patni,student,G-23
+2601ME01,Donga Pal Sanjaybhai,student,G-13
+2601ME02,KUMAR SHANKAR,student,G-14
+2601ME03,Mayuresh Rajiv Nande,student,G-15
+2601ME04,Chinmay Aggarwal,student,G-16
+2601ME05,Priyanshi Goyal,student,G-17
+2601ME06,Mohammad Ali,student,G-18
+2601ME07,aryan,student,G-19
+2601ME08,Shreyansh Ravi,student,G-20
+2601ME09,Tatikonda Karthik Reddy,student,G-21
+2601ME10,Pradyumna Vasant Patil,student,G-22
+2601ME11,Satyam singh,student,G-23
+2601ME12,Gulshan kumar,student,G-24
+2601ME13,AJAY KUMAR PANDIT,student,G-13
+2601ME14,VARANASI SAI RISHIN,student,G-14
+2601ME15,Aman Kumar,student,G-15
+2601ME16,ADRITA BEJ,student,G-16
+2601ME17,Krishnam,student,G-17
+2601ME18,JAI JYOTHI SWAROOP,student,G-18
+2601ME19,HARSHIT KUMAR SINGH,student,G-19
+2601ME20,Puneet Yadav,student,G-20
+2601ME21,Anurag Singh,student,G-21
+2601ME22,GORLE GNANADEEP,student,G-22
+2601ME23,DULAPALLI LEELA KRISHNA,student,G-23
+2601ME24,HAZARE SANVI,student,G-24
+2601ME25,Maithreya Kompella,student,G-13
+2601ME26,ANTHARAM KEERTHI PRIYA,student,G-14
+2601ME27,Dhruv Saxena,student,G-15
+2601ME28,MEGAVATH SAINATH,student,G-16
+2601ME29,Navanitha J,student,G-17
+2601ME30,Mahika Paliwal,student,G-18
+2601ME31,Aprajita Pandey,student,G-19
+2601ME32,YASHASWI SUDHANV BALANAGU,student,G-20
+2601ME33,GAUTAM KUMAR,student,G-21
+2601ME34,SINGH ARYAMAN HARENDRA,student,G-22
+2601ME35,Ashish Jacob,student,G-23
+2601ME36,Aditya Maurya,student,G-24
+2601ME37,Jajimogga Teja,student,G-13
+2601ME38,NAMALA YESHWANTH KUMAR,student,G-14
+2601ME39,Kanishk Choudhary,student,G-15
+2601ME40,Aditya Kumar,student,G-16
+2601ME41,GEDELA BALA SAI GANESH,student,G-17
+2601ME42,Chhatrala Shan Nishant,student,G-18
+2601ME43,Swapnil Chowdhury,student,G-19
+2601ME44,S LITHESH CHETAN VADAVELLI,student,G-20
+2601ME45,Jai Bhatia,student,G-21
+2601ME46,Krish Kumar,student,G-22
+2601ME47,ISHITA SINGH,student,G-23
+2601ME48,DARA VINOOTHNA,student,G-24
+2601ME49,Pranshu Agrawal,student,G-13
+2601ME50,Yusuf Imtiyaz,student,G-14
+2601ME51,Abhishek C K,student,G-15
+2601ME52,Kottisa Haripreeth,student,G-16
+2601ME53,YELAKA MIDHUN SAI,student,G-17
+2601ME54,Gun Agrawal,student,G-18
+2601ME55,Ratan Kumar Yadav,student,G-19
+2601ME56,Muttamsetti Jayasri Durga,student,G-20
+2601ME57,Anurag Nath,student,G-21
+2601ME58,Rishabh kumar,student,G-22
+2601ME59,POORNIMA TIWARI,student,G-23
+2601ME60,RUDRA MAHLAWAT,student,G-24
+2601ME61,Shreya Kumari,student,G-13
+2601ME62,Derin Kurian Jose,student,G-14
+2601ME63,JIYA AGGARWAL,student,G-15
+2601ME64,Anaghmoy Chatterjee,student,G-16
+2601ME65,JUPUDI GOWTHAM,student,G-17
+2601ME66,Aadya Singh,student,G-18
+2601ME67,Diya Agrawal,student,G-19
+2601ME68,Harshvardhan Kishor Shinde,student,G-20
+2601ME69,Anurag Nallani,student,G-21
+2601ME70,Nishanth Reddy B R,student,G-22
+2601ME71,SHIVJEET KUMAR,student,G-23
+2601ME72,Salunke Swami Rahul,student,G-24
+2601ME73,Ramavath Nithin Kumar Naik,student,G-24
+2601ME74,BHUKYA MOHAN,student,G-13
+2601ME75,Suman Mondal,student,G-14
+2601ME76,Rahul Raj,student,G-15
+2601ME77,Atharv Joshi,student,G-16
+2601ME78,MURUKUTI SRIDHAR REDDY,student,G-17
+2601ME79,Bakuri Nava Deep Raju,student,G-18
+2601ME80,Gauransh Sharma,student,G-19
+2601ME81,ritu kumari,student,G-20
+2601ME82,PARUMANDLA JASHWANTH,student,G-21
+2601MM01,Ayush Kumar Sanjay,student,G-13
+2601MM02,Vaishnavi L,student,G-14
+2601MM03,AAKASH YADAV,student,G-15
+2601MM04,Anushka Ghosh,student,G-16
+2601MM05,Samaksh Vishnoi,student,G-17
+2601MM06,Dhanjit Das,student,G-18
+2601MM07,DEEPANSHU SHARMA,student,G-19
+2601MM08,Sumit Singh Bisht,student,G-20
+2601MM09,CHINTALWAR SANKALP MUKESH,student,G-21
+2601MM10,Apurva Pranay,student,G-22
+2601MM11,Drishti,student,G-23
+2601MM12,Ruhan Mazumder,student,G-24
+2601MM13,Kaushik Anand,student,G-13
+2601MM14,METKAR PRANAV PARAG,student,G-14
+2601MM15,ABHISHEK,student,G-15
+2601MM16,GANTI KOUSTHUBH,student,G-16
+2601MM17,Jayant Raj,student,G-17
+2601MM18,Shivank Goyal,student,G-18
+2601MM19,Harshawardhan Navnath Gaikwad,student,G-19
+2601MM20,ARYAN BISWAS,student,G-20
+2601MM21,Samarth Bajpai,student,G-21
+2601MM22,Aditya Raj,student,G-22
+2601MM23,ARSIA,student,G-23
+2601MM24,Aaranya Ganotra,student,G-24
+2601MM25,Shivam Krishnan,student,G-13
+2601MM26,KUNTAMALLA SUNIL SAI PHANINDER,student,G-14
+2601MM27,Aastha Mevawala,student,G-15
+2601MM28,ADHYAPAK SARTHAK JAY,student,G-16
+2601MM29,SUBODH SHARMA,student,G-17
+2601MM30,SHYAM SUNDAR GHORUI,student,G-18
+2601MM31,Rizwanur Rahman,student,G-19
+2601MM32,Bhushan Vijay Barde,student,G-20
+2601MM33,KIRTI VITTHAL FASATE,student,G-21
+2601MM34,CHINTALA RISHITHA,student,G-22
+2601MM35,WAGMARE AJAY,student,G-23
+2601MM36,GUDALA VENKATA PRANAV BHANU,student,G-24
+2601MM37,Naitik Joshi,student,G-22
+2601MM38,Rounak Mandal,student,G-23
+2601MM39,TAMALIKA SAU,student,G-24
+2601MM40,TRISHA SHARMA,student,G-13
+2601MM41,Chocha Jaldeep palabhai,student,G-14
+2601MM42,Ayansh Pathak,student,G-15
+2601MM43,M SIDDHARTH,student,G-16
+2601MM44,Ramavath Praveen Kumar,student,G-17
+2601PH01,Ankush Mondal,student,G-01
+2601PH02,Amit dhakad,student,G-02
+2601PH03,RAMAVATHULA YATHEESWAR MANIKANTA NAIK,student,G-03
+2601PH04,AARNA NITI PUSHKAR,student,G-04
+2601PH05,ROHAN KUMAR SINGH,student,G-05
+2601PH06,Aanya,student,G-06
+2601PH07,Shlok Tanmaya,student,G-07
+2601PH08,MANAS VERMA,student,G-08
+2601PH09,Asish Behera,student,G-09
+2601PH10,Harsh Kumar,student,G-10
+2601PH11,SAANE JYOTHSNA PRANATHI,student,G-11
+2601PH12,VEDIKA MILIND JAMADAR,student,G-12
+2601PH13,SHASWAT GANGOPADHYAY,student,G-01
+2601PH14,Ujjwal priyedarshi,student,G-02
+2601PH15,Aryan Singh Chauhan,student,G-03
+2601PH16,Aditya Garg,student,G-04
+2601PH17,Arnav Aryan,student,G-05
+2601PH18,Nikhil Bharti,student,G-06
+2601PH19,Sushant Jadhav,student,G-07
+2601PH20,NEHA,student,G-08
+2601PH21,KORE SHRIPAD RANGSIDHA,student,G-09
+2601PH22,Shreesh Srivastava,student,G-10
+2601PH23,Akhil Saini,student,G-11
+2601PH24,Sivani Anamika R,student,G-12
+2601PH25,G E GURUKARTIK,student,G-05
+2601PH26,YENUGA PEDDIREDDY GARI KRISHNA,student,G-06
+2601PH27,Tisha Ganvir,student,G-07
+2601PH28,HRITABRATA SWARNAKAR,student,G-08
+2601PH29,Suraj Singh,student,G-09
+2601PH30,PONNAKANTI VIVEK RIPUNJAY,student,G-10
+2601PH31,Banothu Sai charan,student,G-11
+2602CM01,PATAKOTA SUNAY KUMAR REDDY,student,G-21
+2602CM02,Pradyumn Jha,student,G-22
+2602CM03,Lakshya Rajput,student,G-23
+2602CM04,Jaiveen Kaur,student,G-24
+2602CM05,AYANSH UTKARSH MAURYA,student,G-13
+2602CM06,Arhan Saha,student,G-14
+2602CM07,Ishant,student,G-15
+2602CM08,K SANJEEVANI,student,G-16
+2602CM09,K NAVEEN NAYAK,student,G-17
+2602CS01,kakkerla pranay,student,G-18
+2602CS02,BODAPATI VEERA VENKATA RAVI,student,G-19
+2602CS03,Ram Prasannaa R,student,G-20
+2602CS04,Aarav Sharma,student,G-21
+2602CS05,Dev Asati,student,G-22
+2602CS06,somya tikwani,student,G-23
+2602CS07,MUNIZA PARVIN,student,G-24
+2602CS08,Anurag Kumar,student,G-13
+2602CS09,ANKIT MEENA,student,G-14
+2602CS10,Spoorthy M,student,G-15
+2602CS11,Rishu Kumar,student,G-16
+2602GT01,SATYAM SINHA,student,G-17
+2602GT02,Aayush Mishra,student,G-18
+2602GT03,Aditya Kaushal,student,G-19
+2602GT04,DAIDIPYA DADHICH,student,G-20
+2602GT05,YASHRAJ JEPH,student,G-21
+2602GT06,Swati,student,G-22
+2602GT07,Rajesh,student,G-23
+2602GT08,Raunak Patel,student,G-24
+2602MC01,Tushar,student,G-13
+2602MC02,Mudit Agrawal,student,G-14
+2602MC03,Abhishek Kumar,student,G-15
+2602MC04,Raikwar Shruti Vinod,student,G-16
+2602MC05,Polisetti Induja Sri Sivani,student,G-17
+2602MC06,Unhone Pushpak Yogesh,student,G-18
+2602MC07,Potnuru Sartak,student,G-19
+2602MC08,MOHAMMAD BOHRA,student,G-20
+2602MC09,V M KAVIN,student,G-21
+2602MC10,Pathlavath Praveen Naik,student,G-22
+2602MT01,Rupesh,student,G-23
+2602MT02,Suhani Mehta,student,G-24
+2602MT03,ARYAN RAJESH KHAMBAYATE,student,G-13
+2602MT04,MURTHINENI JAHNAVI NAIDU,student,G-14
+2602MT05,Pratyush Srivastav,student,G-15
+2602MT06,Pratyush Srivastava,student,G-16
+2602MT07,VADTHYAVATH NAVEEN,student,G-17
+2602MT08,soumen pandit,student,G-18
+2602MT09,Saksham Singh,student,G-19
+2602MT10,S K THARUN,student,G-20
+2602PC01,R SYAM SUNDAR REDDY,student,G-21
+2602PC02,Mandalapu Sai Sahasra,student,G-22
+2602PC03,ROHIT KUMAR BEHERA,student,G-23
+2602PC04,KONDAKA YASASWY,student,G-24
+2602PC05,Sahil,student,G-13
+2602PC06,Jiya Ganeshsingh Chauhan,student,G-14
+2602PC07,Anumay Gupta,student,G-15
+2602PC08,RITESH KUMAR,student,G-16
+2602ST01,Chinmay Kumar,student,G-17
+2602ST02,SAPTARSHI PATRA,student,G-18
+2602ST03,Natasha Sen,student,G-19
+2602ST04,Subham kumar,student,G-20
+2602ST05,Anirudh Makkapati,student,G-21
+2602ST06,Pranjal Narendra Chaudhari,student,G-22
+2602ST07,SHANTANU KUMAR,student,G-23
+2602ST08,VANAM SAI SUDEEP,student,G-24
+2602ST09,Naitik Sharma,student,G-13
+2602VL01,Kathir Selvan G,student,G-14
+2602VL02,Vishnu Raj,student,G-15
+2602VL03,Aryan singh,student,G-16
+2602VL04,ANDANI VRAJ PINTUBHAI,student,G-17
+2602VL05,Y S Vinisha Reddy,student,G-18
+2602VL06,Harshit Bajaj,student,G-19
+2602VL07,Neeraj Guguloth,student,G-20
+2602VL08,DHANDE HEMANI VINOD,student,G-21
+2603AI01,NAGELLA SHRIVATSA PRASAD,student,G-22
+2603AI02,Nishad Baviskar,student,G-23
+2603AI03,RAHUL PRASAD P,student,G-24
+2603AI04,Muskan sharma,student,G-13
+2603AI05,Mohit kumar,student,G-14
+2603CB01,PRATHEEKSHA B G,student,G-15
+2603CB02,Sriejan Das,student,G-16
+2603CB03,Bishu Bhaskar,student,G-17
+2603CB04,Sachin kumar,student,G-18
+2603CE01,PULAMOLU JAGAN,student,G-19
+2603CE02,Vivek Kumar Singh,student,G-20
+2603CE03,Nikhil Kumar Singh,student,G-21
+2603CE04,BONUGA KOUSHIK CHANDRA REDDY,student,G-22
+2603CE05,AKSHADHA RAMKUMAR,student,G-23
+2603CE06,Ayush Singh,student,G-24
+2603CS01,Alankrit Patel,student,G-13
+2603CS02,Champa Yeshey,student,G-14
+2603CS03,Kalpit Thakur,student,G-15
+2603CT01,MITHIL MANISH PARCHURE,student,G-16
+2603CT02,Srimahi Reddy Yeltiwar,student,G-17
+2603CT03,Dipu Kumar Kewat,student,G-18
+2603CT04,Kishan Jothi Bhava,student,G-19
+2603EC01,ADITYA KUMAR BHAGAT,student,G-20
+2603EC02,Kaushik Kumar,student,G-21
+2603EE01,JASMEET SINGH,student,G-22
+2603EE02,Arshita Agarwal,student,G-23
+2603EE03,LAKSHMI REVANTH SAI PALADUGU,student,G-24
+2603EE04,PUTLURU SAI VARSHITH REDDY,student,G-13
+2603EE05,Abhinav Anand,student,G-14
+2603ES01,Ramchandra Tholiya,student,G-15
+2603ES02,THORAT DAKSH,student,G-16
+2603ES03,PRANIL NIKHIL DUBE,student,G-17
+2603ES04,Rachit Agarwal,student,G-18
+2603MC01,GURKEERAT SINGH,student,G-19
+2603MC02,Barukunta Sankeerth,student,G-20
+2603MC03,Rashmita yadav,student,G-21
+2603ME01,Pranjal Prashant Nerkar,student,G-22
+2603ME02,KARWAR VEDANT DATTATRAY,student,G-23
+2603ME03,Poorvanjali,student,G-24
+2603ME04,Vikash Vaibhav,student,G-13
+2603ME05,Sarda Dhruv,student,G-14
+2603ME06,MITADRU KAR,student,G-15
+2603ME07,BIROJU RUSHIKESH,student,G-16
+2603ME08,Rohit Choudhary,student,G-17
+2603ME09,Parikshit Bedi,student,G-18
+2603ME10,Moulik Singh,student,G-19
+2603ME11,Donapati Dhruva Kumar Reddy,student,G-20
+2603ME12,NITYASRI A,student,G-21
+2603ME13,Silimkar Tejas Mangesh,student,G-22
+2603MM01,Mayank,student,G-23
+2603MM02,Ritojoy Mandal,student,G-24
+2603MM03,BANAVATH MANOJ,student,G-18
+2603MM04,Adya Agarwal,student,G-19
+2603MM05,TELUGU SHASHANK,student,G-20
+2603PH01,Aryan Aggrawal,student,G-21
+2603PH02,ARKA DAS,student,G-22
+2603PH03,Mahak Shakya,student,G-23
+

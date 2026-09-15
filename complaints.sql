@@ -226,4 +226,40 @@ FOR EACH ROW
 WHEN (NEW.status = 'COMPLETED')
 EXECUTE FUNCTION prune_old_completed_complaints();
 
+-- Demo identities. `id` must match campus_agent.users.roll_number because
+-- the executor passes that UUID as the complaint user identifier.
+INSERT INTO users (id, authentication_key, role, names, roll_number, email, hierarchy_level, is_active)
+VALUES
+    (
+        '3a63c6fe-18be-4110-8bfc-02f8538eaaab',
+        'student-demo',
+        'student',
+        'Aarav Sharma',
+        '3a63c6fe-18be-4110-8bfc-02f8538eaaab',
+        'aarav.sharma@example.edu',
+        'student',
+        TRUE
+    ),
+    (
+        '271875d6-51ca-4236-9d13-3d43c25d0320',
+        'faculty-demo',
+        'faculty',
+        'Priya Patel',
+        '271875d6-51ca-4236-9d13-3d43c25d0320',
+        'priya.patel@example.edu',
+        'faculty',
+        TRUE
+    ),
+    (
+        '3af87d28-f359-4494-9dbe-f6d765b40d8b',
+        'admin-demo',
+        'admin',
+        'Rohan Verma',
+        '3af87d28-f359-4494-9dbe-f6d765b40d8b',
+        'rohan.verma@example.edu',
+        'admin',
+        TRUE
+    )
+ON CONFLICT (id) DO NOTHING;
+
 COMMIT;
