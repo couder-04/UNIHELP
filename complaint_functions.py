@@ -76,18 +76,18 @@ def _resolve_user(user_identifier: str):
       - staff/faculty email
 
     Returns:
-      (internal_user_id, role, roll_number, email)
+      (internal_user_id, role, roll_number, email, names)
     """
     identifier = _clean(user_identifier)
     if not identifier:
-        return None, None, None, None
+        return None, None, None, None, None
 
     conn = get_connection()
     cur = conn.cursor()
     try:
         cur.execute(
             """
-            SELECT id, COALESCE(hierarchy_level, role), roll_number, email
+            SELECT id, COALESCE(hierarchy_level, role), roll_number, email, names
             FROM users
             WHERE (
                 LOWER(roll_number) = LOWER(%s)
@@ -100,11 +100,11 @@ def _resolve_user(user_identifier: str):
         )
         row = cur.fetchone()
         if row:
-            return row[0], row[1], row[2], row[3]
+            return row[0], row[1], row[2], row[3], row[4]
 
         cur.execute(
             """
-            SELECT id, COALESCE(hierarchy_level, role), roll_number, email
+            SELECT id, COALESCE(hierarchy_level, role), roll_number, email, names
             FROM users
             WHERE LOWER(email) = LOWER(%s)
               AND is_active = TRUE
@@ -114,9 +114,9 @@ def _resolve_user(user_identifier: str):
         )
         row = cur.fetchone()
         if row:
-            return row[0], row[1], row[2], row[3]
+            return row[0], row[1], row[2], row[3], row[4]
 
-        return None, None, None, None
+        return None, None, None, None, None
     finally:
         cur.close()
         conn.close()
@@ -232,7 +232,7 @@ def create_complaint(
     if not title or not description:
         return {"status": "error", "message": "title and description are required"}
 
-    user_db_id, role, _, _ = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use student roll number or staff email."}
 
@@ -265,15 +265,18 @@ def create_complaint(
         cur.execute(
             """
             INSERT INTO complaints (
-                complaint_number, user_id, title, description,
+                complaint_number, user_id, name, roll_number, title, description,
                 category, status, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
                 %s, 'PENDING_VERIFICATION', %s, %s
             )
             RETURNING id
             """,
-            (complaint_number, user_db_id, title, description, category, now, now),
+            (
+                complaint_number, user_db_id, user_name, user_roll or user_db_id,
+                title, description, category, now, now,
+            ),
         )
         complaint_db_id = cur.fetchone()[0]
 
@@ -326,7 +329,7 @@ def get_complaint(complaint_number: str, user_identifier: str = None):
     if not user_identifier:
         return {"status": "forbidden", "message": "Authenticated user identifier is required"}
 
-    user_db_id, role, _, _ = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use roll number or email."}
     role = _normalize_role(role)
@@ -336,9 +339,9 @@ def get_complaint(complaint_number: str, user_identifier: str = None):
     try:
         cur.execute(
             """
-            SELECT c.complaint_number, c.title, c.description, c.category, c.status,
-                   c.created_at, c.verified_at, c.completed_at, c.user_id,
-                   COALESCE(u.email, u.roll_number) AS reporter
+            SELECT c.complaint_number, c.name, c.roll_number, c.title, c.description,
+                   c.category, c.status, c.created_at, c.verified_at, c.completed_at,
+                   c.user_id, COALESCE(c.name, u.names) AS reporter
             FROM complaints c
             JOIN users u ON u.id = c.user_id
             WHERE c.complaint_number = %s
@@ -374,7 +377,7 @@ def list_complaints(
     if not user_identifier:
         return {"status": "forbidden", "message": "Authenticated user identifier is required"}
 
-    user_db_id, role, _, _ = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use roll number or email."}
     role = _normalize_role(role)
@@ -411,9 +414,9 @@ def list_complaints(
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         cur.execute(
             f"""
-            SELECT c.complaint_number, c.title, c.description, c.category, c.status,
-                   c.created_at, c.verified_at, c.completed_at,
-                   COALESCE(u.email, u.roll_number) AS reporter
+            SELECT c.complaint_number, c.name, c.roll_number, c.title, c.description,
+                   c.category, c.status, c.created_at, c.verified_at, c.completed_at,
+                   COALESCE(c.name, u.names) AS reporter
             FROM complaints c
             JOIN users u ON u.id = c.user_id
             {where_sql}
@@ -432,7 +435,7 @@ def list_complaints(
 
 def verify_complaint(complaint_number: str, verifier_identifier: str):
     """Admin/faculty verify a pending complaint and move it to PROGRESS."""
-    verifier_db_id, verifier_role, _, _ = _resolve_user(verifier_identifier)
+    verifier_db_id, verifier_role, _, _, _ = _resolve_user(verifier_identifier)
     if not verifier_db_id:
         return {"status": "error", "message": "Verifier not found. Use staff email or roll number."}
     verifier_role = _normalize_role(verifier_role)
@@ -491,7 +494,7 @@ def verify_complaint(complaint_number: str, verifier_identifier: str):
 
 def complete_complaint(complaint_number: str, actor_identifier: str):
     """Admin/faculty mark a complaint in PROGRESS as COMPLETED."""
-    actor_db_id, actor_role, _, _ = _resolve_user(actor_identifier)
+    actor_db_id, actor_role, _, _, _ = _resolve_user(actor_identifier)
     if not actor_db_id:
         return {"status": "error", "message": "Actor not found. Use staff email or roll number."}
     actor_role = _normalize_role(actor_role)
@@ -660,7 +663,7 @@ def run_complaint_lifecycle_tests():
     print(json.dumps(res_dup, indent=2, default=str))
 
     print(f"\n3. Verifying {comp_num} as faculty...")
-    res_verify = verify_complaint(comp_num, "2501AI45")
+    res_verify = verify_complaint(comp_num, "PF001")
     print(json.dumps(res_verify, indent=2, default=str))
 
     print("\n4. Duplicate while in PROGRESS should still be rejected...")
@@ -673,7 +676,7 @@ def run_complaint_lifecycle_tests():
     print(json.dumps(res_dup2, indent=2, default=str))
 
     print(f"\n5. Completing {comp_num} as admin...")
-    res_complete = complete_complaint(comp_num, "2501CS84")
+    res_complete = complete_complaint(comp_num, "AD001")
     print(json.dumps(res_complete, indent=2, default=str))
 
 

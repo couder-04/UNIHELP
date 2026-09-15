@@ -155,17 +155,19 @@ psql -d timetable -c "\\copy people(roll_num, name, role, student_group) FROM 't
 
 The room-booking, attendance, and timetable sections drop and recreate their tables. Re-running the file **wipes** existing rows in those databases.
 
-The timetable section creates `people`, `courses`, `rooms`, and `timetable`, and seeds faculty/admin, courses, rooms, and 12 class slots. `timetable_users.csv` is the student roster (about 1,537 rows: `roll_num,name,role,student_group`). Load the SQL first, then `\copy` the CSV. The CSV has no faculty/admin rows; those come from the dump (`A-001` plus department heads `F-CS01` … `F-PH01`).
+The timetable section creates `people`, `courses`, `rooms`, and `timetable`, and seeds faculty/admin, courses, rooms, and 12 class slots. `timetable_users.csv` is the student roster (about 1,537 rows: `roll_num,name,role,student_group`). Load the SQL first, then `\copy` the CSV. The CSV has no faculty/admin rows; those come from the dump (`AD001` / `AD002` plus faculty `PF001`, `PF006` … `PF016`).
 
 ### Demo login keys
 
 These keys are inserted by `unihelp_databases.sql` (campus_agent / complaints / organization_agent sections):
 
-| Key | Role | Name | `roll_number` (TEXT) |
+| Key | Role | Name | `roll_number` |
 | --- | --- | --- | --- |
 | `student-demo` | student | Aarav Sharma | `2501CS09` |
-| `faculty-demo` | faculty | Priya Patel | `2501AI45` |
-| `admin-demo` | admin | Rohan Verma | `2501CS84` |
+| `faculty-demo` | faculty | Priya Patel | `PF001` |
+| `admin-demo` | admin | Rohan Verma | `AD001` |
+
+Additional seeded people use the same convention: students keep IIT-style rolls (`2501CS90`, …), faculty are `PF001`–`PF016`, and admins are `AD001`–`AD002`.
 
 Replace them before any shared or production use.
 
@@ -271,13 +273,13 @@ python timetable_agent.py "What is my class schedule this week?" \
 python timetable_agent.py "What do I have on Wednesday?" \
   --name "Mahak Shakya" --roll-num 2603PH03 --role student
 
-# Faculty (department head seeded by unihelp_databases.sql)
+# Faculty (seeded by unihelp_databases.sql)
 python timetable_agent.py "Show my teaching schedule." \
-  --name "Dr. CS Head" --roll-num F-CS01 --role faculty
+  --name "Harsh Vardhan" --roll-num PF007 --role faculty
 
 # Admin
 python timetable_agent.py "List the rooms used for classes." \
-  --name "Super Admin" --roll-num A-001 --role admin
+  --name "Rohan Verma" --roll-num AD001 --role admin
 ```
 
 Students get read tools only (`get_schedule`, `get_day`, `list_subjects`, …). Faculty and admin can also `add_slot` / `update_slot` / `delete_slot`. Roll numbers are forced from `--roll-num`; a student cannot fetch someone else’s schedule.

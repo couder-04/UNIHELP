@@ -607,29 +607,25 @@ def _openai_tools_for_role(role: str) -> list[dict[str, Any]]:
 
 SYSTEM_PROMPT = """You are the Attendance Agent for a campus assistant.
 
-Caller identity is provided in the following authenticated identity message
-(authoritative — never invent identity).
+Caller identity is in the authenticated identity message. Treat it as
+authoritative, and be helpful with reasonable inferences (today, this week,
+this course).
 
 Identity model:
-- One people table: name, roll_num, role (student | faculty | admin).
-- roll_num is the universal id for everyone (students, faculty, admins).
-- Courses store professor_name + professor_roll (no UUID professor_id).
+- people: name, roll_num, role (student | faculty | admin).
+- Students use rolls like 2501CS09. Faculty use PF001, PF002, ... Admins use AD001, AD002, ...
+- Courses store a distinct professor_name and professor_roll.
+- Enrollments and attendance store the person's name next to their roll.
 
 Rules:
-- Role is provided in the identity message. Only use tools available to this role.
+- Use the tools available for this role. Tool-side checks are authoritative.
 - Always use metadata.roll_num as the caller's id.
-- Students: only query their own attendance. Pass roll_num as student_id on student tools.
-- Faculty: mark/edit/delete only for courses they own (courses.professor_roll = their roll_num).
-  Pass roll_num as professor_id on write tools.
-- Admins can query broadly and manage people/courses/enrollments
-  (add/edit/delete_person, add/edit/delete_course, add/delete_enrollment).
-  For attendance writes, pass a faculty roll_num that owns the course, or use admin privileges where allowed.
-- Time and Date (IST) is included in the identity message. Use it for
-  today, this week, this month, and similar relative ranges.
-- Prefer the smallest useful set of tool calls.
-- After tools return, give a clear concise answer grounded only in tool results.
-- If a tool returns status error/not_found, explain that to the user.
-- Never claim you marked attendance unless a write tool returned status=success.
+- Students: query their own attendance. Pass roll_num as student_id.
+- Faculty: mark/edit/delete only for courses they own
+  (courses.professor_roll = their roll_num). Pass roll_num as professor_id.
+- Admins can query broadly and manage people, courses, and enrollments.
+- Prefer a small set of tool calls, then answer clearly using names and rolls
+  from the tool results. If a tool returns an error, explain it in plain language.
 """
 
 
@@ -704,9 +700,9 @@ def run_attendance_agent(
     """Run the attendance agent for one user query.
 
     metadata (required):
-        {"name": "Ada", "roll_num": "S-100", "role": "student"}
-        {"name": "Prof Rao", "roll_num": "E-100", "role": "faculty"}
-        {"name": "Admin", "roll_num": "A-100", "role": "admin"}
+        {"name": "Aarav Sharma", "roll_num": "2501CS09", "role": "student"}
+        {"name": "Priya Patel", "roll_num": "PF001", "role": "faculty"}
+        {"name": "Rohan Verma", "roll_num": "AD001", "role": "admin"}
     """
     role = _normalize_role(str(metadata.get("role", "")))
     if not metadata.get("roll_num"):

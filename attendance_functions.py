@@ -111,21 +111,30 @@ def _assert_owns_course(course_row, professor_roll):
 
 
 def _upsert_one(cursor, course_code, student_roll, session_date, status, marked_by_roll):
+    student = _resolve_person(cursor, student_roll)
+    marker = _resolve_person(cursor, marked_by_roll)
+    student_name = student[1] if student else None
+    marked_by_name = marker[1] if marker else None
     cursor.execute(
         """
         INSERT INTO attendance (
-            student_roll, course_code, session_date,
-            attendance_status, marked_at, marked_by_roll
+            student_roll, student_name, course_code, session_date,
+            attendance_status, marked_at, marked_by_roll, marked_by_name
         )
-        VALUES (%s, %s, %s, %s, NOW(), %s)
+        VALUES (%s, %s, %s, %s, %s, NOW(), %s, %s)
         ON CONFLICT (student_roll, course_code, session_date)
         DO UPDATE SET
             attendance_status = EXCLUDED.attendance_status,
             marked_at = EXCLUDED.marked_at,
-            marked_by_roll = EXCLUDED.marked_by_roll
+            marked_by_roll = EXCLUDED.marked_by_roll,
+            student_name = EXCLUDED.student_name,
+            marked_by_name = EXCLUDED.marked_by_name
         RETURNING attendance_status, session_date
         """,
-        (student_roll, course_code, session_date, status, marked_by_roll),
+        (
+            student_roll, student_name, course_code, session_date,
+            status, marked_by_roll, marked_by_name,
+        ),
     )
     return cursor.fetchone()
 
@@ -1961,8 +1970,11 @@ def add_enrollment(student_roll, course_code):
         }
 
     cursor.execute(
-        "INSERT INTO enrollments (student_roll, course_code) VALUES (%s, %s)",
-        (student[0], course[0]),
+        """
+        INSERT INTO enrollments (student_roll, student_name, course_code)
+        VALUES (%s, %s, %s)
+        """,
+        (student[0], student[1], course[0]),
     )
     connection.commit()
     cursor.close()

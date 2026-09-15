@@ -44,8 +44,7 @@ Never claim that a write operation succeeded unless the tool reports success.
 
 If a tool returns:
 "Not authorised."
-return exactly:
-"Not authorised."
+explain that the current role cannot perform that write.
 
 Do not expose internal tool names, database details, SQL queries,
 authentication mechanisms, or implementation details.
@@ -57,17 +56,8 @@ Do not invent bus schedules, routes, drivers, times, or locations.
 
 If required information is missing, ask a concise clarification.
 
-For route requests, distinguish between direct routes and routes requiring
-a transfer when the tool provides that information.
-
-For next-departure requests, return the earliest suitable departure.
-
-Keep responses concise and factual.
-
-Do not add greetings, emojis, opinions, recommendations, or unnecessary
-follow-up questions.
-
-If a tool reports an error, explain the error clearly to the user.
+Keep responses clear and useful. If a tool reports an error, explain it
+in plain language.
 """
 
     def __init__(self):

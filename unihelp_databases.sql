@@ -74,24 +74,29 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 INSERT INTO users (authentication_key, role, names, roll_number) VALUES
-    (
-        'student-demo',
-        'student',
-        'Aarav Sharma',
-        '2501CS09'
-    ),
-    (
-        'faculty-demo',
-        'faculty',
-        'Priya Patel',
-        '2501AI45'
-    ),
-    (
-        'admin-demo',
-        'admin',
-        'Rohan Verma',
-        '2501CS84'
-    )
+    ('student-demo', 'student', 'Aarav Sharma', '2501CS09'),
+    ('student-neha', 'student', 'Neha Gupta', '2501CS90'),
+    ('student-kabir', 'student', 'Kabir Mehta', '2501CS91'),
+    ('student-ananya', 'student', 'Ananya Iyer', '2501AI51'),
+    ('student-vikram', 'student', 'Vikram Singh', '2501CS92'),
+    ('faculty-demo', 'faculty', 'Priya Patel', 'PF001'),
+    ('faculty-arjun', 'faculty', 'Arjun Nair', 'PF002'),
+    ('faculty-meera', 'faculty', 'Meera Joshi', 'PF003'),
+    ('faculty-sameer', 'faculty', 'Sameer Khan', 'PF004'),
+    ('faculty-kavita', 'faculty', 'Kavita Desai', 'PF005'),
+    ('faculty-aditi', 'faculty', 'Aditi Rao', 'PF006'),
+    ('faculty-harsh', 'faculty', 'Harsh Vardhan', 'PF007'),
+    ('faculty-leela', 'faculty', 'Leela Menon', 'PF008'),
+    ('faculty-omar', 'faculty', 'Omar Qureshi', 'PF009'),
+    ('faculty-tanvi', 'faculty', 'Tanvi Shah', 'PF010'),
+    ('faculty-nikhil', 'faculty', 'Nikhil Rao', 'PF011'),
+    ('faculty-pooja', 'faculty', 'Pooja Bhatt', 'PF012'),
+    ('faculty-farhan', 'faculty', 'Farhan Ali', 'PF013'),
+    ('faculty-diya', 'faculty', 'Diya Kulkarni', 'PF014'),
+    ('faculty-yash', 'faculty', 'Yash Agarwal', 'PF015'),
+    ('faculty-sana', 'faculty', 'Sana Iqbal', 'PF016'),
+    ('admin-demo', 'admin', 'Rohan Verma', 'AD001'),
+    ('admin-nisha', 'admin', 'Nisha Kapoor', 'AD002')
 ON CONFLICT (authentication_key) DO UPDATE
 SET role = EXCLUDED.role,
     names = EXCLUDED.names,
@@ -673,6 +678,9 @@ CREATE TABLE IF NOT EXISTS complaints (
         CHECK (btrim(description) <> '')
 );
 
+ALTER TABLE complaints ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE complaints ADD COLUMN IF NOT EXISTS roll_number TEXT;
+
 -- ------------------------------------------------------------------
 -- Audit history. ON DELETE CASCADE so pruning completed complaints
 -- also removes their history rows.
@@ -803,47 +811,40 @@ BEGIN
 END
 $$;
 
--- Demo identities. `id` must match campus_agent.users.roll_number (IIT-style
--- text, not UUID) because the executor passes that string as the identifier.
+-- Demo identities. `id` must match campus_agent.users.roll_number.
+-- Students use IIT-style rolls; faculty PF001+; admins AD001+.
+UPDATE users SET id = 'PF001', roll_number = 'PF001', names = 'Priya Patel', role = 'faculty'
+WHERE authentication_key = 'faculty-demo';
+UPDATE users SET id = 'AD001', roll_number = 'AD001', names = 'Rohan Verma', role = 'admin'
+WHERE authentication_key = 'admin-demo';
 UPDATE users SET id = '2501CS09', roll_number = '2501CS09', names = 'Aarav Sharma', role = 'student'
 WHERE authentication_key = 'student-demo';
-UPDATE users SET id = '2501AI45', roll_number = '2501AI45', names = 'Priya Patel', role = 'faculty'
-WHERE authentication_key = 'faculty-demo';
-UPDATE users SET id = '2501CS84', roll_number = '2501CS84', names = 'Rohan Verma', role = 'admin'
-WHERE authentication_key = 'admin-demo';
 
 INSERT INTO users (id, authentication_key, role, names, roll_number, email, hierarchy_level, is_active)
 VALUES
-    (
-        '2501CS09',
-        'student-demo',
-        'student',
-        'Aarav Sharma',
-        '2501CS09',
-        'aarav.sharma@example.edu',
-        'student',
-        TRUE
-    ),
-    (
-        '2501AI45',
-        'faculty-demo',
-        'faculty',
-        'Priya Patel',
-        '2501AI45',
-        'priya.patel@example.edu',
-        'faculty',
-        TRUE
-    ),
-    (
-        '2501CS84',
-        'admin-demo',
-        'admin',
-        'Rohan Verma',
-        '2501CS84',
-        'rohan.verma@example.edu',
-        'admin',
-        TRUE
-    )
+    ('2501CS09', 'student-demo', 'student', 'Aarav Sharma', '2501CS09', 'aarav.sharma@example.edu', 'student', TRUE),
+    ('2501CS90', 'student-neha', 'student', 'Neha Gupta', '2501CS90', 'neha.gupta@example.edu', 'student', TRUE),
+    ('2501CS91', 'student-kabir', 'student', 'Kabir Mehta', '2501CS91', 'kabir.mehta@example.edu', 'student', TRUE),
+    ('2501AI51', 'student-ananya', 'student', 'Ananya Iyer', '2501AI51', 'ananya.iyer@example.edu', 'student', TRUE),
+    ('2501CS92', 'student-vikram', 'student', 'Vikram Singh', '2501CS92', 'vikram.singh@example.edu', 'student', TRUE),
+    ('PF001', 'faculty-demo', 'faculty', 'Priya Patel', 'PF001', 'priya.patel@example.edu', 'faculty', TRUE),
+    ('PF002', 'faculty-arjun', 'faculty', 'Arjun Nair', 'PF002', 'arjun.nair@example.edu', 'faculty', TRUE),
+    ('PF003', 'faculty-meera', 'faculty', 'Meera Joshi', 'PF003', 'meera.joshi@example.edu', 'faculty', TRUE),
+    ('PF004', 'faculty-sameer', 'faculty', 'Sameer Khan', 'PF004', 'sameer.khan@example.edu', 'faculty', TRUE),
+    ('PF005', 'faculty-kavita', 'faculty', 'Kavita Desai', 'PF005', 'kavita.desai@example.edu', 'faculty', TRUE),
+    ('PF006', 'faculty-aditi', 'faculty', 'Aditi Rao', 'PF006', 'aditi.rao@example.edu', 'faculty', TRUE),
+    ('PF007', 'faculty-harsh', 'faculty', 'Harsh Vardhan', 'PF007', 'harsh.vardhan@example.edu', 'faculty', TRUE),
+    ('PF008', 'faculty-leela', 'faculty', 'Leela Menon', 'PF008', 'leela.menon@example.edu', 'faculty', TRUE),
+    ('PF009', 'faculty-omar', 'faculty', 'Omar Qureshi', 'PF009', 'omar.qureshi@example.edu', 'faculty', TRUE),
+    ('PF010', 'faculty-tanvi', 'faculty', 'Tanvi Shah', 'PF010', 'tanvi.shah@example.edu', 'faculty', TRUE),
+    ('PF011', 'faculty-nikhil', 'faculty', 'Nikhil Rao', 'PF011', 'nikhil.rao@example.edu', 'faculty', TRUE),
+    ('PF012', 'faculty-pooja', 'faculty', 'Pooja Bhatt', 'PF012', 'pooja.bhatt@example.edu', 'faculty', TRUE),
+    ('PF013', 'faculty-farhan', 'faculty', 'Farhan Ali', 'PF013', 'farhan.ali@example.edu', 'faculty', TRUE),
+    ('PF014', 'faculty-diya', 'faculty', 'Diya Kulkarni', 'PF014', 'diya.kulkarni@example.edu', 'faculty', TRUE),
+    ('PF015', 'faculty-yash', 'faculty', 'Yash Agarwal', 'PF015', 'yash.agarwal@example.edu', 'faculty', TRUE),
+    ('PF016', 'faculty-sana', 'faculty', 'Sana Iqbal', 'PF016', 'sana.iqbal@example.edu', 'faculty', TRUE),
+    ('AD001', 'admin-demo', 'admin', 'Rohan Verma', 'AD001', 'rohan.verma@example.edu', 'admin', TRUE),
+    ('AD002', 'admin-nisha', 'admin', 'Nisha Kapoor', 'AD002', 'nisha.kapoor@example.edu', 'admin', TRUE)
 ON CONFLICT (id) DO UPDATE
 SET authentication_key = EXCLUDED.authentication_key,
     role = EXCLUDED.role,
@@ -870,8 +871,8 @@ COMMIT;
 --   enrollments  student <-> course
 --   attendance   one mark per student/course/session_date
 --
--- Identity: campus_agent.users.roll_number is stored here as people.roll_num
--- (text). Sample S-100 / E-100 / A-100 rows are kept for local tool tests.
+-- Identity: campus_agent.users.roll_number is stored here as people.roll_num.
+-- Students: 2501CS09-style. Faculty: PF001+. Admins: AD001+.
 --
 -- Run inside the dedicated `organization_agent` database (ATTENDANCE_DB_NAME).
 -- Safe to re-run: drops and recreates the four tables.
@@ -903,17 +904,20 @@ CREATE TABLE courses (
 
 CREATE TABLE enrollments (
     student_roll TEXT NOT NULL REFERENCES people(roll_num),
+    student_name VARCHAR(255) NOT NULL,
     course_code VARCHAR(32) NOT NULL REFERENCES courses(code),
     PRIMARY KEY (student_roll, course_code)
 );
 
 CREATE TABLE attendance (
     student_roll TEXT NOT NULL REFERENCES people(roll_num),
+    student_name VARCHAR(255) NOT NULL,
     course_code VARCHAR(32) NOT NULL REFERENCES courses(code),
     session_date DATE NOT NULL,
     attendance_status VARCHAR(32) NOT NULL,
     marked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     marked_by_roll TEXT NOT NULL REFERENCES people(roll_num),
+    marked_by_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (student_roll, course_code, session_date),
     CONSTRAINT attendance_status_check
         CHECK (LOWER(attendance_status) IN ('present', 'absent', 'late', 'excused'))
@@ -930,75 +934,104 @@ CREATE INDEX idx_people_role
 CREATE INDEX idx_courses_professor
     ON courses (professor_roll);
 
--- Demo people used by standalone tool tests.
-INSERT INTO people (roll_num, name, role) VALUES
-    ('S-100', 'Local Student', 'student'),
-    ('E-100', 'Local Faculty', 'faculty'),
-    ('A-100', 'Local Admin', 'admin');
+CREATE OR REPLACE FUNCTION fill_enrollment_student_name()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.student_name IS NULL OR btrim(NEW.student_name) = '' THEN
+        SELECT name INTO NEW.student_name
+        FROM people WHERE LOWER(roll_num) = LOWER(NEW.student_roll);
+    END IF;
+    RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_enrollments_student_name ON enrollments;
+CREATE TRIGGER trg_enrollments_student_name
+BEFORE INSERT OR UPDATE ON enrollments
+FOR EACH ROW EXECUTE FUNCTION fill_enrollment_student_name();
 
--- Campus-agent identities (users.roll_number as text).
+CREATE OR REPLACE FUNCTION fill_attendance_names()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.student_name IS NULL OR btrim(NEW.student_name) = '' THEN
+        SELECT name INTO NEW.student_name
+        FROM people WHERE LOWER(roll_num) = LOWER(NEW.student_roll);
+    END IF;
+    IF NEW.marked_by_name IS NULL OR btrim(NEW.marked_by_name) = '' THEN
+        SELECT name INTO NEW.marked_by_name
+        FROM people WHERE LOWER(roll_num) = LOWER(NEW.marked_by_roll);
+    END IF;
+    RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_attendance_names ON attendance;
+CREATE TRIGGER trg_attendance_names
+BEFORE INSERT OR UPDATE ON attendance
+FOR EACH ROW EXECUTE FUNCTION fill_attendance_names();
+
+-- Demo people. Students use IIT-style rolls (2501CS09). Faculty use PF001+.
+-- Admins use AD001+. Every name and roll_num is unique.
 INSERT INTO people (roll_num, name, role) VALUES
     ('2501CS09', 'Aarav Sharma', 'student'),
-    ('2501AI45', 'Priya Patel', 'faculty'),
-    ('2501CS84', 'Rohan Verma', 'admin');
+    ('2501CS90', 'Neha Gupta', 'student'),
+    ('2501CS91', 'Kabir Mehta', 'student'),
+    ('2501AI51', 'Ananya Iyer', 'student'),
+    ('2501CS92', 'Vikram Singh', 'student'),
+    ('PF001', 'Priya Patel', 'faculty'),
+    ('PF002', 'Arjun Nair', 'faculty'),
+    ('PF003', 'Meera Joshi', 'faculty'),
+    ('PF004', 'Sameer Khan', 'faculty'),
+    ('PF005', 'Kavita Desai', 'faculty'),
+    ('PF006', 'Aditi Rao', 'faculty'),
+    ('PF007', 'Harsh Vardhan', 'faculty'),
+    ('PF008', 'Leela Menon', 'faculty'),
+    ('PF009', 'Omar Qureshi', 'faculty'),
+    ('PF010', 'Tanvi Shah', 'faculty'),
+    ('PF011', 'Nikhil Rao', 'faculty'),
+    ('PF012', 'Pooja Bhatt', 'faculty'),
+    ('PF013', 'Farhan Ali', 'faculty'),
+    ('PF014', 'Diya Kulkarni', 'faculty'),
+    ('PF015', 'Yash Agarwal', 'faculty'),
+    ('PF016', 'Sana Iqbal', 'faculty'),
+    ('AD001', 'Rohan Verma', 'admin'),
+    ('AD002', 'Nisha Kapoor', 'admin');
 
 INSERT INTO courses (
     code, name, professor_name, professor_roll,
     department, min_attendance_percent, planned_sessions
 ) VALUES
-    ('CS101', 'Algorithms', 'Priya Patel',
-     '2501AI45', 'CSE', 75, 40),
-    ('CS102', 'Data Structures', 'Priya Patel',
-     '2501AI45', 'CSE', 75, 40),
-    ('MA201', 'Linear Algebra', 'Priya Patel',
-     '2501AI45', 'CSE', 75, 40),
-    ('PHY101', 'Physics', 'Priya Patel',
-     '2501AI45', 'CSE', 75, 40),
-    ('HS101', 'Communication', 'Priya Patel',
-     '2501AI45', 'CSE', 75, 40);
+    ('CS101', 'Algorithms', 'Priya Patel', 'PF001', 'CSE', 75, 40),
+    ('CS102', 'Data Structures', 'Arjun Nair', 'PF002', 'CSE', 75, 40),
+    ('MA201', 'Linear Algebra', 'Meera Joshi', 'PF003', 'MA', 75, 40),
+    ('PHY101', 'Physics', 'Sameer Khan', 'PF004', 'PHY', 75, 40),
+    ('HS101', 'Communication', 'Kavita Desai', 'PF005', 'HS', 75, 40);
 
-INSERT INTO enrollments (student_roll, course_code)
-SELECT student_roll, course_code
-FROM (
-    VALUES
-        ('S-100'),
-        ('2501CS09')
-) AS students(student_roll)
-CROSS JOIN (
-    VALUES ('CS101'), ('CS102'), ('MA201'), ('PHY101'), ('HS101')
-) AS course_list(course_code);
+INSERT INTO enrollments (student_roll, student_name, course_code) VALUES
+    ('2501CS09', 'Aarav Sharma', 'CS101'),
+    ('2501CS90', 'Neha Gupta', 'CS102'),
+    ('2501CS91', 'Kabir Mehta', 'MA201'),
+    ('2501AI51', 'Ananya Iyer', 'PHY101'),
+    ('2501CS92', 'Vikram Singh', 'HS101');
 
 INSERT INTO attendance (
-    student_roll, course_code, session_date,
-    attendance_status, marked_at, marked_by_roll
-)
-SELECT
-    student_roll,
-    'CS101',
-    session_date,
-    status,
-    marked_at,
-    CASE
-        WHEN student_roll = 'S-100' AND session_date = DATE '2026-09-20'
-            THEN 'A-100'
-        WHEN student_roll = 'S-100'
-            THEN 'E-100'
-        ELSE '2501AI45'
-    END
-FROM (
-    VALUES
-        ('S-100'),
-        ('2501CS09')
-) AS students(student_roll)
-CROSS JOIN (
-    VALUES
-        (DATE '2026-09-08', 'present', TIMESTAMPTZ '2026-09-13 14:32:02.665742+00'),
-        (DATE '2026-09-10', 'present', TIMESTAMPTZ '2026-09-13 14:32:02.665742+00'),
-        (DATE '2026-09-12', 'absent',  TIMESTAMPTZ '2026-09-13 14:32:02.665742+00'),
-        (DATE '2026-09-15', 'present', TIMESTAMPTZ '2026-09-13 14:32:02.665742+00'),
-        (DATE '2026-09-20', 'present', TIMESTAMPTZ '2026-09-13 14:36:33.624238+00'),
-        (DATE '2026-09-21', 'absent',  TIMESTAMPTZ '2026-09-13 14:36:33.638692+00')
-) AS sessions(session_date, status, marked_at);
+    student_roll, student_name, course_code, session_date,
+    attendance_status, marked_at, marked_by_roll, marked_by_name
+) VALUES
+    ('2501CS09', 'Aarav Sharma', 'CS101', DATE '2026-09-08', 'present',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF001', 'Priya Patel'),
+    ('2501CS09', 'Aarav Sharma', 'CS101', DATE '2026-09-10', 'present',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF001', 'Priya Patel'),
+    ('2501CS09', 'Aarav Sharma', 'CS101', DATE '2026-09-12', 'absent',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF001', 'Priya Patel'),
+    ('2501CS90', 'Neha Gupta', 'CS102', DATE '2026-09-08', 'present',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF002', 'Arjun Nair'),
+    ('2501CS90', 'Neha Gupta', 'CS102', DATE '2026-09-10', 'late',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF002', 'Arjun Nair'),
+    ('2501CS91', 'Kabir Mehta', 'MA201', DATE '2026-09-08', 'present',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF003', 'Meera Joshi'),
+    ('2501AI51', 'Ananya Iyer', 'PHY101', DATE '2026-09-08', 'absent',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF004', 'Sameer Khan'),
+    ('2501CS92', 'Vikram Singh', 'HS101', DATE '2026-09-08', 'present',
+     TIMESTAMPTZ '2026-09-13 14:32:02+00', 'PF005', 'Kavita Desai');
 
 COMMIT;
 
@@ -1102,27 +1135,37 @@ CREATE UNIQUE INDEX uq_timetable_course_day_start
     ON timetable (course_code, timetable_day, slot_start);
 
 INSERT INTO people (roll_num, name, role) VALUES
-    ('A-001', 'Super Admin', 'admin'),
-    ('2501CS84', 'Rohan Verma', 'admin'),
-    ('F-CS01', 'Dr. CS Head', 'faculty'),
-    ('F-CB01', 'Dr. CBE Head', 'faculty'),
-    ('F-CE01', 'Dr. Civil Head', 'faculty'),
-    ('F-MA01', 'Dr. Maths Head', 'faculty'),
-    ('F-PH01', 'Dr. Physics Head', 'faculty'),
-    ('2501AI45', 'Priya Patel', 'faculty');
+    ('AD001', 'Rohan Verma', 'admin'),
+    ('AD002', 'Nisha Kapoor', 'admin'),
+    ('PF001', 'Priya Patel', 'faculty'),
+    ('PF006', 'Aditi Rao', 'faculty'),
+    ('PF007', 'Harsh Vardhan', 'faculty'),
+    ('PF008', 'Leela Menon', 'faculty'),
+    ('PF009', 'Omar Qureshi', 'faculty'),
+    ('PF010', 'Tanvi Shah', 'faculty'),
+    ('PF011', 'Nikhil Rao', 'faculty'),
+    ('PF012', 'Pooja Bhatt', 'faculty'),
+    ('PF013', 'Farhan Ali', 'faculty'),
+    ('PF014', 'Diya Kulkarni', 'faculty'),
+    ('PF015', 'Yash Agarwal', 'faculty'),
+    ('PF016', 'Sana Iqbal', 'faculty'),
+    ('2501CS90', 'Neha Gupta', 'student'),
+    ('2501CS91', 'Kabir Mehta', 'student'),
+    ('2501AI51', 'Ananya Iyer', 'student'),
+    ('2501CS92', 'Vikram Singh', 'student');
 
 INSERT INTO courses (code, name, professor_name, professor_roll, department) VALUES
-    ('MA1101', 'Calculus and Linear Algebra', 'Dr. Maths Head', 'F-MA01', 'MA'),
-    ('CS1101', 'Foundations of Programming', 'Dr. CS Head', 'F-CS01', 'CS'),
-    ('PH1101', 'Physics', 'Dr. Physics Head', 'F-PH01', 'PH'),
-    ('CE1101', 'Engineering Graphics', 'Dr. Civil Head', 'F-CE01', 'CE'),
-    ('CS2101', 'Algorithms', 'Dr. CS Head', 'F-CS01', 'CS'),
-    ('CS2102', 'Digital Logic', 'Dr. CS Head', 'F-CS01', 'CS'),
-    ('CS2103', 'AI Concepts', 'Dr. CS Head', 'F-CS01', 'CS'),
-    ('CB2101', 'Process Calculations', 'Dr. CBE Head', 'F-CB01', 'CB'),
-    ('CB2102', 'Fluid Mechanics', 'Dr. CBE Head', 'F-CB01', 'CB'),
-    ('CB2103', 'Chemical Engineering Thermodynamics', 'Dr. CBE Head', 'F-CB01', 'CB'),
-    ('CB2105', 'Mechanical Operations', 'Dr. CBE Head', 'F-CB01', 'CB');
+    ('MA1101', 'Calculus and Linear Algebra', 'Aditi Rao', 'PF006', 'MA'),
+    ('CS1101', 'Foundations of Programming', 'Harsh Vardhan', 'PF007', 'CS'),
+    ('PH1101', 'Physics', 'Leela Menon', 'PF008', 'PH'),
+    ('CE1101', 'Engineering Graphics', 'Omar Qureshi', 'PF009', 'CE'),
+    ('CS2101', 'Algorithms', 'Tanvi Shah', 'PF010', 'CS'),
+    ('CS2102', 'Digital Logic', 'Nikhil Rao', 'PF011', 'CS'),
+    ('CS2103', 'AI Concepts', 'Pooja Bhatt', 'PF012', 'CS'),
+    ('CB2101', 'Process Calculations', 'Farhan Ali', 'PF013', 'CB'),
+    ('CB2102', 'Fluid Mechanics', 'Diya Kulkarni', 'PF014', 'CB'),
+    ('CB2103', 'Chemical Engineering Thermodynamics', 'Yash Agarwal', 'PF015', 'CB'),
+    ('CB2105', 'Mechanical Operations', 'Sana Iqbal', 'PF016', 'CB');
 
 INSERT INTO rooms (room_id, capacity) VALUES
     ('Auditorium', 500), ('LT001', 120), ('LT002', 120),
