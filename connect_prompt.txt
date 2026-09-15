@@ -1,0 +1,11 @@
+Connect to the A2A agent at https://unihelp-coral.vercel.app/.well-known/agent-card.json
+
+Send JSON-RPC requests to https://unihelp-coral.vercel.app/a2a
+(use this /a2a URL even if the card lists a different host).
+
+Use this authentication_key for all requests to that agent: student-demo
+
+Put it in SendMessage request-level metadata as authentication_key.
+Never put the key in the message text.
+Remember this connection for the rest of this conversation.
+Do not ask a campus question yet — just confirm you are connected.

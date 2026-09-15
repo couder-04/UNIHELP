@@ -74,6 +74,30 @@
       min-width: 0;
       max-width: 640px;
     }
+    .connect-box {
+      margin-top: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: rgba(31, 39, 28, 0.55);
+    }
+    .connect-box summary {
+      cursor: pointer;
+      color: var(--gold-2);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .connect-box pre {
+      margin: 10px 0 8px;
+      white-space: pre-wrap;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--paper);
+      line-height: 1.45;
+    }
+    .connect-box button { font-size: 0.72rem; }
     .header-key .hint {
       flex: 0 0 auto;
       font-family: var(--mono);
@@ -229,6 +253,13 @@
       <input id="llmKey" type="password" placeholder="Paste LLM_API_KEY" autocomplete="off" spellcheck="false" />
       <span class="hint">Used for this session. Leave blank to use the server key, if set.</span>
     </div>
+    <div class="connect-box">
+      <details open>
+        <summary>Personal agent — connect once, then chat</summary>
+        <pre id="connectPrompt">Loading connect prompt…</pre>
+        <button class="ghost" type="button" id="copyConnect">Copy prompt</button>
+      </details>
+    </div>
   </header>
   <main>
     <section class="card chat">
@@ -290,6 +321,28 @@
       b.onclick = () => { document.getElementById("prompt").value = text; };
       chips.appendChild(b);
     });
+
+    async function loadConnectPrompt() {
+      const pre = document.getElementById("connectPrompt");
+      try {
+        const res = await fetch("/api/connect-prompt");
+        const data = await res.json();
+        pre.textContent = data.prompt || "";
+      } catch (err) {
+        pre.textContent = "Could not load the personal-agent connect prompt.";
+      }
+    }
+    loadConnectPrompt();
+    document.getElementById("copyConnect").onclick = async () => {
+      const text = document.getElementById("connectPrompt").textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("copyConnect").textContent = "Copied";
+        setTimeout(() => {
+          document.getElementById("copyConnect").textContent = "Copy prompt";
+        }, 1600);
+      } catch (err) {}
+    };
 
     const fmt = (n, d = 0) => {
       if (n == null || Number.isNaN(n)) return "—";

@@ -26,7 +26,8 @@ from a2a.types import (
 )
 from pathlib import Path
 
-from starlette.applications import Starlette
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Route
 import uvicorn
@@ -42,10 +43,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# Stable production alias. Unique *.vercel.app deployment hosts are often
+# SSO-gated, so personal agents must use this origin — not VERCEL_URL.
+_PRODUCTION_PUBLIC_ORIGIN = "https://unihelp-coral.vercel.app"
+
+
 def _public_base_url() -> str:
     explicit = (os.getenv("PUBLIC_BASE_URL") or "").rstrip("/")
     if explicit:
         return explicit
+    if os.getenv("VERCEL"):
+        return _PRODUCTION_PUBLIC_ORIGIN
     vercel = (os.getenv("VERCEL_URL") or "").rstrip("/")
     if vercel:
         if vercel.startswith("http://") or vercel.startswith("https://"):
@@ -54,22 +62,85 @@ def _public_base_url() -> str:
     return "http://127.0.0.1:8002"
 
 
+def _connect_prompt_text() -> str:
+    origin = _public_base_url()
+    return (
+        f"Connect to the A2A agent at {origin}/.well-known/agent-card.json\n"
+        "\n"
+        f"Send JSON-RPC requests to {origin}/a2a\n"
+        "(use this /a2a URL even if the card lists a different host).\n"
+        "\n"
+        "Use this authentication_key for all requests to that agent: student-demo\n"
+        "\n"
+        "Put it in SendMessage request-level metadata as authentication_key.\n"
+        "Never put the key in the message text.\n"
+        "Remember this connection for the rest of this conversation.\n"
+        "Do not ask a campus question yet — just confirm you are connected."
+    )
+
+
+def _is_connection_handshake(text: str) -> bool:
+    """True when a personal agent is only checking connectivity, not a campus task."""
+    t = (text or "").strip().lower()
+    if not t:
+        return False
+    campus = (
+        "mess", "menu", "dinner", "lunch", "breakfast", "bus", "complaint",
+        "room", "book", "attendance", "notice", "timetable", "class",
+        "hostel", "kalam", "sac", "guest house",
+    )
+    if any(word in t for word in campus):
+        return False
+    markers = (
+        "confirm you are connected",
+        "just confirm you are connected",
+        "do not ask a campus",
+        "do not look up campus",
+        "remember this connection",
+        "are you connected",
+        "connection check",
+    )
+    if any(m in t for m in markers):
+        return True
+    return t in {"hi", "hello", "hey", "connect", "connected?", "ping", "status"}
+
+
+def _handshake_reply(authentication_key: str) -> str:
+    user = authenticate(authentication_key)
+    if user is None:
+        return "ERROR: KEY NOT FOUND"
+    return (
+        "Connected to IIT Patna Organization Management Agent. "
+        f"Authenticated as {user['name']} ({user['role']}). "
+        "Ready for campus requests. Keep using this authentication_key in "
+        "request-level metadata for the rest of the conversation."
+    )
+
+
+def _request_auth_key(metadata: dict | None) -> str:
+    data = metadata or {}
+    return data.get("authentication_key") or data.get("authenticationKey") or ""
+
+
 agent_card = AgentCard(
     name="IIT Patna Organization Management Agent",
 
     description=(
-        "This is an A2A v1.0 JSON-RPC agent that acts as the entry point "
+        "This is an A2A JSON-RPC agent that acts as the entry point "
         "to the IIT Patna Organization Management system. Other agents "
-        "can invoke this agent by sending a SendMessage request to the "
-        "endpoint specified in supportedInterfaces. The user's request "
-        "must be provided as plain text inside message.parts[].text. "
-        "The caller's authentication credential MUST be provided "
-        "separately in the SendMessage request-level metadata using "
-        "the key 'authentication_key'. The credential MUST NOT be "
-        "included in the message text. The agent authenticates the "
-        "caller and passes the authorized request to the organization's "
-        "planning system, which determines the specialized services "
-        "and tasks required to fulfill the request."
+        "can invoke this agent by sending a SendMessage (A2A v1.0) or "
+        "message/send (A2A v0.3) request to the endpoint specified in "
+        "supportedInterfaces. The user's request must be provided as "
+        "plain text inside message.parts[].text. "
+        "Obtain authentication_key ONCE from the user at connection time, "
+        "store it for the rest of the conversation, and attach it on "
+        "EVERY subsequent request in params.metadata.authentication_key. "
+        "Never put the credential in the message text. Never ask the user "
+        "to repeat the key after the first connect turn. "
+        "A first message that only confirms connectivity (no campus task) "
+        "should be answered with a short connected confirmation. "
+        "Later turns are normal campus questions sent to this same agent "
+        "with the stored key."
     ),
 
     version="1.0.0",
@@ -143,14 +214,21 @@ agent_card = AgentCard(
                 "   - Faculty/admin add, update, or delete class slots\n\n"
 
                 "INVOCATION:\n"
-                "1. Send an A2A v1.0 JSON-RPC request.\n"
-                "2. Use the method 'SendMessage'.\n"
-                "3. Send the request to the endpoint advertised in "
+                "1. Send an A2A JSON-RPC request to the endpoint in "
                 "supportedInterfaces.\n"
-                "4. Put the user's request in "
+                "2. Use method 'SendMessage' (v1.0) or 'message/send' (v0.3).\n"
+                "3. Put the user's request in "
                 "params.message.parts[].text.\n"
-                "5. Put the caller's authentication credential in "
-                "params.metadata.authentication_key.\n\n"
+                "4. Put the caller's authentication credential in "
+                "params.metadata.authentication_key on every call.\n"
+                "5. After the user supplies the key once, reuse that same "
+                "value for the rest of the conversation. Do not ask again.\n\n"
+
+                "CONNECTION HANDSHAKE:\n"
+                "If the user only asked you to connect and confirm, send a "
+                "short connectivity check (no campus question). Wait for a "
+                "connected confirmation, then handle later user messages as "
+                "campus requests to this agent.\n\n"
 
                 "IMPORTANT:\n"
                 "The authentication_key belongs to the request-level "
@@ -196,6 +274,11 @@ agent_card = AgentCard(
             ],
 
             examples=[
+                (
+                    "Connect once: store metadata.authentication_key for the "
+                    "conversation, then SendMessage text='Confirm you are connected. "
+                    "Do not ask a campus question yet.'"
+                ),
                 (
                     "SendMessage example: "
                     "message.parts[0].text='What is today's dinner at Kalam hostel?'; "
@@ -318,8 +401,8 @@ class OrganizationAgent(AgentExecutor):
 
         user_input = context.get_user_input()
         metadata = context.metadata or {}
-        authentication_key = metadata.get("authentication_key")
-        llm_api_key = metadata.get("llm_api_key") or ""
+        authentication_key = _request_auth_key(metadata)
+        llm_api_key = metadata.get("llm_api_key") or metadata.get("llmApiKey") or ""
 
         # Never log the raw credential or the full metadata dict (which
         # contains it) — the original code printed both on every request.
@@ -327,12 +410,18 @@ class OrganizationAgent(AgentExecutor):
 
         async with _request_semaphore:
             try:
-                result, _rec = await asyncio.to_thread(
-                    _run_authenticated_request,
-                    user_input,
-                    authentication_key,
-                    llm_api_key,
-                )
+                if _is_connection_handshake(user_input):
+                    result = await asyncio.to_thread(
+                        _handshake_reply,
+                        authentication_key,
+                    )
+                else:
+                    result, _rec = await asyncio.to_thread(
+                        _run_authenticated_request,
+                        user_input,
+                        authentication_key,
+                        llm_api_key,
+                    )
 
             except Exception:
                 # Previously any exception (e.g. the planner's json.loads
@@ -380,6 +469,18 @@ async def _api_metrics_reset(request):
     return JSONResponse({"ok": True})
 
 
+async def _api_connect_prompt(request):
+    origin = _public_base_url()
+    return JSONResponse(
+        {
+            "prompt": _connect_prompt_text(),
+            "agent_card": f"{origin}/.well-known/agent-card.json",
+            "a2a": f"{origin}/a2a",
+            "authentication_key": "student-demo",
+        }
+    )
+
+
 async def _api_ask(request):
     try:
         body = await request.json()
@@ -394,12 +495,19 @@ async def _api_ask(request):
 
     async with _request_semaphore:
         try:
-            result, rec = await asyncio.to_thread(
-                _run_authenticated_request,
-                message,
-                authentication_key,
-                llm_api_key,
-            )
+            if _is_connection_handshake(message):
+                result = await asyncio.to_thread(
+                    _handshake_reply,
+                    authentication_key,
+                )
+                rec = None
+            else:
+                result, rec = await asyncio.to_thread(
+                    _run_authenticated_request,
+                    message,
+                    authentication_key,
+                    llm_api_key,
+                )
         except Exception:
             logger.exception("GUI request failed")
             return JSONResponse(
@@ -420,6 +528,7 @@ routes = [
     Route("/gui", _gui_index),
     Route("/api/metrics", _api_metrics),
     Route("/api/metrics/reset", _api_metrics_reset, methods=["POST"]),
+    Route("/api/connect-prompt", _api_connect_prompt),
     Route("/api/ask", _api_ask, methods=["POST"]),
 ]
 
@@ -431,6 +540,7 @@ routes.extend(
     create_jsonrpc_routes(
         request_handler,
         rpc_url="/a2a",
+        enable_v0_3_compat=True,
     )
 )
 
@@ -446,7 +556,13 @@ async def _lifespan(app):
     await asyncio.to_thread(db.close_all_pools)
 
 
-app = Starlette(routes=routes, lifespan=_lifespan)
+app = FastAPI(routes=routes, lifespan=_lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 if __name__ == "__main__":
