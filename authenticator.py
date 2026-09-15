@@ -45,6 +45,40 @@ def invalidate_auth_cache(key: str = None):
             _cache.pop(key, None)
 
 
+def list_users():
+    """Return every campus_agent.users row for the GUI directory."""
+    connection = _get_connection()
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            SELECT authentication_key, role, names, roll_number
+            FROM users
+            ORDER BY
+              CASE LOWER(role)
+                WHEN 'admin' THEN 0
+                WHEN 'faculty' THEN 1
+                ELSE 2
+              END,
+              names,
+              roll_number
+            """
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "authentication_key": row[0],
+                "role": row[1],
+                "names": row[2],
+                "roll_number": str(row[3]) if row[3] is not None else "",
+            }
+            for row in rows
+        ]
+    finally:
+        connection.close()
+
+
 def authenticate(key):
     if not key:
         return None

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UniHelp · Users</title>
+  <style>
+    :root {
+      --ink: #10140f;
+      --ink-2: #181e16;
+      --panel: #1f271c;
+      --line: #31402c;
+      --gold: #d4a017;
+      --gold-2: #f0c75e;
+      --leaf: #8fbf6a;
+      --mist: #c5d0bc;
+      --paper: #eef3e8;
+      --warn: #e07a3d;
+      --mono: "IBM Plex Mono", "ui-monospace", "SFMono-Regular", Menlo, monospace;
+      --sans: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--paper); }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #2a3a22 0%, transparent 55%),
+        radial-gradient(800px 400px at 100% 0%, #3a2e12 0%, transparent 50%),
+        var(--ink);
+    }
+    header.app-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 28px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16, 20, 15, 0.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: baseline; gap: 12px; }
+    .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
+    .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    nav.links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    nav.links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mist);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    nav.links a:hover { border-color: var(--gold); color: var(--gold-2); }
+    nav.links a.active { color: #1a1404; background: var(--gold); border-color: var(--gold); }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+    .lead {
+      color: var(--mist);
+      line-height: 1.5;
+      max-width: 62ch;
+      margin: 0 0 18px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .roles { display: flex; flex-wrap: wrap; gap: 8px; }
+    .role-btn {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--mist);
+    }
+    .role-btn.active {
+      background: var(--gold);
+      color: #1a1404;
+      border-color: var(--gold);
+      font-weight: 700;
+    }
+    .role-btn:hover { border-color: var(--gold); color: var(--gold-2); }
+    .role-btn.active:hover { color: #1a1404; }
+    input[type="search"] {
+      flex: 1;
+      min-width: 220px;
+      font: inherit;
+      color: var(--paper);
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .hint {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--mist);
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px 18px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--mist);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    td.key, td.roll { font-family: var(--mono); font-size: 0.82rem; }
+    .pill {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 99px;
+      padding: 2px 8px;
+      border: 1px solid var(--line);
+      color: var(--mist);
+    }
+    .pill.student { color: var(--leaf); border-color: #4a6b3a; }
+    .pill.faculty { color: var(--gold-2); border-color: var(--gold); }
+    .pill.admin { color: var(--warn); border-color: var(--warn); }
+    button.copy {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--mist);
+      white-space: nowrap;
+    }
+    button.copy:hover { border-color: var(--gold); color: var(--gold-2); }
+    .empty { color: var(--mist); font-size: 0.9rem; padding: 12px 0; }
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      background: var(--gold);
+      color: #1a1404;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 720px) {
+      header.app-bar { padding: 12px 16px; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="header-top">
+      <div class="brand">
+        <h1>UniHelp</h1>
+        <span>Users</span>
+      </div>
+      <nav class="links">
+        <a href="/">Console</a>
+        <a href="/commands">Commands</a>
+        <a class="active" href="/users">Users</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <p class="lead">
+      Campus identities from <code>campus_agent.users</code>. Paste an authentication key into the console to sign in as that person.
+    </p>
+    <div class="toolbar">
+      <div class="roles" id="roles"></div>
+      <input id="search" type="search" placeholder="Search name, roll number, or key" autocomplete="off" />
+      <span class="hint" id="count"></span>
+    </div>
+    <section class="card">
+      <div id="table">Loading users…</div>
+    </section>
+  </main>
+  <div class="toast" id="toast">Copied</div>
+  <script>
+    const ROLES = ["all", "student", "faculty", "admin"];
+    let users = [];
+    let role = "all";
+    let query = "";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function toast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1400);
+    }
+
+    function copyKey(key) {
+      navigator.clipboard.writeText(key).then(() => toast("Copied key")).catch(() => {});
+    }
+
+    function filtered() {
+      const q = query.trim().toLowerCase();
+      return users.filter((u) => {
+        const r = (u.role || "").toLowerCase();
+        if (role !== "all" && r !== role) return false;
+        if (!q) return true;
+        return [u.authentication_key, u.role, u.names, u.roll_number]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      });
+    }
+
+    function renderToolbar() {
+      document.getElementById("roles").innerHTML = ROLES.map((r) =>
+        `<button class="role-btn${r === role ? " active" : ""}" data-role="${r}" type="button">${r}</button>`
+      ).join("");
+    }
+
+    function renderTable() {
+      const rows = filtered();
+      document.getElementById("count").textContent = `${rows.length} of ${users.length}`;
+      if (!users.length) {
+        document.getElementById("table").innerHTML = `<p class="empty">No users loaded.</p>`;
+        return;
+      }
+      if (!rows.length) {
+        document.getElementById("table").innerHTML = `<p class="empty">No matching users.</p>`;
+        return;
+      }
+      document.getElementById("table").innerHTML = `<table>
+        <thead>
+          <tr>
+            <th>authentication_key</th>
+            <th>role</th>
+            <th>names</th>
+            <th>roll_number</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((u) => {
+            const key = escapeHtml(u.authentication_key);
+            const r = (u.role || "").toLowerCase();
+            return `<tr>
+              <td class="key">${key}</td>
+              <td><span class="pill ${escapeHtml(r)}">${escapeHtml(u.role)}</span></td>
+              <td>${escapeHtml(u.names)}</td>
+              <td class="roll">${escapeHtml(u.roll_number)}</td>
+              <td><button class="copy" type="button" data-key="${encodeURIComponent(u.authentication_key || "")}">Copy key</button></td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    document.getElementById("roles").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-role]");
+      if (!btn) return;
+      role = btn.dataset.role;
+      renderToolbar();
+      renderTable();
+    });
+    document.getElementById("search").addEventListener("input", (e) => {
+      query = e.target.value;
+      renderTable();
+    });
+    document.getElementById("table").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-key]");
+      if (!btn) return;
+      copyKey(decodeURIComponent(btn.dataset.key));
+    });
+
+    renderToolbar();
+    (async () => {
+      try {
+        const res = await fetch("/api/users");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not load users");
+        users = data.users || [];
+        renderTable();
+      } catch (err) {
+        document.getElementById("table").innerHTML =
+          `<p class="empty">${escapeHtml(err.message || err)}</p>`;
+        document.getElementById("count").textContent = "";
+      }
+    })();
+  </script>
+</body>
+</html>

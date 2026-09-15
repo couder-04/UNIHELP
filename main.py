@@ -34,7 +34,7 @@ import uvicorn
 
 import db
 import metrics
-from authenticator import authenticate
+from authenticator import authenticate, list_users
 from llm import effective_api_key, using_api_key
 from planner import Planner
 from executor import Executor
@@ -464,6 +464,22 @@ async def _gui_commands(request):
     return FileResponse(_GUI_DIR / "commands.html")
 
 
+async def _gui_users(request):
+    return FileResponse(_GUI_DIR / "users.html")
+
+
+async def _api_users(request):
+    try:
+        users = await asyncio.to_thread(list_users)
+    except Exception:
+        logger.exception("Failed to list users")
+        return JSONResponse(
+            {"error": "Could not load users from campus_agent"},
+            status_code=500,
+        )
+    return JSONResponse({"users": users, "count": len(users)})
+
+
 async def _api_metrics(request):
     return JSONResponse(metrics.snapshot())
 
@@ -532,6 +548,9 @@ routes = [
     Route("/gui", _gui_index),
     Route("/commands", _gui_commands),
     Route("/gui/commands", _gui_commands),
+    Route("/users", _gui_users),
+    Route("/gui/users", _gui_users),
+    Route("/api/users", _api_users),
     Route("/api/metrics", _api_metrics),
     Route("/api/metrics/reset", _api_metrics_reset, methods=["POST"]),
     Route("/api/connect-prompt", _api_connect_prompt),
