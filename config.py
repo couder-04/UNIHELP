@@ -19,8 +19,9 @@ ATTENDANCE_DB_NAME = os.getenv("ATTENDANCE_DB_NAME", "organization_agent")
 NOTICE_DB_NAME = os.getenv("NOTICE_DB_NAME", "notice_board")
 TIMETABLE_DB_NAME = os.getenv("TIMETABLE_DB_NAME", "timetable")
 
-# --- LLM (secret via environment) ---
-# Never hardcode the API key. Set LLM_API_KEY in your environment / .env file.
+# --- LLM (secret via environment; the GUI can also supply LLM_API_KEY per request) ---
+# Never hardcode the API key. Set LLM_API_KEY in your environment / .env file,
+# or paste it in the campus console header.
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://awesome.kado.so/openai/v1")
 LLM_MODEL = os.getenv("LLM_MODEL", "kado")

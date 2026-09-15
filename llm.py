@@ -15,7 +15,9 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Iterable, Optional
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Any, Iterable, Iterator, Optional
 
 from openai import OpenAI
 
@@ -24,7 +26,9 @@ from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 
 logger = logging.getLogger(__name__)
 
-_client: Optional[OpenAI] = None
+# Per-request override from the GUI (or A2A metadata). Empty means "use env".
+_request_api_key: ContextVar[str] = ContextVar("request_api_key", default="")
+_clients: dict[str, OpenAI] = {}
 _client_lock = threading.Lock()
 
 # "full"     -> cache markers on content/tools + prompt_cache_key
@@ -48,13 +52,30 @@ _CACHE_ERROR_HINTS = (
 )
 
 
+@contextmanager
+def using_api_key(api_key: Optional[str]) -> Iterator[None]:
+    """Use a caller-supplied LLM key for the current request, if provided."""
+    token = _request_api_key.set((api_key or "").strip())
+    try:
+        yield
+    finally:
+        _request_api_key.reset(token)
+
+
+def effective_api_key() -> str:
+    return _request_api_key.get() or LLM_API_KEY
+
+
 def get_client() -> OpenAI:
-    global _client
-    if _client is None:
+    key = effective_api_key()
+    client = _clients.get(key)
+    if client is None:
         with _client_lock:
-            if _client is None:
-                _client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
-    return _client
+            client = _clients.get(key)
+            if client is None:
+                client = OpenAI(api_key=key or "missing", base_url=LLM_BASE_URL)
+                _clients[key] = client
+    return client
 
 
 def cached_system_message(text: str) -> dict[str, Any]:

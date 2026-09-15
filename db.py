@@ -43,6 +43,16 @@ _pools_lock = threading.Lock()
 POOL_MIN_SIZE = int(os.getenv("DB_POOL_MIN_SIZE", "1"))
 POOL_MAX_SIZE = int(os.getenv("DB_POOL_MAX_SIZE", "10"))
 
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def _sslmode(host: str) -> str:
+    explicit = os.getenv("PGSSLMODE")
+    if explicit:
+        return explicit
+    # Hosted Postgres (Neon, etc.) requires TLS. Local clusters usually do not.
+    return "disable" if host in _LOCAL_HOSTS else "require"
+
 
 def _conninfo(dbname: str) -> str:
     host = os.getenv("PGHOST", DB_HOST)
@@ -53,7 +63,7 @@ def _conninfo(dbname: str) -> str:
     # ...), never user input, so plain interpolation here is safe.
     return (
         f"host={host} port={port} dbname={dbname} "
-        f"user={user} password={password}"
+        f"user={user} password={password} sslmode={_sslmode(host)}"
     )
 
 
@@ -110,17 +120,20 @@ def _fallback_connection(dbname: str):
     port = int(os.getenv("PGPORT", DB_PORT))
     user = os.getenv("PGUSER", DB_USER)
     password = os.getenv("PGPASSWORD", DB_PASSWORD)
+    sslmode = _sslmode(host)
     try:
         import pg8000
         return pg8000.connect(
             host=host, port=port, database=dbname,
             user=user, password=password, timeout=5,
+            ssl_context=sslmode not in ("disable", "allow"),
         )
     except ImportError:
         import psycopg
         return psycopg.connect(
             host=host, port=port, dbname=dbname,
             user=user, password=password, connect_timeout=5,
+            sslmode=sslmode,
         )
 
 

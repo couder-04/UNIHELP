@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -33,11 +34,25 @@ import uvicorn
 import db
 import metrics
 from authenticator import authenticate
+from llm import effective_api_key, using_api_key
 from planner import Planner
 from executor import Executor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _public_base_url() -> str:
+    explicit = (os.getenv("PUBLIC_BASE_URL") or "").rstrip("/")
+    if explicit:
+        return explicit
+    vercel = (os.getenv("VERCEL_URL") or "").rstrip("/")
+    if vercel:
+        if vercel.startswith("http://") or vercel.startswith("https://"):
+            return vercel
+        return f"https://{vercel}"
+    return "http://127.0.0.1:8002"
+
 
 agent_card = AgentCard(
     name="IIT Patna Organization Management Agent",
@@ -61,7 +76,7 @@ agent_card = AgentCard(
 
     supported_interfaces=[
         AgentInterface(
-            url="http://127.0.0.1:8002/a2a",
+            url=f"{_public_base_url()}/a2a",
             protocol_binding="JSONRPC",
             protocol_version="1.0",
         )
@@ -249,45 +264,52 @@ _request_semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 _GUI_DIR = Path(__file__).resolve().parent / "gui"
 
 
-def _run_authenticated_request(user_input, authentication_key):
+def _run_authenticated_request(user_input, authentication_key, llm_api_key=""):
     """Authenticate, plan, and execute. Time/token flags are recorded here."""
-    user = authenticate(authentication_key)
+    with using_api_key(llm_api_key):
+        if not effective_api_key():
+            return (
+                "ERROR: LLM API key is required. Paste it in the header field.",
+                None,
+            )
 
-    if user is None:
-        return "ERROR: KEY NOT FOUND", None
+        user = authenticate(authentication_key)
 
-    now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
-    user_metadata = {
-        "role": user["role"],
-        "name": user["name"],
-        "roll_number": user["roll_number"],
-        "Time and Date": now_ist.strftime(
-            "%A, %Y-%m-%d %H:%M:%S IST"
-        ),
-    }
-    logger.info(
-        "Request state role=%s name=%s roll=%s time=%s",
-        user_metadata["role"],
-        user_metadata["name"],
-        user_metadata["roll_number"],
-        user_metadata["Time and Date"],
-    )
+        if user is None:
+            return "ERROR: KEY NOT FOUND", None
 
-    with metrics.request_scope(
-        user_name=user["name"],
-        user_role=user["role"],
-        roll_number=user["roll_number"],
-        query=user_input,
-    ) as rec:
-        started = time.time()
+        now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
+        user_metadata = {
+            "role": user["role"],
+            "name": user["name"],
+            "roll_number": user["roll_number"],
+            "Time and Date": now_ist.strftime(
+                "%A, %Y-%m-%d %H:%M:%S IST"
+            ),
+        }
+        logger.info(
+            "Request state role=%s name=%s roll=%s time=%s",
+            user_metadata["role"],
+            user_metadata["name"],
+            user_metadata["roll_number"],
+            user_metadata["Time and Date"],
+        )
 
-        with metrics.task_timer("planner"):
-            plan = _planner.create_plan(user_input)
-        logger.info("Planner took %.2fs", time.time() - started)
+        with metrics.request_scope(
+            user_name=user["name"],
+            user_role=user["role"],
+            roll_number=user["roll_number"],
+            query=user_input,
+        ) as rec:
+            started = time.time()
 
-        result = _executor.execute(user_input, plan, user_metadata)
-        logger.info("Total took %.2fs", time.time() - started)
-        return result, rec
+            with metrics.task_timer("planner"):
+                plan = _planner.create_plan(user_input)
+            logger.info("Planner took %.2fs", time.time() - started)
+
+            result = _executor.execute(user_input, plan, user_metadata)
+            logger.info("Total took %.2fs", time.time() - started)
+            return result, rec
 
 
 class OrganizationAgent(AgentExecutor):
@@ -297,6 +319,7 @@ class OrganizationAgent(AgentExecutor):
         user_input = context.get_user_input()
         metadata = context.metadata or {}
         authentication_key = metadata.get("authentication_key")
+        llm_api_key = metadata.get("llm_api_key") or ""
 
         # Never log the raw credential or the full metadata dict (which
         # contains it) — the original code printed both on every request.
@@ -308,6 +331,7 @@ class OrganizationAgent(AgentExecutor):
                     _run_authenticated_request,
                     user_input,
                     authentication_key,
+                    llm_api_key,
                 )
 
             except Exception:
@@ -364,6 +388,7 @@ async def _api_ask(request):
 
     message = (body.get("message") or "").strip()
     authentication_key = body.get("authentication_key") or ""
+    llm_api_key = body.get("llm_api_key") or ""
     if not message:
         return JSONResponse({"error": "message is required"}, status_code=400)
 
@@ -373,6 +398,7 @@ async def _api_ask(request):
                 _run_authenticated_request,
                 message,
                 authentication_key,
+                llm_api_key,
             )
         except Exception:
             logger.exception("GUI request failed")
