@@ -1,0 +1,21 @@
+# Core
+openai>=1.40.0
+starlette>=0.37.0
+uvicorn>=0.30.0
+python-dotenv>=1.0.0
+a2a-sdk[http-server]==1.1.2
+
+# Database.
+# psycopg_pool is what enables connection pooling in db.py. Without it the
+# app still runs, but silently falls back to opening a fresh connection per
+# query (the old behavior). The [binary] extra avoids needing a C toolchain.
+psycopg[binary,pool]>=3.1.0
+
+# Optional pure-Python fallback driver, used only when psycopg is
+# unavailable (e.g. some Windows setups). NOTE: bus_function._fetch() uses
+# psycopg's dict_row row factory, which pg8000 does not support — the
+# fallback is a partial one. Standardizing on psycopg is recommended.
+pg8000>=1.30.0
+
+# Tests (attendance tool coverage)
+pytest>=8.0.0
