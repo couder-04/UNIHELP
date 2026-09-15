@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UniHelp · Command catalog</title>
+  <style>
+    :root {
+      --ink: #10140f;
+      --ink-2: #181e16;
+      --panel: #1f271c;
+      --line: #31402c;
+      --gold: #d4a017;
+      --gold-2: #f0c75e;
+      --leaf: #8fbf6a;
+      --mist: #c5d0bc;
+      --paper: #eef3e8;
+      --warn: #e07a3d;
+      --mono: "IBM Plex Mono", "ui-monospace", "SFMono-Regular", Menlo, monospace;
+      --sans: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--paper); }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #2a3a22 0%, transparent 55%),
+        radial-gradient(800px 400px at 100% 0%, #3a2e12 0%, transparent 50%),
+        var(--ink);
+    }
+    header.app-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 28px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16, 20, 15, 0.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: baseline; gap: 12px; }
+    .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
+    .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    nav.links { display: flex; gap: 8px; align-items: center; }
+    nav.links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mist);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    nav.links a:hover { border-color: var(--gold); color: var(--gold-2); }
+    nav.links a.active { color: #1a1404; background: var(--gold); border-color: var(--gold); }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+    .lead {
+      color: var(--mist);
+      line-height: 1.5;
+      max-width: 62ch;
+      margin: 0 0 18px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .roles { display: flex; flex-wrap: wrap; gap: 8px; }
+    .role-btn, .feat-btn {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--mist);
+    }
+    .role-btn.active, .feat-btn.active {
+      background: var(--gold);
+      color: #1a1404;
+      border-color: var(--gold);
+      font-weight: 700;
+    }
+    .role-btn:hover, .feat-btn:hover { border-color: var(--gold); color: var(--gold-2); }
+    .role-btn.active:hover, .feat-btn.active:hover { color: #1a1404; }
+    .hint {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--mist);
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px 18px;
+      margin-bottom: 14px;
+    }
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mist);
+    }
+    .scope {
+      color: var(--gold-2);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      margin: 0 0 12px;
+    }
+    .cmds { display: flex; flex-direction: column; gap: 8px; }
+    .cmd {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      color: var(--paper);
+      font: inherit;
+    }
+    .cmd:hover { border-color: var(--gold); }
+    .cmd code {
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .cmd .copy {
+      flex: 0 0 auto;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mist);
+      margin-top: 3px;
+    }
+    .deny {
+      margin-top: 10px;
+      color: var(--warn);
+      font-size: 0.88rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--mist);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      background: var(--gold);
+      color: #1a1404;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 720px) {
+      header.app-bar { padding: 12px 16px; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="header-top">
+      <div class="brand">
+        <h1>UniHelp</h1>
+        <span>Command catalog</span>
+      </div>
+      <nav class="links">
+        <a href="/">Console</a>
+        <a class="active" href="/commands">Commands</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <p class="lead">
+      UniHelp is a natural-language campus agent. Paste any of these as a chat message.
+      Identity (name, roll, role) comes from the authentication key — students cannot look up someone else’s records.
+    </p>
+    <div class="toolbar">
+      <div class="roles" id="roles"></div>
+      <span class="hint" id="roleHint"></span>
+    </div>
+    <div class="toolbar">
+      <div class="roles" id="features"></div>
+    </div>
+    <div id="catalog"></div>
+    <section class="card" id="matrix">
+      <h2>Permission map</h2>
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Student</th><th>Faculty</th><th>Admin</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Attendance</td><td>Own records only</td><td>Mark/edit own courses</td><td>+ people, courses, enrollments</td></tr>
+          <tr><td>Timetable</td><td>Own schedule</td><td>+ add/update/delete slots</td><td>Same writes</td></tr>
+          <tr><td>Complaint</td><td>Create &amp; view own</td><td>+ verify &amp; complete all</td><td>Same as faculty</td></tr>
+          <tr><td>Notice</td><td>View student notices</td><td>Publish (+ archive)</td><td>View all, publish, archive</td></tr>
+          <tr><td>Room booking</td><td>SAC + Guest House; request CLH/Aud</td><td>Guest House + CLH; request Aud</td><td>Direct GH/CLH/Aud; approve/reject</td></tr>
+          <tr><td>Bus</td><td>View only</td><td>Add / change / remove trips</td><td>Same as faculty</td></tr>
+          <tr><td>Mess</td><td>View menu &amp; timings</td><td>Temporary menu change</td><td>Temporary + permanent change</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <div class="toast" id="toast">Copied</div>
+  <script>
+    const FEATURES = [
+      "attendance", "timetable", "complaint", "notice", "room booking", "bus", "mess"
+    ];
+    const ROLES = [
+      { id: "student", label: "Student", hint: "Demo key: student-demo" },
+      { id: "faculty", label: "Faculty", hint: "Demo key: faculty-demo" },
+      { id: "admin", label: "Admin", hint: "Demo key: admin-demo" },
+    ];
+    const CATALOG = {
+      student: {
+        attendance: {
+          scope: "Own attendance only. Identity is taken from the auth key.",
+          commands: [
+            "What is my attendance percentage in CS101?",
+            "Show my attendance summary",
+            "How many classes can I still skip in CS101?",
+            "What is my weekly attendance?",
+            "What is my monthly attendance?",
+            "What is my semester attendance?",
+            "Did I have any consecutive absences?",
+            "Show my attendance chart",
+            "What is my attendance today?",
+            "List my courses",
+          ],
+        },
+        timetable: {
+          scope: "Own class schedule.",
+          commands: [
+            "What is my class timetable today?",
+            "What is my schedule this week?",
+            "What do I have on Wednesday?",
+            "When is my next class?",
+            "How many classes do I have this week?",
+            "Show free slots on Friday",
+            "List all subjects",
+            "Which rooms are used for classes?",
+          ],
+        },
+        complaint: {
+          scope: "Create and view your own complaints.",
+          commands: [
+            "The water cooler on my floor is broken",
+            "File a mess complaint that dinner was served late",
+            "File an academic complaint about missing lab marks",
+            "Show my complaints",
+            "What is the status of my latest complaint?",
+            "Search if this complaint was already filed",
+          ],
+        },
+        notice: {
+          scope: "Student-audience notices.",
+          commands: [
+            "Show me the current notices",
+            "Are there any important student notices?",
+          ],
+        },
+        "room booking": {
+          scope: "Direct book SAC Hall and Guest House. Request CLH and Auditorium.",
+          commands: [
+            "List available facilities",
+            "Is SAC Hall free on 2030-02-10 from 10 to 11?",
+            "Book SAC Hall on 2030-02-10 from 10 to 11 for a club meeting",
+            "Book Guest House for 2030-03-01 from 14:00 to 16:00",
+            "Request CLH for 2030-03-05 from 9 to 11 for a seminar",
+            "Request Auditorium for 2030-04-01 from 17 to 19 for a cultural event",
+            "Show my bookings",
+            "Show my pending requests",
+            "Cancel my SAC Hall booking",
+            "Modify my booking to 11–12 instead",
+          ],
+        },
+        bus: {
+          scope: "Read-only schedules and routes.",
+          commands: [
+            "Show me the Bus 02 schedule",
+            "Which buses are running now?",
+            "Who is the driver of Bus 02?",
+            "Buses between 8am and 10am",
+            "How do I go to Patna Junction?",
+            "When is the next bus to the campus gate?",
+            "Is the bus database up?",
+          ],
+        },
+        mess: {
+          scope: "View menus and meal timings. Hostels: Kalam, CV Raman, Aryabhatta, Asima.",
+          commands: [
+            "What is today's dinner at Kalam hostel?",
+            "Show today's menu at CV Raman",
+            "What is tomorrow's breakfast at Aryabhatta?",
+            "Show the weekly menu for Asima",
+            "What time is lunch served?",
+          ],
+          deny: "Students cannot change the menu.",
+        },
+      },
+      faculty: {
+        attendance: {
+          scope: "Own teaching courses: view, mark, edit, delete. Cannot manage people or course catalog.",
+          commands: [
+            "Show course attendance for CS101",
+            "Show CS101 attendance summary",
+            "Who is at risk in CS101?",
+            "Who is unmarked in today’s CS101 class?",
+            "List CS101 sessions",
+            "Show the CS101 roster",
+            "Rank students by attendance in CS101",
+            "Export CS101 attendance as CSV",
+            "Mark 2501CS09 present in CS101 today",
+            "Mark the whole CS101 class present today",
+            "Edit attendance for 2501CS09 in CS101 to absent",
+            "Delete the CS101 attendance record for 2501CS09 on 2026-09-15",
+          ],
+        },
+        timetable: {
+          scope: "View teaching schedule and add, update, or delete slots.",
+          commands: [
+            "Show my teaching schedule",
+            "Add a CS101 slot on Monday 10–11 in Room 101",
+            "Move the CS101 Monday slot to 11–12",
+            "Delete the CS101 Monday 10–11 slot",
+            "What do I teach on Wednesday?",
+            "List all subjects",
+            "Which rooms are used for classes?",
+          ],
+        },
+        complaint: {
+          scope: "Create complaints, list all, verify, and complete.",
+          commands: [
+            "File a hostel complaint about a leaking roof",
+            "List all complaints",
+            "Show complaint #12",
+            "Verify complaint #12",
+            "Mark complaint #12 as completed",
+            "Search for duplicate complaints about the water cooler",
+          ],
+        },
+        notice: {
+          scope: "View staff notices; publish; archive expired notices.",
+          commands: [
+            "Show staff notices",
+            "Publish a notice that CS101 lab is cancelled tomorrow",
+            "Publish an important alert for all students: midterm on Friday, expires 2026-09-20",
+            "Archive expired notices",
+          ],
+        },
+        "room booking": {
+          scope: "Direct book Guest House and CLH. Request Auditorium. Manage own bookings.",
+          commands: [
+            "List available facilities",
+            "Book Guest House on 2030-03-01 from 14:00 to 16:00",
+            "Book CLH on 2030-03-05 from 9 to 11 for a faculty meeting",
+            "Request Auditorium for 2030-04-01 from 17 to 19",
+            "Show my bookings",
+            "Show my pending requests",
+            "Cancel my CLH booking",
+            "Modify my booking to 11–12 instead",
+          ],
+          deny: "Faculty cannot book SAC Hall (student-only) or approve/reject requests (admin-only).",
+        },
+        bus: {
+          scope: "View schedules and add, change, or remove trips.",
+          commands: [
+            "Show me the Bus 02 schedule",
+            "Which buses are running now?",
+            "Add a Bus 03 trip from Gate to Hostel at 7:30",
+            "Change Bus 02 8:00 departure to 8:15",
+            "Remove the Bus 02 21:00 trip",
+            "When is the next bus to the campus gate?",
+          ],
+        },
+        mess: {
+          scope: "View menus; temporary (one-day) menu changes only.",
+          commands: [
+            "What is today's dinner at Kalam hostel?",
+            "Show the weekly menu for Asima",
+            "Change today’s dinner at Kalam to paneer curry (temporary)",
+            "Replace tomorrow’s breakfast at Aryabhatta with poha for today only",
+          ],
+          deny: "Faculty cannot make permanent menu changes.",
+        },
+      },
+      admin: {
+        attendance: {
+          scope: "All faculty attendance tools plus people, course, and enrollment catalog.",
+          commands: [
+            "Show course attendance for CS101",
+            "Who is at risk in CS101?",
+            "Mark the whole CS101 class present today",
+            "Add a new student named Aarav Sharma with roll 2501CS99",
+            "Edit person 2501CS09 name to Aarav Sharma",
+            "Delete person 2501CS99",
+            "Add course CS999 Introduction to Agents",
+            "Edit course CS101 title",
+            "Delete course CS999",
+            "Enroll 2501CS09 in CS101",
+            "Remove enrollment of 2501CS09 from CS101",
+            "List all enrollments",
+          ],
+        },
+        timetable: {
+          scope: "Read any timetable; add, update, or delete slots.",
+          commands: [
+            "List the rooms used for classes",
+            "Show the timetable for Monday",
+            "Add a CS101 slot on Monday 10–11 in Room 101",
+            "Move the CS101 Monday slot to 11–12",
+            "Delete the CS101 Monday 10–11 slot",
+          ],
+        },
+        complaint: {
+          scope: "List, verify, and complete any complaint.",
+          commands: [
+            "List all complaints",
+            "Show complaint #12",
+            "Verify complaint #12",
+            "Mark complaint #12 as completed",
+            "Search for duplicate complaints about the water cooler",
+            "The water cooler on my floor is broken",
+          ],
+        },
+        notice: {
+          scope: "View all notices; publish; archive expired notices.",
+          commands: [
+            "Show all notices",
+            "Publish a campus-wide important alert: campus closed Friday, expires 2026-09-20",
+            "Archive expired notices",
+          ],
+        },
+        "room booking": {
+          scope: "Direct book Guest House, CLH, and Auditorium. Approve or reject pending requests.",
+          commands: [
+            "List available facilities",
+            "Book Auditorium on 2030-04-01 from 17 to 19",
+            "Book CLH on 2030-03-05 from 9 to 11",
+            "List all pending room requests",
+            "Approve request #5",
+            "Reject request #5 because the hall is reserved",
+            "Show booking details",
+            "Cancel booking #8",
+            "Modify booking #8 to 11–12",
+          ],
+          deny: "Admin cannot direct-book SAC Hall (student-only).",
+        },
+        bus: {
+          scope: "View schedules and add, change, or remove trips.",
+          commands: [
+            "Show me the Bus 02 schedule",
+            "Add a new Bus 04 trip from Hostel to Gate at 18:00",
+            "Change Bus 02 8:00 departure to 8:15",
+            "Remove the Bus 02 21:00 trip",
+            "Who is the driver of Bus 02?",
+          ],
+        },
+        mess: {
+          scope: "View menus; temporary and permanent menu changes.",
+          commands: [
+            "What is today's dinner at Kalam hostel?",
+            "Show the weekly menu for Asima",
+            "Change today’s dinner at Kalam to paneer curry (temporary)",
+            "Permanently change Kalam Sunday dinner to dal tadka",
+            "What time is lunch served?",
+          ],
+        },
+      },
+    };
+
+    let role = "student";
+    let feature = "all";
+
+    function copyText(text, el) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById("toast");
+        toast.textContent = "Copied";
+        toast.classList.add("show");
+        if (el) {
+          const label = el.querySelector(".copy");
+          if (label) {
+            label.textContent = "Copied";
+            setTimeout(() => { label.textContent = "Copy"; }, 1200);
+          }
+        }
+        setTimeout(() => toast.classList.remove("show"), 1400);
+      }).catch(() => {});
+    }
+
+    function renderToolbar() {
+      document.getElementById("roles").innerHTML = ROLES.map((r) =>
+        `<button class="role-btn${r.id === role ? " active" : ""}" data-role="${r.id}" type="button">${r.label}</button>`
+      ).join("");
+      document.getElementById("roleHint").textContent = ROLES.find((r) => r.id === role).hint;
+      document.getElementById("features").innerHTML =
+        `<button class="feat-btn${feature === "all" ? " active" : ""}" data-feature="all" type="button">All features</button>` +
+        FEATURES.map((f) =>
+          `<button class="feat-btn${feature === f ? " active" : ""}" data-feature="${f}" type="button">${f}</button>`
+        ).join("");
+    }
+
+    function renderCatalog() {
+      const data = CATALOG[role];
+      const keys = feature === "all" ? FEATURES : [feature];
+      document.getElementById("catalog").innerHTML = keys.map((key) => {
+        const block = data[key];
+        const cmds = block.commands.map((c) =>
+          `<button class="cmd" type="button" data-cmd="${encodeURIComponent(c)}">
+            <code>${c}</code>
+            <span class="copy">Copy</span>
+          </button>`
+        ).join("");
+        const deny = block.deny ? `<p class="deny">${block.deny}</p>` : "";
+        return `<section class="card">
+          <h2>${key}</h2>
+          <p class="scope">${block.scope}</p>
+          <div class="cmds">${cmds}</div>
+          ${deny}
+        </section>`;
+      }).join("");
+    }
+
+    document.getElementById("roles").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-role]");
+      if (!btn) return;
+      role = btn.dataset.role;
+      renderToolbar();
+      renderCatalog();
+    });
+    document.getElementById("features").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-feature]");
+      if (!btn) return;
+      feature = btn.dataset.feature;
+      renderToolbar();
+      renderCatalog();
+    });
+    document.getElementById("catalog").addEventListener("click", (e) => {
+      const btn = e.target.closest(".cmd");
+      if (!btn) return;
+      copyText(decodeURIComponent(btn.dataset.cmd), btn);
+    });
+
+    renderToolbar();
+    renderCatalog();
+  </script>
+</body>
+</html>

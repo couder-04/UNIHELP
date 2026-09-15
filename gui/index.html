@@ -50,6 +50,7 @@
       justify-content: space-between;
       gap: 16px;
     }
+    .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     .brand { display: flex; align-items: baseline; gap: 12px; }
     .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
     .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
@@ -104,6 +105,20 @@
       font-size: 0.68rem;
       color: var(--mist);
     }
+    nav.links { display: flex; gap: 8px; align-items: center; }
+    nav.links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mist);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    nav.links a:hover { border-color: var(--gold); color: var(--gold-2); }
+    nav.links a.active { color: #1a1404; background: var(--gold); border-color: var(--gold); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 8px var(--leaf); }
     .dot.busy { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulse 1.2s infinite; }
     @keyframes pulse { 50% { opacity: 0.4; } }
@@ -238,9 +253,15 @@
 <body>
   <header class="app-bar">
     <div class="header-top">
-      <div class="brand">
-        <h1>UniHelp</h1>
-        <span>IIT Patna campus console</span>
+      <div class="header-left">
+        <div class="brand">
+          <h1>UniHelp</h1>
+          <span>IIT Patna campus console</span>
+        </div>
+        <nav class="links">
+          <a class="active" href="/">Console</a>
+          <a href="/commands">Commands</a>
+        </nav>
       </div>
       <div class="header-meta">
         <span class="dot" id="liveDot"></span>

@@ -460,6 +460,10 @@ async def _gui_index(request):
     return FileResponse(_GUI_DIR / "index.html")
 
 
+async def _gui_commands(request):
+    return FileResponse(_GUI_DIR / "commands.html")
+
+
 async def _api_metrics(request):
     return JSONResponse(metrics.snapshot())
 
@@ -526,6 +530,8 @@ async def _api_ask(request):
 routes = [
     Route("/", _gui_index),
     Route("/gui", _gui_index),
+    Route("/commands", _gui_commands),
+    Route("/gui/commands", _gui_commands),
     Route("/api/metrics", _api_metrics),
     Route("/api/metrics/reset", _api_metrics_reset, methods=["POST"]),
     Route("/api/connect-prompt", _api_connect_prompt),
