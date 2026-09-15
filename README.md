@@ -145,29 +145,21 @@ From the repo root, with the same host/port/user as `.env`:
 ```bash
 export PGHOST=localhost PGPORT=5432 PGUSER=postgres
 
-psql -d campus_agent         -f campus_agent.sql
-psql -d mess_menu            -f mess_menu.sql
-psql -d bus_schedule         -f bus_schedule.sql
-psql -d room_booking         -f room_booking.sql
-psql -d complaints           -f complaints.sql
-psql -d organization_agent   -f attendance.sql
-psql -d notice_board         -f notice_board.sql
-psql -d timetable            -f timetable.sql
-psql                          -f postgres_indexes.sql
+psql -d postgres -f unihelp_databases.sql
 
 # Optional: load the 1,500+ student roster into timetable.people
 psql -d timetable -c "\\copy people(roll_num, name, role, student_group) FROM 'timetable_users.csv' DELIMITER ',' CSV HEADER"
 ```
 
-`postgres_indexes.sql` uses `\connect` to switch databases. Run it with `psql` (not another client) after the domain dumps.
+`unihelp_databases.sql` creates the eight databases if needed, then `\connect`s into each one to load tables, seed rows, and indexes. Run it with `psql` (not another client).
 
-`room_booking.sql`, `attendance.sql`, and `timetable.sql` drop and recreate their tables. They are safe to re-run; they **wipe** existing rows in those databases.
+The room-booking, attendance, and timetable sections drop and recreate their tables. Re-running the file **wipes** existing rows in those databases.
 
-`timetable.sql` creates `people`, `courses`, `rooms`, and `timetable`, and seeds faculty/admin, courses, rooms, and 12 class slots. `timetable_users.csv` is the student roster (about 1,537 rows: `roll_num,name,role,student_group`). Load the SQL first, then `\copy` the CSV. The CSV has no faculty/admin rows; those come from `timetable.sql` (`A-001` plus department heads `F-CS01` … `F-PH01`).
+The timetable section creates `people`, `courses`, `rooms`, and `timetable`, and seeds faculty/admin, courses, rooms, and 12 class slots. `timetable_users.csv` is the student roster (about 1,537 rows: `roll_num,name,role,student_group`). Load the SQL first, then `\copy` the CSV. The CSV has no faculty/admin rows; those come from the dump (`A-001` plus department heads `F-CS01` … `F-PH01`).
 
 ### Demo login keys
 
-These keys are inserted by `campus_agent.sql` / `complaints.sql` and match the sample people in `attendance.sql`:
+These keys are inserted by `unihelp_databases.sql` (campus_agent / complaints / organization_agent sections):
 
 | Key | Role | Name | UUID (`roll_number`) |
 | --- | --- | --- | --- |
@@ -279,7 +271,7 @@ python timetable_agent.py "What is my class schedule this week?" \
 python timetable_agent.py "What do I have on Wednesday?" \
   --name "Mahak Shakya" --roll-num 2603PH03 --role student
 
-# Faculty (department head seeded by timetable.sql)
+# Faculty (department head seeded by unihelp_databases.sql)
 python timetable_agent.py "Show my teaching schedule." \
   --name "Dr. CS Head" --roll-num F-CS01 --role faculty
 
@@ -345,16 +337,8 @@ SQL dumps:
 
 | File | Database |
 | --- | --- |
-| `campus_agent.sql` | `campus_agent` |
-| `mess_menu.sql` | `mess_menu` |
-| `bus_schedule.sql` | `bus_schedule` |
-| `room_booking.sql` | `room_booking` |
-| `complaints.sql` | `complaints` |
-| `attendance.sql` | `organization_agent` |
-| `notice_board.sql` | `notice_board` |
-| `timetable.sql` | `timetable` |
-| `timetable_users.csv` | student roster for `timetable.people` (load after `timetable.sql`) |
-| `postgres_indexes.sql` | extra indexes on bus + mess |
+| `unihelp_databases.sql` | all eight UniHelp databases (schema + seed + indexes) |
+| `timetable_users.csv` | student roster for `timetable.people` (load after `unihelp_databases.sql`) |
 
 ## Common failures
 
@@ -363,7 +347,7 @@ SQL dumps:
 | `connection refused` on port 5432/5434 | Postgres not running, or `PGPORT` does not match the cluster |
 | `password authentication failed` | `PGUSER` / `PGPASSWORD` in `.env` |
 | `database "…" does not exist` | `createdb` step skipped or name mismatch with `*_DB_NAME` |
-| `ERROR: KEY NOT FOUND` | Wrong `authentication_key`, or `campus_agent.sql` not loaded |
+| `ERROR: KEY NOT FOUND` | Wrong `authentication_key`, or `unihelp_databases.sql` not loaded |
 | LLM errors / empty plans | Missing `LLM_API_KEY`, or `LLM_BASE_URL` / `LLM_MODEL` wrong |
 | Bus queries crash under `pg8000` | Install `psycopg[binary,pool]` as in `requirements.txt` |
 | Attendance tests fail | `organization_agent` not restored, or `.env` points at a different cluster |
