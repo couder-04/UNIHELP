@@ -33,6 +33,9 @@
 -- Student roster (optional, after this file):
 --   psql -d timetable -c "\\copy people(roll_num, name, role, student_group) FROM 'timetable_users.csv' DELIMITER ',' CSV HEADER"
 --
+-- Enroll campus_agent.users into organization_agent (courses/attendance):
+--   python scripts/populate_attendance_from_users.py
+--
 -- Run with psql. Other clients will not honor \connect / \gexec.
 
 \connect postgres
@@ -1137,7 +1140,33 @@ INSERT INTO courses (
     ('CS102', 'Data Structures', 'Arjun Nair', 'PF002', 'CSE', 75, 40),
     ('MA201', 'Linear Algebra', 'Meera Joshi', 'PF003', 'MA', 75, 40),
     ('PHY101', 'Physics', 'Sameer Khan', 'PF004', 'PHY', 75, 40),
-    ('HS101', 'Communication', 'Kavita Desai', 'PF005', 'HS', 75, 40);
+    ('HS101', 'Communication', 'Kavita Desai', 'PF005', 'HS', 75, 40),
+    ('MA1101', 'Calculus and Linear Algebra', 'Aditi Rao', 'PF006', 'MA', 75, 40),
+    ('CS1101', 'Foundations of Programming', 'Harsh Vardhan', 'PF007', 'CS', 75, 40),
+    ('PH1101', 'Engineering Physics', 'Leela Menon', 'PF008', 'PH', 75, 40),
+    ('CE1101', 'Engineering Graphics', 'Omar Qureshi', 'PF009', 'CE', 75, 40),
+    ('CS2101', 'Design and Analysis of Algorithms', 'Tanvi Shah', 'PF010', 'CS', 75, 40),
+    ('CS2102', 'Digital Logic', 'Nikhil Rao', 'PF011', 'CS', 75, 40),
+    ('CS2103', 'AI Concepts', 'Pooja Bhatt', 'PF012', 'CS', 75, 40),
+    ('CB2101', 'Process Calculations', 'Farhan Ali', 'PF013', 'CB', 75, 40),
+    ('CB2102', 'Fluid Mechanics', 'Diya Kulkarni', 'PF014', 'CB', 75, 40),
+    ('CB2103', 'Chemical Engineering Thermodynamics', 'Yash Agarwal', 'PF015', 'CB', 75, 40),
+    ('CB2105', 'Mechanical Operations', 'Sana Iqbal', 'PF016', 'CB', 75, 40),
+    ('CS103', 'Database Systems', 'Priya Patel', 'PF001', 'CS', 75, 40),
+    ('CS104', 'Operating Systems', 'Arjun Nair', 'PF002', 'CS', 75, 40),
+    ('CS105', 'Computer Networks', 'Tanvi Shah', 'PF010', 'CS', 75, 40),
+    ('CS106', 'Machine Learning', 'Pooja Bhatt', 'PF012', 'CS', 75, 40),
+    ('CS107', 'Discrete Mathematics', 'Meera Joshi', 'PF003', 'CS', 75, 40),
+    ('EE1101', 'Basic Electrical Engineering', 'Sameer Khan', 'PF004', 'EE', 75, 40),
+    ('ME1101', 'Engineering Mechanics', 'Omar Qureshi', 'PF009', 'ME', 75, 40),
+    ('HS102', 'Professional Ethics', 'Kavita Desai', 'PF005', 'HS', 75, 40),
+    ('MA1102', 'Probability and Statistics', 'Aditi Rao', 'PF006', 'MA', 75, 40),
+    ('PH1102', 'Modern Physics', 'Leela Menon', 'PF008', 'PH', 75, 40),
+    ('CB2104', 'Heat Transfer', 'Farhan Ali', 'PF013', 'CB', 75, 40),
+    ('AI1101', 'Introduction to Artificial Intelligence', 'Pooja Bhatt', 'PF012', 'AI', 75, 40),
+    ('CE2101', 'Strength of Materials', 'Omar Qureshi', 'PF009', 'CE', 75, 40),
+    ('EC1101', 'Basic Electronics', 'Nikhil Rao', 'PF011', 'EC', 75, 40),
+    ('MM1101', 'Materials Science', 'Sana Iqbal', 'PF016', 'MM', 75, 40);
 
 INSERT INTO enrollments (student_roll, student_name, course_code) VALUES
     ('2501CS09', 'Aarav Sharma', 'CS101'),
@@ -1291,15 +1320,35 @@ INSERT INTO people (roll_num, name, role) VALUES
 INSERT INTO courses (code, name, professor_name, professor_roll, department) VALUES
     ('MA1101', 'Calculus and Linear Algebra', 'Aditi Rao', 'PF006', 'MA'),
     ('CS1101', 'Foundations of Programming', 'Harsh Vardhan', 'PF007', 'CS'),
-    ('PH1101', 'Physics', 'Leela Menon', 'PF008', 'PH'),
+    ('PH1101', 'Engineering Physics', 'Leela Menon', 'PF008', 'PH'),
     ('CE1101', 'Engineering Graphics', 'Omar Qureshi', 'PF009', 'CE'),
-    ('CS2101', 'Algorithms', 'Tanvi Shah', 'PF010', 'CS'),
+    ('CS2101', 'Design and Analysis of Algorithms', 'Tanvi Shah', 'PF010', 'CS'),
     ('CS2102', 'Digital Logic', 'Nikhil Rao', 'PF011', 'CS'),
     ('CS2103', 'AI Concepts', 'Pooja Bhatt', 'PF012', 'CS'),
     ('CB2101', 'Process Calculations', 'Farhan Ali', 'PF013', 'CB'),
     ('CB2102', 'Fluid Mechanics', 'Diya Kulkarni', 'PF014', 'CB'),
     ('CB2103', 'Chemical Engineering Thermodynamics', 'Yash Agarwal', 'PF015', 'CB'),
-    ('CB2105', 'Mechanical Operations', 'Sana Iqbal', 'PF016', 'CB');
+    ('CB2105', 'Mechanical Operations', 'Sana Iqbal', 'PF016', 'CB'),
+    ('CS101', 'Algorithms', 'Priya Patel', 'PF001', 'CSE'),
+    ('CS102', 'Data Structures', 'Arjun Nair', 'PF002', 'CSE'),
+    ('MA201', 'Linear Algebra', 'Meera Joshi', 'PF003', 'MA'),
+    ('PHY101', 'Physics', 'Sameer Khan', 'PF004', 'PHY'),
+    ('HS101', 'Communication', 'Kavita Desai', 'PF005', 'HS'),
+    ('CS103', 'Database Systems', 'Priya Patel', 'PF001', 'CS'),
+    ('CS104', 'Operating Systems', 'Arjun Nair', 'PF002', 'CS'),
+    ('CS105', 'Computer Networks', 'Tanvi Shah', 'PF010', 'CS'),
+    ('CS106', 'Machine Learning', 'Pooja Bhatt', 'PF012', 'CS'),
+    ('CS107', 'Discrete Mathematics', 'Meera Joshi', 'PF003', 'CS'),
+    ('EE1101', 'Basic Electrical Engineering', 'Sameer Khan', 'PF004', 'EE'),
+    ('ME1101', 'Engineering Mechanics', 'Omar Qureshi', 'PF009', 'ME'),
+    ('HS102', 'Professional Ethics', 'Kavita Desai', 'PF005', 'HS'),
+    ('MA1102', 'Probability and Statistics', 'Aditi Rao', 'PF006', 'MA'),
+    ('PH1102', 'Modern Physics', 'Leela Menon', 'PF008', 'PH'),
+    ('CB2104', 'Heat Transfer', 'Farhan Ali', 'PF013', 'CB'),
+    ('AI1101', 'Introduction to Artificial Intelligence', 'Pooja Bhatt', 'PF012', 'AI'),
+    ('CE2101', 'Strength of Materials', 'Omar Qureshi', 'PF009', 'CE'),
+    ('EC1101', 'Basic Electronics', 'Nikhil Rao', 'PF011', 'EC'),
+    ('MM1101', 'Materials Science', 'Sana Iqbal', 'PF016', 'MM');
 
 INSERT INTO rooms (room_id, capacity) VALUES
     ('Auditorium', 500), ('LT001', 120), ('LT002', 120),
