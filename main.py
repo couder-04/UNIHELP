@@ -49,12 +49,12 @@ _PRODUCTION_PUBLIC_ORIGIN = "https://unihelp-coral.vercel.app"
 
 
 def _public_base_url() -> str:
-    explicit = (os.getenv("PUBLIC_BASE_URL") or "").rstrip("/")
+    explicit = (os.getenv("PUBLIC_BASE_URL") or "").strip().rstrip("/")
     if explicit:
         return explicit
     if os.getenv("VERCEL"):
         return _PRODUCTION_PUBLIC_ORIGIN
-    vercel = (os.getenv("VERCEL_URL") or "").rstrip("/")
+    vercel = (os.getenv("VERCEL_URL") or "").strip().rstrip("/")
     if vercel:
         if vercel.startswith("http://") or vercel.startswith("https://"):
             return vercel
