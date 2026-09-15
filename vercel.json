@@ -3,6 +3,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 300,
+      "includeFiles": "gui/**",
       "excludeFiles": "{tests/**,.venv/**,**/*.sql,timetable_users.csv}"
     }
   },
