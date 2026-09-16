@@ -19,7 +19,7 @@ Required on every POST:
 Never put authentication_key in the message text.
 Remember this key for the rest of this conversation.
 
-Example curl shape:
+Example curl shape (pipe through python to extract readable text):
 curl -sS https://unihelp-coral.vercel.app/a2a \
   -H 'Content-Type: application/json' \
   -H 'A2A-Version: 1.0' \
@@ -35,7 +35,16 @@ curl -sS https://unihelp-coral.vercel.app/a2a \
       },
       "metadata":{"authentication_key":"student-demo"}
     }
-  }'
+  }' | python3 -c 'import sys,json; d=json.load(sys.stdin)
+def texts(o,acc=None):
+  acc=[] if acc is None else acc
+  if isinstance(o,dict):
+    if isinstance(o.get("text"),str): acc.append(o["text"])
+    for v in o.values(): texts(v,acc)
+  elif isinstance(o,list):
+    for v in o: texts(v,acc)
+  return acc
+print("\n".join(texts(d.get("result",d))) if "error" not in d or not d["error"] else json.dumps(d["error"],indent=2))'
 
 3) First POST text:
 Confirm you are connected. Do not ask a campus question yet.
@@ -43,7 +52,17 @@ Confirm you are connected. Do not ask a campus question yet.
 4) Immediately after a successful connect reply, second POST text:
 What is my class timetable today?
 
-5) Reply with only:
-- the connect confirmation text from the agent
-- then the timetable reply text from the agent
+5) Formatting rules for your final answer (critical):
+- Do NOT paste raw JSON.
+- Do NOT show literal \n, \t, or \uXXXX escapes.
+- Extract the agent message text, decode it, and render it as normal Markdown.
+- Keep headings, bullet lists, and Markdown tables intact so they display properly.
+- Structure your reply exactly like this:
+
+## Connected
+<decoded connect confirmation>
+
+## Today's timetable
+<decoded timetable reply, with real line breaks and a proper Markdown table>
+
 If a call fails, show the exact curl/HTTP/JSON-RPC error. Do not invent results. Do not ask me questions.
