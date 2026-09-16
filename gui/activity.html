@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UniHelp · Activity</title>
+  <style>
+    :root {
+      --ink: #10140f;
+      --ink-2: #181e16;
+      --panel: #1f271c;
+      --line: #31402c;
+      --gold: #d4a017;
+      --gold-2: #f0c75e;
+      --leaf: #8fbf6a;
+      --mist: #c5d0bc;
+      --paper: #eef3e8;
+      --warn: #e07a3d;
+      --mono: "IBM Plex Mono", "ui-monospace", "SFMono-Regular", Menlo, monospace;
+      --sans: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--paper); }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #2a3a22 0%, transparent 55%),
+        radial-gradient(800px 400px at 100% 0%, #3a2e12 0%, transparent 50%),
+        var(--ink);
+    }
+    header.app-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 28px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16, 20, 15, 0.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: baseline; gap: 12px; }
+    .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
+    .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .header-meta { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 0.75rem; color: var(--mist); }
+    nav.links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    nav.links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mist);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    nav.links a:hover { border-color: var(--gold); color: var(--gold-2); }
+    nav.links a.active { color: #1a1404; background: var(--gold); border-color: var(--gold); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 8px var(--leaf); }
+    .dot.busy { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    h2 { margin: 0 0 10px; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 720px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    .kpi { background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .kpi .n { font-family: var(--mono); font-size: 1.35rem; color: var(--gold-2); }
+    .kpi .l { font-size: 0.72rem; color: var(--mist); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: var(--mono); font-size: 0.68rem; color: var(--mist); letter-spacing: 0.08em; text-transform: uppercase; }
+    td.num { font-family: var(--mono); white-space: nowrap; }
+    .empty { color: var(--mist); font-size: 0.9rem; padding: 8px 0; }
+    .req { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; background: var(--ink-2); }
+    .req header { position: static; padding: 0; border: 0; background: none; display: flex; justify-content: space-between; }
+    .pill { font-family: var(--mono); font-size: 0.65rem; border-radius: 99px; padding: 2px 8px; border: 1px solid var(--line); color: var(--mist); }
+    .pill.ok { color: var(--leaf); border-color: #4a6b3a; }
+    .pill.err { color: var(--warn); }
+    .pill.run { color: var(--gold-2); }
+    details { margin-top: 6px; }
+    summary { cursor: pointer; color: var(--gold-2); font-size: 0.82rem; }
+    .actions { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .actions h2 { flex: 1; margin: 0; }
+    button.ghost {
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold-2);
+      font: inherit;
+    }
+    @media (max-width: 720px) {
+      header.app-bar { padding: 12px 16px; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="header-top">
+      <div class="header-left">
+        <div class="brand">
+          <h1>UniHelp</h1>
+          <span>Activity</span>
+        </div>
+        <nav class="links">
+          <a href="/">Connect</a>
+          <a href="/ask">Ask</a>
+          <a class="active" href="/activity">Activity</a>
+          <a href="/commands">Commands</a>
+          <a href="/users">Users</a>
+        </nav>
+      </div>
+      <div class="header-meta">
+        <span class="dot" id="liveDot"></span>
+        <span id="clock"></span>
+        <span id="flight">0 in flight</span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="kpis" id="kpis"></div>
+    <section class="card">
+      <h2>By user</h2>
+      <div id="users"><p class="empty">Waiting for authenticated requests.</p></div>
+    </section>
+    <section class="card">
+      <div class="actions">
+        <h2>Requests · LLM calls</h2>
+        <button class="ghost" id="reset" type="button">Reset stats</button>
+      </div>
+      <div id="requests"><p class="empty">Each campus request lists task latency and every LLM round.</p></div>
+    </section>
+  </main>
+  <script>
+    const fmt = (n, d = 0) => {
+      if (n == null || Number.isNaN(n)) return "—";
+      return Number(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+    };
+    const ms = (n) => (n == null ? "—" : `${fmt(n, 0)} ms`);
+    const tok = (n) => fmt(n, 0);
+
+    function renderKpis(t) {
+      const items = [
+        ["Requests", fmt(t.requests)],
+        ["LLM calls", fmt(t.llm_calls)],
+        ["Tokens", tok(t.total_tokens)],
+        ["Avg latency", ms(t.avg_request_latency_ms)],
+      ];
+      document.getElementById("kpis").innerHTML = items.map(([l, n]) =>
+        `<div class="kpi"><div class="n">${n}</div><div class="l">${l}</div></div>`
+      ).join("");
+      document.getElementById("flight").textContent = `${t.in_flight || 0} in flight`;
+      document.getElementById("liveDot").classList.toggle("busy", (t.in_flight || 0) > 0);
+    }
+
+    function renderUsers(rows) {
+      const el = document.getElementById("users");
+      if (!rows.length) {
+        el.innerHTML = `<p class="empty">Waiting for authenticated requests.</p>`;
+        return;
+      }
+      el.innerHTML = `<table>
+        <thead><tr><th>User</th><th>Role</th><th>Requests</th><th>Avg latency</th><th>LLM calls</th><th>Tokens</th></tr></thead>
+        <tbody>
+          ${rows.map((r) => `<tr>
+            <td>${r.user}</td>
+            <td>${r.role || "—"}</td>
+            <td class="num">${fmt(r.requests)}</td>
+            <td class="num">${ms(r.avg_latency_ms)}</td>
+            <td class="num">${fmt(r.llm_calls)}</td>
+            <td class="num">${tok(r.tokens.total)} <span style="color:var(--mist)">in ${tok(r.tokens.prompt)} / out ${tok(r.tokens.completion)}</span></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    function callRows(calls) {
+      if (!calls || !calls.length) return `<p class="empty">No LLM calls.</p>`;
+      return `<table>
+        <thead><tr><th>Feature</th><th>Latency</th><th>Prompt</th><th>Completion</th><th>Cached</th><th>Total</th></tr></thead>
+        <tbody>
+          ${calls.map((c) => `<tr>
+            <td>${c.feature}${c.cache_key !== c.feature ? ` <span style="color:var(--mist)">(${c.cache_key})</span>` : ""}</td>
+            <td class="num">${ms(c.latency_ms)}</td>
+            <td class="num">${tok(c.prompt_tokens)}</td>
+            <td class="num">${tok(c.completion_tokens)}</td>
+            <td class="num">${tok(c.cached_tokens)}</td>
+            <td class="num">${tok(c.total_tokens)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    function renderRequests(live, history) {
+      const el = document.getElementById("requests");
+      const rows = [...(live || []), ...(history || [])].slice(0, 24);
+      if (!rows.length) {
+        el.innerHTML = `<p class="empty">Each campus request lists task latency and every LLM round.</p>`;
+        return;
+      }
+      el.innerHTML = rows.map((r) => {
+        const st = r.status === "ok" ? "ok" : r.status === "running" ? "run" : "err";
+        const tasks = (r.tasks || []).map((t) => `${t.feature} ${ms(t.latency_ms)}`).join(" · ") || "—";
+        return `<article class="req">
+          <header>
+            <strong>${r.user}</strong>
+            <span class="pill ${st}">${r.status} · ${ms(r.latency_ms)}</span>
+          </header>
+          <div style="color:var(--mist);margin:6px 0;font-size:0.88rem">${(r.query || "").slice(0, 180)}</div>
+          <div class="num" style="font-size:0.78rem;color:var(--gold-2)">
+            ${tok((r.tokens || {}).total)} tokens · ${fmt((r.llm_calls || []).length)} LLM calls · tasks: ${tasks}
+          </div>
+          <details>
+            <summary>LLM calls</summary>
+            ${callRows(r.llm_calls)}
+          </details>
+        </article>`;
+      }).join("");
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/metrics");
+        const data = await res.json();
+        renderKpis(data.totals || {});
+        renderUsers(data.by_user || []);
+        renderRequests(data.live || [], data.requests || []);
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    document.getElementById("reset").onclick = async () => {
+      await fetch("/api/metrics/reset", { method: "POST" });
+      refresh();
+    };
+
+    function tick() {
+      document.getElementById("clock").textContent = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour12: false,
+      }) + " IST";
+    }
+    tick();
+    setInterval(tick, 1000);
+    refresh();
+    setInterval(refresh, 2500);
+  </script>
+</body>
+</html>

@@ -7,6 +7,10 @@
     }
   },
   "rewrites": [
+    { "source": "/", "destination": "/gui/index.html" },
+    { "source": "/connect", "destination": "/gui/index.html" },
+    { "source": "/ask", "destination": "/gui/ask.html" },
+    { "source": "/activity", "destination": "/gui/activity.html" },
     { "source": "/commands", "destination": "/gui/commands.html" },
     { "source": "/users", "destination": "/gui/users.html" },
     { "source": "/(.*)", "destination": "/api" }

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UniHelp · Ask</title>
+  <style>
+    :root {
+      --ink: #10140f;
+      --ink-2: #181e16;
+      --panel: #1f271c;
+      --line: #31402c;
+      --gold: #d4a017;
+      --gold-2: #f0c75e;
+      --leaf: #8fbf6a;
+      --mist: #c5d0bc;
+      --paper: #eef3e8;
+      --warn: #e07a3d;
+      --mono: "IBM Plex Mono", "ui-monospace", "SFMono-Regular", Menlo, monospace;
+      --sans: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--paper); }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #2a3a22 0%, transparent 55%),
+        radial-gradient(800px 400px at 100% 0%, #3a2e12 0%, transparent 50%),
+        var(--ink);
+    }
+    header.app-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 28px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(16, 20, 15, 0.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: baseline; gap: 12px; }
+    .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
+    .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .header-meta { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 0.75rem; color: var(--mist); }
+    nav.links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    nav.links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--mist);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    nav.links a:hover { border-color: var(--gold); color: var(--gold-2); }
+    nav.links a.active { color: #1a1404; background: var(--gold); border-color: var(--gold); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 8px var(--leaf); }
+    .dot.busy { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .chat {
+      display: flex;
+      flex-direction: column;
+    }
+    .metrics { overflow-x: auto; }
+    .thread {
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 4px 2px 12px;
+      min-height: 80px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .msg {
+      max-width: 92%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+    .msg.user { align-self: flex-end; background: #314a28; border: 1px solid #4a6b3a; }
+    .msg.agent { align-self: flex-start; background: #151a13; border: 1px solid var(--line); }
+    .msg .who { font-family: var(--mono); font-size: 0.68rem; color: var(--gold-2); margin-bottom: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+    label { display: block; font-size: 0.78rem; color: var(--mist); margin: 8px 0 4px; }
+    input, textarea, button { font: inherit; color: var(--paper); }
+    input, textarea {
+      width: 100%;
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .chip {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      border: 1px solid var(--line);
+      background: transparent;
+      border-radius: 999px;
+      padding: 5px 10px;
+      cursor: pointer;
+      color: var(--mist);
+    }
+    .chip:hover { border-color: var(--gold); color: var(--gold-2); }
+    button.primary, button.ghost {
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--gold);
+    }
+    button.primary { background: var(--gold); color: #1a1404; font-weight: 700; }
+    button.primary:disabled { opacity: 0.55; cursor: wait; }
+    button.ghost { background: transparent; color: var(--gold-2); }
+    h2 { margin: 0 0 10px; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: var(--mono); font-size: 0.68rem; color: var(--mist); letter-spacing: 0.08em; text-transform: uppercase; }
+    td.num { font-family: var(--mono); white-space: nowrap; }
+    .bar { height: 6px; background: #2a3326; border-radius: 99px; overflow: hidden; margin-top: 4px; }
+    .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--leaf), var(--gold)); }
+    .empty { color: var(--mist); font-size: 0.9rem; padding: 8px 0; }
+    .actions { display: flex; gap: 8px; margin-top: 10px; }
+    .actions.top { margin: 0 0 10px; align-items: center; }
+    .actions.top h2 { flex: 1; margin: 0; }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="header-top">
+      <div class="header-left">
+        <div class="brand">
+          <h1>UniHelp</h1>
+          <span>Ask</span>
+        </div>
+        <nav class="links">
+          <a href="/">Connect</a>
+          <a class="active" href="/ask">Ask</a>
+          <a href="/activity">Activity</a>
+          <a href="/commands">Commands</a>
+          <a href="/users">Users</a>
+        </nav>
+      </div>
+      <div class="header-meta">
+        <span class="dot" id="liveDot"></span>
+        <span id="clock"></span>
+        <span id="flight">0 in flight</span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="card chat">
+      <h2>Request</h2>
+      <label for="key">Authentication key</label>
+      <input id="key" value="student-demo" autocomplete="off" />
+      <div class="chips" id="chips"></div>
+      <div class="thread" id="thread">
+        <div class="msg agent">
+          <div class="who">Agent</div>
+          Signed in as a campus user. Ask about mess, buses, complaints, room booking, attendance, notices, or timetable.
+        </div>
+      </div>
+      <label for="prompt">Request</label>
+      <textarea id="prompt" placeholder="What is today's dinner at Kalam hostel?"></textarea>
+      <div class="actions">
+        <button class="primary" id="send">Send</button>
+        <button class="ghost" id="clearChat">Clear chat</button>
+      </div>
+    </section>
+    <section class="card metrics">
+      <div class="actions top">
+        <h2>By feature</h2>
+        <button class="ghost" id="reset">Reset stats</button>
+      </div>
+      <div id="features"><p class="empty">No traffic yet. Send a request to start measuring.</p></div>
+    </section>
+  </main>
+  <script>
+    const EXAMPLES = [
+      "What is today's dinner at Kalam hostel?",
+      "Show me the Bus 02 schedule",
+      "What is my attendance percentage in CS101?",
+      "Show me the current notices",
+      "What is my class timetable today?",
+      "The water cooler on my floor is broken",
+    ];
+    const chips = document.getElementById("chips");
+    EXAMPLES.forEach((text) => {
+      const b = document.createElement("button");
+      b.className = "chip";
+      b.type = "button";
+      b.textContent = text;
+      b.onclick = () => { document.getElementById("prompt").value = text; };
+      chips.appendChild(b);
+    });
+
+    const fmt = (n, d = 0) => {
+      if (n == null || Number.isNaN(n)) return "—";
+      return Number(n).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+    };
+    const ms = (n) => (n == null ? "—" : `${fmt(n, 0)} ms`);
+    const tok = (n) => fmt(n, 0);
+
+    function renderFeatures(rows, totals) {
+      document.getElementById("flight").textContent = `${(totals && totals.in_flight) || 0} in flight`;
+      document.getElementById("liveDot").classList.toggle("busy", ((totals && totals.in_flight) || 0) > 0);
+      const el = document.getElementById("features");
+      if (!rows.length) {
+        el.innerHTML = `<p class="empty">No traffic yet. Send a request to start measuring.</p>`;
+        return;
+      }
+      const maxTok = Math.max(...rows.map((r) => r.tokens.total || 0), 1);
+      el.innerHTML = `<table>
+        <thead><tr>
+          <th>Feature</th><th>Task latency</th><th>LLM latency</th><th>LLM calls</th><th>Tokens</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((r) => `<tr>
+            <td>${r.label}<div class="bar"><span style="width:${Math.round(100 * (r.tokens.total || 0) / maxTok)}%"></span></div></td>
+            <td class="num">${r.tasks ? ms(r.avg_task_latency_ms) + " avg" : "—"}</td>
+            <td class="num">${r.llm_calls ? ms(r.avg_llm_latency_ms) + " avg" : "—"}</td>
+            <td class="num">${fmt(r.llm_calls)}</td>
+            <td class="num">${tok(r.tokens.total)} <span style="color:var(--mist)">(${tok(r.tokens.prompt)} in / ${tok(r.tokens.completion)} out)</span></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch("/api/metrics");
+        const data = await res.json();
+        renderFeatures(data.by_feature || [], data.totals || {});
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function addMsg(who, text) {
+      const div = document.createElement("div");
+      div.className = `msg ${who === "You" ? "user" : "agent"}`;
+      const label = document.createElement("div");
+      label.className = "who";
+      label.textContent = who;
+      const body = document.createElement("div");
+      body.textContent = typeof text === "string" ? text : JSON.stringify(text, null, 2);
+      div.append(label, body);
+      const thread = document.getElementById("thread");
+      thread.appendChild(div);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function llmKey() {
+      try { return sessionStorage.getItem("unihelp_llm_api_key") || ""; } catch (err) { return ""; }
+    }
+
+    async function send() {
+      const message = document.getElementById("prompt").value.trim();
+      const authentication_key = document.getElementById("key").value.trim();
+      if (!message) return;
+      try { sessionStorage.setItem("unihelp_auth_key", authentication_key); } catch (err) {}
+      const btn = document.getElementById("send");
+      btn.disabled = true;
+      addMsg("You", message);
+      document.getElementById("prompt").value = "";
+      addMsg("Agent", "Working…");
+      const pending = document.getElementById("thread").lastElementChild;
+      try {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, authentication_key, llm_api_key: llmKey() }),
+        });
+        const data = await res.json();
+        let text = data.result ?? data.error ?? "No reply";
+        if (typeof text !== "string") text = JSON.stringify(text, null, 2);
+        const rec = data.request;
+        if (rec) {
+          text += `\n\n— ${ms(rec.latency_ms)} · ${tok((rec.tokens || {}).total)} tokens · ${fmt((rec.llm_calls || []).length)} LLM calls`;
+        }
+        pending.querySelector("div:last-child").textContent = text;
+      } catch (err) {
+        pending.querySelector("div:last-child").textContent = String(err);
+      } finally {
+        btn.disabled = false;
+        refresh();
+      }
+    }
+
+    document.getElementById("send").onclick = send;
+    document.getElementById("prompt").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
+    });
+    document.getElementById("clearChat").onclick = () => {
+      document.getElementById("thread").innerHTML = "";
+    };
+    document.getElementById("reset").onclick = async () => {
+      await fetch("/api/metrics/reset", { method: "POST" });
+      refresh();
+    };
+    document.getElementById("key").addEventListener("change", () => {
+      try { sessionStorage.setItem("unihelp_auth_key", document.getElementById("key").value.trim()); } catch (err) {}
+    });
+    try {
+      const saved = sessionStorage.getItem("unihelp_auth_key");
+      if (saved) document.getElementById("key").value = saved;
+    } catch (err) {}
+
+    function tick() {
+      document.getElementById("clock").textContent = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour12: false,
+      }) + " IST";
+    }
+    tick();
+    setInterval(tick, 1000);
+    refresh();
+    setInterval(refresh, 2500);
+  </script>
+</body>
+</html>

@@ -460,6 +460,14 @@ async def _gui_index(request):
     return FileResponse(_GUI_DIR / "index.html")
 
 
+async def _gui_ask(request):
+    return FileResponse(_GUI_DIR / "ask.html")
+
+
+async def _gui_activity(request):
+    return FileResponse(_GUI_DIR / "activity.html")
+
+
 async def _gui_commands(request):
     return FileResponse(_GUI_DIR / "commands.html")
 
@@ -545,7 +553,12 @@ async def _api_ask(request):
 
 routes = [
     Route("/", _gui_index),
+    Route("/connect", _gui_index),
     Route("/gui", _gui_index),
+    Route("/ask", _gui_ask),
+    Route("/gui/ask", _gui_ask),
+    Route("/activity", _gui_activity),
+    Route("/gui/activity", _gui_activity),
     Route("/commands", _gui_commands),
     Route("/gui/commands", _gui_commands),
     Route("/users", _gui_users),

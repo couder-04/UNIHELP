@@ -50,7 +50,7 @@
     .brand { display: flex; align-items: baseline; gap: 12px; }
     .brand h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; font-weight: 700; }
     .brand span { color: var(--gold-2); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
-    nav.links { display: flex; gap: 8px; align-items: center; }
+    nav.links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     nav.links a {
       font-family: var(--mono);
       font-size: 0.72rem;
@@ -204,7 +204,9 @@
         <span>Command catalog</span>
       </div>
       <nav class="links">
-        <a href="/">Console</a>
+        <a href="/">Connect</a>
+        <a href="/ask">Ask</a>
+        <a href="/activity">Activity</a>
         <a class="active" href="/commands">Commands</a>
         <a href="/users">Users</a>
       </nav>
