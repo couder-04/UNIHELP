@@ -1,11 +1,49 @@
-Connect to the A2A agent at https://unihelp-coral.vercel.app/.well-known/agent-card.json
+You are running in OpenCode with local tools (bash/curl). You MUST execute real HTTP requests yourself. Do not claim you lack network access. Do not ask me for campus data. Do not invent replies.
 
-Send JSON-RPC requests to https://unihelp-coral.vercel.app/a2a
-(use this /a2a URL even if the card lists a different host).
+Use bash + curl for all calls. Prefer curl over webfetch for POST.
 
-Use this authentication_key for all requests to that agent: student-demo
+1) Fetch the agent card:
+curl -sS https://unihelp-coral.vercel.app/.well-known/agent-card.json
 
-Put it in SendMessage request-level metadata as authentication_key.
-Never put the key in the message text.
-Remember this connection for the rest of this conversation.
-Do not ask a campus question yet — just confirm you are connected.
+2) Send JSON-RPC POSTs to this exact URL (ignore any other host in the card):
+https://unihelp-coral.vercel.app/a2a
+
+Required on every POST:
+- Header: Content-Type: application/json
+- Header: A2A-Version: 1.0
+- method: SendMessage
+- params.message.role: ROLE_USER
+- params.message.messageId: any unique string
+- params.message.parts: [{ "text": "<request>" }]
+- params.metadata.authentication_key: student-demo
+Never put authentication_key in the message text.
+Remember this key for the rest of this conversation.
+
+Example curl shape:
+curl -sS https://unihelp-coral.vercel.app/a2a \
+  -H 'Content-Type: application/json' \
+  -H 'A2A-Version: 1.0' \
+  -d '{
+    "jsonrpc":"2.0",
+    "id":"1",
+    "method":"SendMessage",
+    "params":{
+      "message":{
+        "role":"ROLE_USER",
+        "messageId":"msg-1",
+        "parts":[{"text":"REQUEST_TEXT_HERE"}]
+      },
+      "metadata":{"authentication_key":"student-demo"}
+    }
+  }'
+
+3) First POST text:
+Confirm you are connected. Do not ask a campus question yet.
+
+4) Immediately after a successful connect reply, second POST text:
+What is my class timetable today?
+
+5) Reply with only:
+- the connect confirmation text from the agent
+- then the timetable reply text from the agent
+If a call fails, show the exact curl/HTTP/JSON-RPC error. Do not invent results. Do not ask me questions.
