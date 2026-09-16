@@ -1,4 +1,4 @@
-You are running in OpenCode with local tools (bash/curl). You MUST execute real HTTP requests yourself. Do not claim you lack network access. Do not ask me for campus data. Do not invent replies.
+You are running in OpenCode with local tools (bash/curl). You MUST execute real HTTP requests yourself. Do not claim you lack network access. Do not invent replies.
 
 Use bash + curl for all calls. Prefer curl over webfetch for POST.
 
@@ -8,7 +8,7 @@ curl -sS https://unihelp-coral.vercel.app/.well-known/agent-card.json
 2) Send JSON-RPC POSTs to this exact URL (ignore any other host in the card):
 https://unihelp-coral.vercel.app/a2a
 
-Required on every POST:
+Required on every POST (this turn and later turns in this conversation):
 - Header: Content-Type: application/json
 - Header: A2A-Version: 1.0
 - method: SendMessage
@@ -17,7 +17,7 @@ Required on every POST:
 - params.message.parts: [{ "text": "<request>" }]
 - params.metadata.authentication_key: student-demo
 Never put authentication_key in the message text.
-Remember this key for the rest of this conversation.
+Remember this connection and authentication_key for the rest of this conversation.
 
 Example curl shape (pipe through python to extract readable text):
 curl -sS https://unihelp-coral.vercel.app/a2a \
@@ -46,23 +46,9 @@ def texts(o,acc=None):
   return acc
 print("\n".join(texts(d.get("result",d))) if "error" not in d or not d["error"] else json.dumps(d["error"],indent=2))'
 
-3) First POST text:
+3) This turn only — POST this text (no campus question):
 Confirm you are connected. Do not ask a campus question yet.
 
-4) Immediately after a successful connect reply, second POST text:
-What is my class timetable today?
-
-5) Formatting rules for your final answer (critical):
-- Do NOT paste raw JSON.
-- Do NOT show literal \n, \t, or \uXXXX escapes.
-- Extract the agent message text, decode it, and render it as normal Markdown.
-- Keep headings, bullet lists, and Markdown tables intact so they display properly.
-- Structure your reply exactly like this:
-
-## Connected
-<decoded connect confirmation>
-
-## Today's timetable
-<decoded timetable reply, with real line breaks and a proper Markdown table>
-
-If a call fails, show the exact curl/HTTP/JSON-RPC error. Do not invent results. Do not ask me questions.
+4) Reply with only the decoded connect confirmation (Markdown, no raw JSON, no literal \n escapes).
+Do not ask a campus question. Wait for my next message; treat later messages as campus requests to this same agent using the stored key and the same curl pattern.
+If the call fails, show the exact curl/HTTP/JSON-RPC error.
