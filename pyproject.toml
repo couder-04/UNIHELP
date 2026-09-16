@@ -1,0 +1,5 @@
+[project]
+name = "app"
+version = "0.1.0"
+dependencies = [ "openai>=1.40.0", "starlette>=0.37.0", "fastapi>=0.115.0", "uvicorn>=0.30.0", "python-dotenv>=1.0.0", "a2a-sdk[http-server]==1.1.2", "psycopg[binary,pool]>=3.1.0", "pg8000>=1.30.0", "pytest>=8.0.0" ]
+requires-python = "~=3.12.0"
