@@ -14,7 +14,6 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from llm import cached_system_message, chat_create, identity_message
-from prompt_common import COMMON_AGENT_INSTRUCTIONS
 from fast_parse import format_timetable_reply, parse_timetable_query
 import timetable_functions as timetable_fns
 
@@ -244,9 +243,8 @@ def _openai_tools_for_role(role: str) -> list[dict[str, Any]]:
     ]
 
 
-SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
-
-You are the Timetable Agent for a campus assistant.
+def _system_prompt() -> str:
+    return """You are the Timetable Agent for a campus assistant.
 
 Identity model:
 - people(roll_num, name, role) — student | faculty | admin
@@ -254,6 +252,9 @@ Identity model:
 - Students use IIT-style rolls such as 2501CS09.
 - courses(code, name, professor_name, professor_roll, ...)
 - timetable(course_code, timetable_day, slot_start, slot_end, room_id)
+
+Be helpful with relative times (today, now, tomorrow) using Time and Date
+from the identity message. Do not invent identity.
 
 If a user asks for their schedule, call get_schedule. Year and department
 are encoded in student roll numbers. If get_schedule returns 0 items, say
@@ -382,7 +383,7 @@ def run_timetable_agent(
     openai_tools = _openai_tools_for_role(role)
 
     messages: list[dict[str, Any]] = [
-        cached_system_message(SYSTEM_PROMPT),
+        cached_system_message(_system_prompt()),
         identity_message(
             {
                 "role": role,
@@ -402,8 +403,6 @@ def run_timetable_agent(
             messages=messages,
             tools=openai_tools,
             tool_choice="auto",
-            # observed LLM max 297 (tool-call round); week tables can run longer
-            max_tokens=600,
         )
         message = response.choices[0].message
         tool_calls = message.tool_calls or []

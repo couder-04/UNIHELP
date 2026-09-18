@@ -2,7 +2,6 @@ import json
 import logging
 
 from llm import cached_system_message, chat_create, get_client, identity_message
-from prompt_common import COMMON_AGENT_INSTRUCTIONS
 from fast_parse import format_mess_reply, parse_mess_query
 
 from mess_functions_1 import (
@@ -17,9 +16,12 @@ logger = logging.getLogger(__name__)
 
 class MessAgent:
 
-    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
-
+    SYSTEM_PROMPT = """
 You are the Mess Agent for IIT Patna campus.
+
+The authenticated user's role, name, roll number, and Time and Date
+(IST) are provided in the following message. Use Time and Date to
+resolve relative times such as today, tomorrow, tonight, and now.
 
 You handle:
 - Daily mess menus
@@ -48,6 +50,11 @@ Admin:
 - Can ask for meal timings.
 - Can make TEMPORARY menu modifications.
 - Can make PERMANENT menu modifications.
+
+IMPORTANT:
+The authenticated role is provided by the application.
+Never ask the user for their role.
+Never attempt to determine or change the user's role.
 
 Before calling modify_menu, check the authority rules.
 
@@ -334,8 +341,6 @@ FORMATTING:
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
-                # observed LLM max 104; weekly mess table ~230 tokens
-                max_tokens=500,
             )
 
             message = response.choices[0].message

@@ -1,8 +1,8 @@
-"""Deterministic fast-path parsers for unambiguous campus lookups.
+"""Deterministic fast-path parsers for unambiguous mess/bus/timetable queries.
 
 Every public parser returns a fully populated argument dict, or None.
-Nothing is guessed: missing hostel/route/course, write intent, mixed
-schedule/timing language, or an unparseable date all fall through to the LLM.
+Nothing is guessed: missing hostel/route, write intent, mixed schedule/
+timing language, or an unparseable date all fall through to the LLM.
 """
 
 from __future__ import annotations
@@ -125,21 +125,6 @@ _FREE_SLOT_RE = re.compile(
     re.I,
 )
 _COURSE_CODE_RE = re.compile(r"\b[A-Z]{2,3}\d{3}\b")
-_ATTENDANCE_COURSE_RE = re.compile(r"\b([A-Za-z]{2,3}\d{3})\b")
-_ATTENDANCE_INTENT_RE = re.compile(
-    r"\b(attendance|skip budget|how many (?:can i|classes can i) (?:skip|miss))\b",
-    re.I,
-)
-_ATTENDANCE_EXCLUDE_RE = re.compile(
-    r"\b("
-    r"mark|edit|delete|chart|graph|"
-    r"weekly|monthly|semester|"
-    r"today|tonight|tomorrow|"
-    r"consecutive|at[- ]risk|unmarked|roster|"
-    r"who is absent|who was absent"
-    r")\b",
-    re.I,
-)
 _ROOM_LOOKUP_RE = re.compile(r"\b(which room|what room|room number)\b", re.I)
 _OTHER_ROLL_RE = re.compile(
     r"\b(\d{4}[A-Z]{2}\d{2,}|(?:PF|AD)\d{3,})\b",
@@ -406,52 +391,6 @@ def parse_timetable_query(
     }
 
 
-def parse_attendance_query(
-    user_input: str,
-    user_metadata: Optional[dict[str, Any]],
-) -> Optional[dict[str, Any]]:
-    """Resolve a student's own attendance-summary lookup, or None."""
-    if not user_input or not str(user_input).strip():
-        return None
-    text = str(user_input).strip()
-    meta = user_metadata or {}
-
-    if _WRITE_RE.search(text):
-        return None
-    if not _ATTENDANCE_INTENT_RE.search(text):
-        return None
-    if _ATTENDANCE_EXCLUDE_RE.search(text):
-        return None
-
-    role = str(meta.get("role") or "").strip().lower()
-    if role != "student":
-        return None
-
-    roll = meta.get("roll_number") or meta.get("roll_num")
-    if not roll or not str(roll).strip():
-        return None
-    roll = str(roll).strip()
-
-    mentioned = _OTHER_ROLL_RE.search(text)
-    if mentioned and mentioned.group(1).upper() != roll.upper():
-        return None
-
-    codes = [c.upper() for c in _ATTENDANCE_COURSE_RE.findall(text)]
-    seen: set[str] = set()
-    unique: list[str] = []
-    for code in codes:
-        if code not in seen:
-            seen.add(code)
-            unique.append(code)
-    if len(unique) > 1:
-        return None
-
-    return {
-        "student_id": roll,
-        "course_code": unique[0] if unique else None,
-    }
-
-
 def format_mess_reply(parsed: dict[str, Any], result: Any) -> str:
     """Markdown table for a mess lookup, matching mess_agent_1 FORMATTING."""
     if not isinstance(result, dict):
@@ -564,59 +503,3 @@ def format_timetable_reply(parsed: dict[str, Any], result: Any) -> str:
         room = item.get("room_id") or "—"
         lines.append(f"| {slot} | {course} | {room} |")
     return "\n".join(lines)
-
-
-def format_attendance_reply(
-    parsed: dict[str, Any],
-    result: Any,
-    *,
-    name: Optional[str] = None,
-) -> str:
-    """Plain summary for a student's attendance / skip-budget lookup."""
-    if not isinstance(result, dict):
-        return str(result)
-    if result.get("status") not in (None, "success"):
-        return str(result.get("message") or result)
-
-    summaries = result.get("summaries")
-    if not summaries:
-        if result.get("course_code") or result.get("attendance_percent") is not None:
-            summaries = [result]
-        else:
-            return str(result.get("message") or "No attendance records found.")
-
-    who = f", {name}" if name else ""
-    blocks: list[str] = []
-    for summary in summaries:
-        code = summary.get("course_code") or parsed.get("course_code") or ""
-        course_name = summary.get("course_name") or ""
-        if code and course_name:
-            header = f"**{code} ({course_name})**"
-        elif code:
-            header = f"**{code}**"
-        else:
-            header = "**all courses**"
-
-        pct = summary.get("attendance_percent")
-        present = summary.get("present_count")
-        total = summary.get("total_sessions")
-        absent = summary.get("absent_count")
-        skip = summary.get("can_skip")
-        if skip is None:
-            skip = summary.get("skip_budget")
-        must = summary.get("must_attend")
-        remaining = summary.get("remaining_sessions")
-        threshold = summary.get("threshold_percent") or 75
-
-        pct_s = f"{pct:.2f}%" if isinstance(pct, (int, float)) else "n/a"
-        lines = [
-            f"Attendance summary for {header}{who}:",
-            "",
-            f"- Attendance percentage: {pct_s}",
-            f"- Present: {present} out of {total} sessions held so far",
-            f"- Absent: {absent}",
-            f"- Skip budget: {skip} more classes while remaining at the {threshold}% threshold",
-            f"- Must attend: {must} of the remaining {remaining} sessions",
-        ]
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks)

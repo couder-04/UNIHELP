@@ -10,8 +10,6 @@ import json
 from typing import Any, Callable
 
 from llm import cached_system_message, chat_create, identity_message
-from prompt_common import COMMON_AGENT_INSTRUCTIONS
-from fast_parse import format_attendance_reply, parse_attendance_query
 import attendance_functions as attendance_tools
 
 ROLES = frozenset({"student", "faculty", "admin"})
@@ -607,11 +605,11 @@ def _openai_tools_for_role(role: str) -> list[dict[str, Any]]:
     ]
 
 
-SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
+SYSTEM_PROMPT = """You are the Attendance Agent for a campus assistant.
 
-You are the Attendance Agent for a campus assistant.
-
-Be helpful with reasonable inferences (this week, this course).
+Caller identity is in the authenticated identity message. Treat it as
+authoritative, and be helpful with reasonable inferences (today, this week,
+this course).
 
 Identity model:
 - people: name, roll_num, role (student | faculty | admin).
@@ -722,29 +720,6 @@ def run_attendance_agent(
 
     openai_tools = _openai_tools_for_role(role)
 
-    parsed = parse_attendance_query(query, metadata)
-    if parsed is not None:
-        result = attendance_tools.get_attendance_summary(
-            parsed["student_id"], parsed.get("course_code")
-        )
-        answer = format_attendance_reply(
-            parsed, result, name=metadata.get("name")
-        )
-        return {
-            "status": "success",
-            "role": role,
-            "name": metadata.get("name"),
-            "roll_num": roll,
-            "answer": answer,
-            "tool_calls": [
-                {
-                    "tool": "get_attendance_summary",
-                    "args": parsed,
-                    "result": result,
-                }
-            ],
-        }
-
     messages: list[dict[str, Any]] = [
         cached_system_message(SYSTEM_PROMPT),
         identity_message(
@@ -767,8 +742,6 @@ def run_attendance_agent(
             messages=messages,
             tools=openai_tools,
             tool_choice="auto",
-            # observed LLM max 168; summary lookups skip the LLM
-            max_tokens=250,
         )
         message = response.choices[0].message
         tool_calls = message.tool_calls or []

@@ -2,16 +2,17 @@ import json
 
 from llm import cached_system_message, chat_create, identity_message
 from notice_functions import call_tool
-from prompt_common import COMMON_AGENT_INSTRUCTIONS
 
 
 class NoticeAgent:
 
-    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
-
+    SYSTEM_PROMPT = """
 You are the IIT Patna Notice Board Agent.
 
 Your job is to answer questions and handle notices using your tools.
+Do not ask the user for their role, name, or the current time —
+they are provided in the authenticated identity message.
+Use the Time and Date from identity for relative times such as today, now, and notice expiry.
 
 Students can view notices. Faculty and admin can publish or archive.
 If a tool returns an authorization error, explain it clearly.
@@ -91,8 +92,6 @@ When a user asks to view notices, present them in this Bulletin Feed format.
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
-                # observed LLM max 251 (tool-call round)
-                max_tokens=450,
             )
             message = response.choices[0].message
             if not message.tool_calls:

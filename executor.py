@@ -740,7 +740,5 @@ Write one clear, friendly reply that combines these results.
             response = chat_create(
                 cache_key="executor",
                 messages=messages,
-                # observed synthesis max 374 (mess+bus); three-way replies need more
-                max_tokens=600,
             )
             return response.choices[0].message.content

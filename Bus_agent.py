@@ -3,7 +3,6 @@ import logging
 import time
 
 from llm import cached_system_message, chat_create, get_client, identity_message
-from prompt_common import COMMON_AGENT_INSTRUCTIONS
 from bus_function import call_tool, query_schedule
 from fast_parse import format_bus_reply, parse_bus_query
 
@@ -11,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 class BusAgent:
 
-    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
-
+    SYSTEM_PROMPT = """
 You are the IIT Patna Bus Agent.
 
 Your job is to answer questions and perform authorized bus schedule operations
@@ -31,6 +29,11 @@ WRITE OPERATIONS:
 - Add a bus schedule.
 - Remove a bus schedule.
 - Change a bus schedule.
+
+The authenticated user role, name, roll number, and Time and Date (IST)
+are supplied separately by the application.
+Use Time and Date for next-departure and "today" / "now" queries.
+Never ask the user to provide their role.
 
 For write operations:
 - Students are not authorized.
@@ -216,7 +219,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "add_schedule",
-                    "description": "Add a new bus schedule.",
+                    "description": "Add a new bus schedule. Only faculty and admin users are authorized.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -259,7 +262,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "remove_schedule",
-                    "description": "Remove a bus schedule.",
+                    "description": "Remove a bus schedule. Only faculty and admin users are authorized.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -275,7 +278,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "change_schedule",
-                    "description": "Change one or more fields of an existing bus schedule.",
+                    "description": "Change one or more fields of an existing bus schedule. Only faculty and admin users are authorized.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -352,8 +355,6 @@ in plain language.
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
-                # observed short replies ~130; schedule tables skip the LLM
-                max_tokens=350,
             )
             logger.debug("Bus LLM round took %.2fs", time.time() - start)
             message = response.choices[0].message
@@ -363,7 +364,6 @@ in plain language.
 
             messages.append(message)
 
-            round_calls = []
             for tool_call in message.tool_calls:
 
                 tool_name = tool_call.function.name
@@ -404,7 +404,6 @@ in plain language.
                 if not isinstance(result, str):
                     result = json.dumps(result, default=str)
 
-                round_calls.append((tool_name, arguments, result))
                 messages.append(
                     {
                         "role": "tool",
@@ -412,27 +411,6 @@ in plain language.
                         "content": result
                     }
                 )
-
-            if round_calls and all(
-                name == "query_schedule" for name, _, _ in round_calls
-            ):
-                chunks = []
-                for _, arguments, raw in round_calls:
-                    try:
-                        payload = json.loads(raw) if isinstance(raw, str) else raw
-                    except json.JSONDecodeError:
-                        payload = raw
-                    chunks.append(
-                        format_bus_reply(
-                            {
-                                "route_name": arguments.get("route_name") or "",
-                                "day": arguments.get("day") or "",
-                                "date": arguments.get("date") or "",
-                            },
-                            payload,
-                        )
-                    )
-                return "\n\n".join(chunks)
 
         return (
             "The bus request could not be completed because the agent "
