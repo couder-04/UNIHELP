@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UniHelp — Admin setup prompts</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm 12mm 14mm 12mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1c1c1c;
+      font: 10.5px/1.42 "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    h1 { font-size: 20px; line-height: 1.2; font-weight: 650; margin: 0 0 6px; }
+    h2 { font-size: 13px; line-height: 1.3; font-weight: 650; margin: 14px 0 5px; page-break-after: avoid; }
+    h3 { font-size: 11.5px; font-weight: 650; margin: 10px 0 4px; page-break-after: avoid; }
+    p { margin: 0 0 7px; }
+    .lede { color: #555; font-size: 11px; max-width: 720px; }
+    .tiny { color: #7a7a7a; font-size: 9px; margin: 0 0 8px; }
+    code {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 0.92em;
+      background: #f3f3f1;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .kicker {
+      color: #6a6a6a;
+      font-size: 9.5px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin: 4px 0 8px;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border-bottom: 1px solid #ecece8;
+      padding: 4px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      color: #444;
+      background: #f7f7f5;
+      font-size: 9.5px;
+    }
+    tbody tr:nth-child(even) td { background: #fafaf8; }
+    .prompt {
+      border: 1px solid #e6e6e4;
+      border-left: 3px solid #3b6fd8;
+      background: #fafaf8;
+      padding: 7px 10px;
+      border-radius: 0 6px 6px 0;
+      margin: 4px 0 10px;
+    }
+    .prompt.example { border-left-color: #1a7f4c; }
+    .prompt .who {
+      font-size: 9px;
+      color: #6a6a6a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 8.6px;
+      line-height: 1.38;
+      white-space: pre-wrap;
+    }
+    .callout {
+      border: 1px solid #d9e3f5;
+      background: #f5f8fd;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin: 8px 0 10px;
+      page-break-inside: avoid;
+    }
+    .callout.danger {
+      border-color: #f0d4d0;
+      background: #fdf6f5;
+    }
+    .callout strong { display: block; margin-bottom: 2px; }
+    .page-break { break-before: page; page-break-before: always; }
+    hr { border: 0; border-top: 1px solid #e6e6e4; margin: 12px 0 8px; }
+    .footer { color: #8a8a8a; font-size: 8.5px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="kicker">UniHelp admin sheet · 19 Sep 2026 · fill brackets, paste as one chat message</div>
+  <h1>Two admin prompts — campus database and new agent</h1>
+  <p class="lede">
+    Sign in as admin (<code>admin-demo</code> until you import your own key).
+    The server must already be running. Fill every <code>[BRACKET]</code>
+    before pasting. Send Prompt 1 first; send Prompt 2 only after Prompt 1 succeeds.
+  </p>
+  <div class="callout">
+    <strong>Do not put SQL in either prompt.</strong>
+    Prompt 1 writes the org YAML and people rows, then seeds mess/bus/notice
+    through those agents. Prompt 2 registers a JSON record service
+    (list / search / add) — it does not <code>CREATE TABLE</code>.
+  </div>
+
+  <h2>Prompt 1 — set up the campus database</h2>
+  <h3>Collect this before you paste</h3>
+  <table>
+    <thead><tr><th>Required</th><th>Rules</th></tr></thead>
+    <tbody>
+      <tr><td>Campus display name</td><td>Official name students will see</td></tr>
+      <tr><td>Timezone</td><td>IANA, e.g. <code>Asia/Kolkata</code></td></tr>
+      <tr><td>Enabled agents</td><td>Subset of: mess, bus, complaint, room_booking, attendance, notice, timetable. Day college: omit mess and bus</td></tr>
+      <tr><td>Student id regex</td><td>Must compile. IIT-style: <code>^[0-9]{4}[A-Z]{2}[0-9]{2}$</code></td></tr>
+      <tr><td>Hostels</td><td>If mess is on: ≥1 name. Aliases optional</td></tr>
+      <tr><td>Rooms</td><td>If room_booking is on: map onto SAC Hall, Guest House, CLH, Auditorium (those four booking types are fixed)</td></tr>
+      <tr><td>Buses</td><td>If bus is on: names like <code>Bus 01</code></td></tr>
+      <tr><td>Meals</td><td>If mess is on: usually breakfast, lunch, snacks, dinner</td></tr>
+      <tr><td>Complaint categories</td><td>If complaint is on: ≥1, e.g. academic, hostel, mess</td></tr>
+      <tr><td>People CSV</td><td>Header <code>role,name,roll_number</code> plus optional <code>authentication_key</code>. Roles: student / faculty / admin. ≥1 of each. Students must match the regex. Max 500 rows</td></tr>
+      <tr><td>Seed rows</td><td>Optional but needed to go live: one menu, one bus trip, one notice if those agents are on. Skip disabled agents</td></tr>
+    </tbody>
+  </table>
+  <p class="tiny">Empty catalog lists are rejected. A student roll that fails the regex aborts the whole people import. Generated authentication keys are shown once — copy them from the reply.</p>
+
+  <div class="prompt">
+    <div class="who">Blank template · paste as one admin message</div>
+    <div class="mono">SETUP CAMPUS DATABASE. I am an authenticated admin.
+Execute every section in order. Do not invent names I did not list.
+Do not run SQL or CREATE TABLE. Use setup for A and B. Use the
+matching domain agents for C (only for agents I enabled).
+When done, quote: saved display_name, enabled_agents, catalog names,
+every generated authentication_key, and which seed writes succeeded.
+
+A. PROFILE (update_org_profile)
+- display_name: [CAMPUS NAME]
+- timezone: [IANA TIMEZONE]
+- student_id_field: roll_number
+- student_id_pattern: [REGEX]
+- enabled_agents: [mess, bus, complaint, room_booking, attendance, notice, timetable]
+- replace_hostels: [NAME (aliases: ...)], ...
+- replace_rooms: [SAC Hall, Guest House, CLH, Auditorium]
+- replace_buses: [Bus 01, Bus 02, ...]
+- replace_meals: [breakfast, lunch, snacks (alias snack), dinner (alias supper)]
+- replace_complaint_categories: [academic, hostel, mess]
+
+B. PEOPLE (import_people, csv_text). Abort the batch if any student
+roll fails the regex. Max 500 rows.
+role,name,roll_number,authentication_key
+admin,[ADMIN NAME],[ADMIN ID],[OPTIONAL KEY]
+faculty,[FACULTY NAME],[FACULTY ID],[OPTIONAL KEY]
+student,[STUDENT NAME],[STUDENT ROLL],[OPTIONAL KEY]
+
+C. SEED (skip any agent I disabled)
+Mess: set today's [HOSTEL] [MEAL] to [DISH].
+Bus: add [Bus NN] weekdays [HH:MM] from [STOP A] to [STOP B], driver [NAME], phone [PHONE].
+Notice: publish "[NOTICE TEXT]".
+Timetable (optional): add [COURSE] for [ROLL] on [DAY] [HH:MM]-[HH:MM] in [ROOM].</div>
+  </div>
+
+  <div class="prompt example">
+    <div class="who">Filled example · IIT Mandi</div>
+    <div class="mono">SETUP CAMPUS DATABASE. I am an authenticated admin.
+Execute every section in order. Do not invent names I did not list.
+Do not run SQL or CREATE TABLE. Use setup for A and B. Use the
+matching domain agents for C (only for agents I enabled).
+When done, quote: saved display_name, enabled_agents, catalog names,
+every generated authentication_key, and which seed writes succeeded.
+
+A. PROFILE (update_org_profile)
+- display_name: IIT Mandi
+- timezone: Asia/Kolkata
+- student_id_field: roll_number
+- student_id_pattern: ^[0-9]{4}[A-Z]{2}[0-9]{2}$
+- enabled_agents: mess, bus, complaint, room_booking, attendance, notice, timetable
+- replace_hostels: Chandra (aliases: C hostel), Suvalsar
+- replace_rooms: SAC Hall, Guest House, CLH, Auditorium
+- replace_buses: Bus 01, Bus 02, Bus 03, Bus 04
+- replace_meals: breakfast, lunch, snacks (alias snack), dinner (alias supper)
+- replace_complaint_categories: academic, hostel, mess
+
+B. PEOPLE (import_people, csv_text). Abort the batch if any student
+roll fails the regex. Max 500 rows.
+role,name,roll_number,authentication_key
+admin,Campus Admin,AD001,mandi-admin
+faculty,Priya Patel,PF001,mandi-faculty
+student,Asha Rao,2501CS99,mandi-asha
+
+C. SEED
+Mess: set today's Chandra breakfast to poha and tea.
+Bus: add Bus 01 weekdays 08:00 from Chandra to the academic block, driver Test, phone 9999999999.
+Notice: publish "Orientation Monday 9am, Auditorium."</div>
+  </div>
+
+  <h2 class="page-break">Prompt 2 — define a new agent</h2>
+  <p>
+    This registers a JSON-backed service (list / search / add records).
+    It does <strong>not</strong> create a PostgreSQL table or a new Python file.
+    A hospital or fees system with its own schema still needs a real coded agent.
+  </p>
+  <h3>Collect this before you paste</h3>
+  <table>
+    <thead><tr><th>Required</th><th>Rules</th></tr></thead>
+    <tbody>
+      <tr><td>Agent name</td><td>Becomes slug <code>library</code>, <code>lost_and_found</code>. Letters, numbers, underscore. Not reserved: mess, bus, complaint, room_booking, attendance, notice, timetable, setup</td></tr>
+      <tr><td>One-line description</td><td>What students ask this agent to do</td></tr>
+      <tr><td>Keywords</td><td>≥1 words the planner uses to route (“library”, “book”, “isbn”)</td></tr>
+      <tr><td>Fields (1–20)</td><td>Each: <code>name</code> (snake_case), <code>type</code> = string / number / boolean / date, required yes/no, short description</td></tr>
+      <tr><td>Who may use it</td><td>Subset of student, faculty, admin</td></tr>
+      <tr><td>Seed records (optional)</td><td>One sample row so search works immediately</td></tr>
+    </tbody>
+  </table>
+  <p class="tiny">Students can list, search, and add. There is no delete/update tool on this path.</p>
+
+  <div class="prompt">
+    <div class="who">Blank template · paste as one admin message</div>
+    <div class="mono">DEFINE A NEW CAMPUS AGENT. I am an authenticated admin.
+Use add_feature only. Do not run SQL, do not CREATE TABLE, do not
+reuse a built-in name (mess, bus, complaint, room_booking, attendance,
+notice, timetable, setup). Then add the seed records onto that feature.
+Finally tell me the slug, keywords, field list, and one student
+smoke-test phrase.
+
+- name: [AGENT NAME]
+- title: [DISPLAY TITLE]
+- description: [WHAT IT DOES IN ONE SENTENCE]
+- keywords: [word1, word2, word3]
+- roles that may use it: [student, faculty, admin]
+- fields:
+  - [field_name] ([string|number|boolean|date], required|optional) — [what it stores]
+  - [field_name] ([string|number|boolean|date], required|optional) — [what it stores]
+- seed records (add_record on the new agent):
+  1) [field]=[value]; [field]=[value]
+  2) [field]=[value]; [field]=[value]</div>
+  </div>
+
+  <div class="prompt example">
+    <div class="who">Filled example · campus library</div>
+    <div class="mono">DEFINE A NEW CAMPUS AGENT. I am an authenticated admin.
+Use add_feature only. Do not run SQL, do not CREATE TABLE, do not
+reuse a built-in name (mess, bus, complaint, room_booking, attendance,
+notice, timetable, setup). Then add the seed records onto that feature.
+Finally tell me the slug, keywords, field list, and one student
+smoke-test phrase.
+
+- name: library
+- title: Campus Library
+- description: Search and add holds for campus library books
+- keywords: library, book, isbn
+- roles that may use it: student, faculty, admin
+- fields:
+  - title (string, required) — book title
+  - author (string, required) — author name
+  - isbn (string, optional) — ISBN-13
+- seed records (add_record on the new agent):
+  1) title=Introduction to Algorithms; author=Cormen; isbn=9780262033848
+  2) title=Operating Systems; author=Galvin; isbn=9781118063330</div>
+  </div>
+  <p class="tiny">Student smoke-test after Prompt 2: <code>Search the library for algorithms.</code></p>
+
+  <h2>What these prompts will not do</h2>
+  <table>
+    <thead><tr><th>Request</th><th>What actually happens</th></tr></thead>
+    <tbody>
+      <tr><td>“Run this SQL” / “create a fees table”</td><td>Rejected. Setup has no SQL tool. Invalid org YAML is refused; previous file kept as <code>.bak</code></td></tr>
+      <tr><td>“Add a hospital agent with its own schema”</td><td>Not a JSON feature. That needs a real agent in the registry — engineering work</td></tr>
+      <tr><td>Empty catalog (no hostels, no buses)</td><td>Save fails loud. A missing field must not silently disable a route</td></tr>
+      <tr><td>Student or faculty trying setup</td><td>Planner does not offer setup. The agent itself also refuses</td></tr>
+      <tr><td>Reuse a built-in name (<code>mess</code>, <code>bus</code>, …)</td><td><code>add_feature</code> returns an error. Reserved slugs cannot be overwritten</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout danger">
+    <strong>After Prompt 1, before students</strong>
+    Copy generated authentication keys offline. Confirm a hostel alias resolves
+    and one live query per enabled agent uses the new campus names, not IIT Patna leftovers.
+  </div>
+
+  <hr>
+  <p class="footer">
+    UniHelp admin setup prompts · 19 Sep 2026 · Sign in as admin · Prompt 1 then Prompt 2.
+    Companion briefing: unihelp-campus-generalization.pdf
+  </p>
+</body>
+</html>
