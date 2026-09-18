@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -201,3 +202,106 @@ class TestTimetableAgentBypass:
 
         assert "CS101" in result
         assert "B204" in result
+
+
+class TestAttendanceAgentBypass:
+    def test_parser_none_reaches_llm(self, monkeypatch):
+        import attendance_agent
+
+        llm_calls = []
+
+        def fake_chat_create(**kwargs):
+            llm_calls.append(kwargs)
+            return fake_chat_response("llm attendance reply")
+
+        monkeypatch.setattr(
+            attendance_agent, "parse_attendance_query", lambda *a, **k: None
+        )
+        monkeypatch.setattr(attendance_agent, "chat_create", fake_chat_create)
+
+        agent = attendance_agent.AttendanceAgent()
+        result = agent.chat("unclear attendance question", USER_META)
+
+        assert result == "llm attendance reply"
+        assert len(llm_calls) == 1
+
+    def test_parser_hit_skips_llm(self, monkeypatch):
+        import attendance_agent
+
+        parsed = {"student_id": "2501CS00", "course_code": "CS101"}
+        summary = {
+            "status": "success",
+            "summaries": [
+                {
+                    "course_code": "CS101",
+                    "course_name": "Algorithms",
+                    "attendance_percent": 91.67,
+                    "present_count": 11,
+                    "absent_count": 1,
+                    "total_sessions": 12,
+                    "can_skip": 9,
+                    "must_attend": 19,
+                    "remaining_sessions": 28,
+                    "threshold_percent": 75,
+                }
+            ],
+        }
+
+        monkeypatch.setattr(
+            attendance_agent, "parse_attendance_query", lambda *a, **k: dict(parsed)
+        )
+        monkeypatch.setattr(
+            attendance_agent.attendance_tools,
+            "get_attendance_summary",
+            lambda *a, **k: dict(summary),
+        )
+        monkeypatch.setattr(attendance_agent, "chat_create", _raise_if_llm_called)
+
+        agent = attendance_agent.AttendanceAgent()
+        result = agent.chat("What is my attendance percentage in CS101?", USER_META)
+
+        assert "91.67%" in result
+        assert "CS101" in result
+
+
+class TestBusAgentFormatsScheduleWithoutSecondLlm:
+    def test_query_schedule_tool_skips_rewrite_round(self, monkeypatch):
+        import Bus_agent
+
+        llm_calls = []
+
+        def fake_chat_create(**kwargs):
+            llm_calls.append(kwargs)
+            tool_call = SimpleNamespace(
+                id="call_1",
+                function=SimpleNamespace(
+                    name="query_schedule",
+                    arguments=json.dumps(
+                        {"route_name": "Bus 02", "day": "Friday"}
+                    ),
+                ),
+            )
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=None, tool_calls=[tool_call]
+                        )
+                    )
+                ]
+            )
+
+        monkeypatch.setattr(Bus_agent, "parse_bus_query", lambda *a, **k: None)
+        monkeypatch.setattr(Bus_agent, "chat_create", fake_chat_create)
+        monkeypatch.setattr(
+            Bus_agent,
+            "call_tool",
+            lambda *a, **k: json.dumps(list(BUS_RESULT)),
+        )
+
+        agent = Bus_agent.BusAgent()
+        result = agent.chat("today's bus schedule", USER_META)
+
+        assert len(llm_calls) == 1
+        assert "08:00" in result
+        assert "Aryabhatta" in result

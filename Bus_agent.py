@@ -352,8 +352,8 @@ in plain language.
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
-                # observed LLM max 515; long schedule round 739 in metrics fixture
-                max_tokens=800,
+                # observed short replies ~130; schedule tables skip the LLM
+                max_tokens=350,
             )
             logger.debug("Bus LLM round took %.2fs", time.time() - start)
             message = response.choices[0].message
@@ -363,6 +363,7 @@ in plain language.
 
             messages.append(message)
 
+            round_calls = []
             for tool_call in message.tool_calls:
 
                 tool_name = tool_call.function.name
@@ -403,6 +404,7 @@ in plain language.
                 if not isinstance(result, str):
                     result = json.dumps(result, default=str)
 
+                round_calls.append((tool_name, arguments, result))
                 messages.append(
                     {
                         "role": "tool",
@@ -410,6 +412,27 @@ in plain language.
                         "content": result
                     }
                 )
+
+            if round_calls and all(
+                name == "query_schedule" for name, _, _ in round_calls
+            ):
+                chunks = []
+                for _, arguments, raw in round_calls:
+                    try:
+                        payload = json.loads(raw) if isinstance(raw, str) else raw
+                    except json.JSONDecodeError:
+                        payload = raw
+                    chunks.append(
+                        format_bus_reply(
+                            {
+                                "route_name": arguments.get("route_name") or "",
+                                "day": arguments.get("day") or "",
+                                "date": arguments.get("date") or "",
+                            },
+                            payload,
+                        )
+                    )
+                return "\n\n".join(chunks)
 
         return (
             "The bus request could not be completed because the agent "

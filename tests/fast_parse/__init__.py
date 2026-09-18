@@ -22,6 +22,8 @@ _spec.loader.exec_module(_mod)
 parse_mess_query = _mod.parse_mess_query
 parse_bus_query = _mod.parse_bus_query
 parse_timetable_query = _mod.parse_timetable_query
+parse_attendance_query = _mod.parse_attendance_query
 format_mess_reply = _mod.format_mess_reply
 format_bus_reply = _mod.format_bus_reply
 format_timetable_reply = _mod.format_timetable_reply
+format_attendance_reply = _mod.format_attendance_reply
