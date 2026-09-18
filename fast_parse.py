@@ -1,8 +1,10 @@
 """Deterministic fast-path parsers for unambiguous mess/bus/timetable/notice queries.
 
 Every public parser returns a fully populated argument dict, or None.
-Nothing is guessed: missing hostel/route, write intent, mixed schedule/
-timing language, or an unparseable date all fall through to the LLM.
+Nothing is guessed: write intent, mixed schedule/timing language, or an
+unparseable date all fall through to the LLM. A mess lookup that names a
+meal or "mess" but no hostel returns need_hostel=True so the agent can
+ask which hostel without calling the model.
 """
 
 from __future__ import annotations
@@ -262,10 +264,6 @@ def parse_mess_query(
     if now is None:
         return None
 
-    hostel = _resolve_hostel(text)
-    if hostel is None:
-        return None
-
     meal = _resolve_meal(text)
     if meal == "__ambiguous__":
         return None
@@ -282,6 +280,22 @@ def parse_mess_query(
     weekly = bool(_WEEKLY_RE.search(text)) or (
         bool(_SCHEDULE_AMBIGUOUS_RE.search(text)) and not has_day
     )
+    hostel = _resolve_hostel(text)
+    if hostel is None:
+        looks_like_menu = bool(
+            _MENU_CONTENT_RE.search(text)
+            or _MEAL_NAMED_RE.search(text)
+            or re.search(r"\bmess\b", text, re.I)
+        )
+        if not looks_like_menu:
+            return None
+        return {
+            "hostel": None,
+            "need_hostel": True,
+            "meal": meal,
+            "date": _iso(resolved),
+            "weekly": weekly,
+        }
     return {
         "hostel": hostel,
         "meal": meal,
@@ -519,7 +533,7 @@ _NOTICE_WORD_RE = re.compile(
 )
 _NOTICE_VIEW_RE = re.compile(
     r"\b(today|today's|todays|current|active|show|list|view|what are|"
-    r"notice board|bulletin)\b",
+    r"are there|notice board|bulletin)\b",
     re.I,
 )
 _NOTICE_OTHER_DATE_RE = re.compile(
@@ -530,12 +544,69 @@ _NOTICE_TYPE_FILTER_RE = re.compile(
     r"\b(important alert|notice type|of type)\b",
     re.I,
 )
+_NOTICE_ARCHIVE_RE = re.compile(
+    r"\barchive\b.{0,40}\bnotices?\b|\bnotices?\b.{0,40}\barchive\b",
+    re.I,
+)
+_NOTICE_PUBLISH_RE = re.compile(
+    r"^\s*(?:please\s+)?(?:publish|post|create|add)\s+"
+    r"(?:an?\s+)?"
+    r"(?:campus[- ]wide\s+)?"
+    r"(?P<kind>important\s+alert|notice)\b"
+    r"(?P<for_students>\s+for\s+all\s+students)?"
+    r"(?:\s+that|\s*:\s*|\s+)"
+    r"(?P<body>.+?)\s*$",
+    re.I | re.S,
+)
+_NOTICE_EXPIRES_RE = re.compile(
+    r",?\s*expires(?:\s+on)?\s+(\d{4}-\d{2}-\d{2})\s*$",
+    re.I,
+)
+
+
+def _notice_publish_args(
+    text: str, time_and_date: Optional[str]
+) -> Optional[dict[str, Any]]:
+    match = _NOTICE_PUBLISH_RE.match(text)
+    if not match:
+        return None
+    body = (match.group("body") or "").strip()
+    if not body:
+        return None
+    expires = None
+    exp = _NOTICE_EXPIRES_RE.search(body)
+    if exp:
+        expires = exp.group(1)
+        body = body[: exp.start()].strip().rstrip(",").strip()
+    if not body:
+        return None
+    now = _parse_now(time_and_date)
+    if expires is None:
+        if now is None:
+            return None
+        expires = (now + timedelta(days=7)).strftime("%Y-%m-%d")
+    kind = (match.group("kind") or "notice").lower()
+    notice_type = "Important Alert" if "alert" in kind or "important" in text.lower() else "General"
+    lower = text.lower()
+    if match.group("for_students") or "student" in lower:
+        audience = ["All_Students"]
+    elif "campus-wide" in lower or "campus wide" in lower or "campuswide" in lower:
+        audience = ["All"]
+    else:
+        audience = ["All"]
+    return {
+        "action": "publish",
+        "content": body,
+        "notice_type": notice_type,
+        "target_audience": audience,
+        "expires_at": expires,
+    }
 
 
 def parse_notice_query(
     user_input: str, time_and_date: Optional[str]
 ) -> Optional[dict[str, Any]]:
-    """Resolve an unqualified 'show current notices' lookup, or None.
+    """Resolve view / publish / archive notice intents, or None.
 
     Audience/authority are never parsed from text — the agent fills them
     from user_metadata, same as timetable's roll number.
@@ -543,6 +614,11 @@ def parse_notice_query(
     if not user_input or not str(user_input).strip():
         return None
     text = str(user_input).strip()
+    if _NOTICE_ARCHIVE_RE.search(text):
+        return {"action": "archive"}
+    published = _notice_publish_args(text, time_and_date)
+    if published is not None:
+        return published
     if _NOTICE_WRITE_RE.search(text):
         return None
     if _NOTICE_CONTENT_RE.search(text):
@@ -563,6 +639,22 @@ def parse_notice_query(
 
 def format_notice_reply(parsed: dict[str, Any], result: Any) -> str:
     """Bulletin feed matching Notice_agent FORMATTING RULES."""
+    action = (parsed or {}).get("action") or "view"
+    if action == "publish":
+        if isinstance(result, dict) and result.get("status") == "success":
+            ntype = parsed.get("notice_type") or "notice"
+            content = parsed.get("content") or ""
+            return f"Published {ntype} notice.\n\n> {content}"
+        if isinstance(result, dict):
+            return str(result.get("message") or result.get("error") or result)
+        return str(result)
+    if action == "archive":
+        if isinstance(result, dict) and result.get("status") == "success":
+            count = result.get("archived_count", 0)
+            return f"Archived {count} expired notice(s)."
+        if isinstance(result, dict):
+            return str(result.get("message") or result.get("error") or result)
+        return str(result)
     if isinstance(result, dict) and result.get("error"):
         return str(result.get("error") or result)
     if isinstance(result, list) and result and isinstance(result[0], dict) and result[0].get("error"):
@@ -576,7 +668,7 @@ def format_notice_reply(parsed: dict[str, Any], result: Any) -> str:
         date = row.get("publish_timestamp") or ""
         if date:
             date = str(date).split(" ")[0]
-        author = row.get("author_id") or row.get("author") or "—"
+        author = row.get("author_id") or row.get("author") or "-"
         content = row.get("content") or ""
         lines.append(f"**{ntype}** | *{date}* | By: {author}")
         lines.append(f"> {content}")

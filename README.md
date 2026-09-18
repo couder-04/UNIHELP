@@ -30,7 +30,7 @@ The HTTP server listens only on `127.0.0.1:8002`. Each request must include an `
 | Python | 3.12 (3.11+ should work) | Project venv was built with 3.12 |
 | PostgreSQL | 14+ | Needs `createdb` / `psql`. `btree_gist` and `pgcrypto` extensions are used |
 | pip | bundled with Python | |
-| An OpenAI-compatible LLM key | — | Default gateway is `https://awesome.kado.so/openai/v1` |
+| An OpenRouter API key | — | Default is `https://openrouter.ai/api/v1` |
 
 Optional: `curl` to smoke-test the server.
 
@@ -106,15 +106,16 @@ NOTICE_DB_NAME=notice_board
 TIMETABLE_DB_NAME=timetable
 
 LLM_API_KEY=your_llm_api_key_here
-LLM_BASE_URL=https://awesome.kado.so/openai/v1
-LLM_MODEL=kado
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL=deepseek/deepseek-v4-flash-0731
+LLM_FAST_MODEL=qwen/qwen3.8-27b
 ```
 
 Notes:
 
 - `.env.example` uses port `5434`. Homebrew and most Linux installs use `5432`. Set `PGPORT` to whatever `psql` actually uses (`SHOW port;` inside `psql`).
 - Never commit `.env`. It is gitignored.
-- Any OpenAI-compatible endpoint works: set `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`.
+- Default LLM is OpenRouter. Set `LLM_BASE_URL`, `LLM_MODEL`, `LLM_FAST_MODEL`, and `LLM_API_KEY`.
 - Optional pool tuning: `DB_POOL_MIN_SIZE` (default `1`) and `DB_POOL_MAX_SIZE` (default `10`). Keep the pool max ≥ 8, the server's concurrent-request cap.
 
 ## 4. Load the full databases

@@ -122,6 +122,27 @@ class TestMessAgentBypass:
         assert "Paneer" in result
         assert "Dinner" in result
 
+    def test_missing_hostel_skips_llm(self, monkeypatch):
+        import mess_agent_1
+
+        monkeypatch.setattr(
+            mess_agent_1,
+            "parse_mess_query",
+            lambda *a, **k: {
+                "hostel": None,
+                "need_hostel": True,
+                "meal": None,
+                "date": "2026-09-18",
+                "weekly": False,
+            },
+        )
+        monkeypatch.setattr(mess_agent_1, "chat_create", _raise_if_llm_called)
+
+        agent = mess_agent_1.MessAgent()
+        result = agent.chat("today's mess menu", USER_META)
+
+        assert "Which hostel?" in result
+
 
 class TestBusAgentBypass:
     def test_parser_none_reaches_llm(self, monkeypatch):
@@ -244,3 +265,39 @@ class TestNoticeAgentBypass:
 
         assert "Fest this weekend" in result
         assert "Active Notices" in result
+
+    def test_publish_skips_llm(self, monkeypatch):
+        import Notice_agent
+
+        captured = {}
+
+        def fake_publish(**kwargs):
+            captured.update(kwargs)
+            return {"status": "success", "id": "n1", "publish_timestamp": NOW}
+
+        monkeypatch.setattr(Notice_agent, "publish_notice", fake_publish)
+        monkeypatch.setattr(Notice_agent, "chat_create", _raise_if_llm_called)
+
+        agent = Notice_agent.NoticeAgent()
+        FACULTY = dict(USER_META, role="faculty", name="Priya Patel")
+        result = agent.chat("add notice: no class today", FACULTY)
+
+        assert "Published" in result
+        assert "no class today" in result
+        assert captured["content"] == "no class today"
+        assert captured["user"] == "faculty"
+
+    def test_student_publish_is_denied(self, monkeypatch):
+        import Notice_agent
+
+        monkeypatch.setattr(
+            Notice_agent,
+            "publish_notice",
+            lambda **k: {"status": "error", "message": "Not authorised."},
+        )
+        monkeypatch.setattr(Notice_agent, "chat_create", _raise_if_llm_called)
+
+        agent = Notice_agent.NoticeAgent()
+        result = agent.chat("add notice: no class today", USER_META)
+
+        assert "Not authorised" in result

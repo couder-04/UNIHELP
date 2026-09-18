@@ -72,8 +72,13 @@ def _view_notices_uncached(caller_audience: str, caller_authority: str) -> List[
                 r["id"] = str(r["id"])
                 r["publish_timestamp"] = str(r["publish_timestamp"])
                 r["expires_at"] = str(r["expires_at"]) if r["expires_at"] else None
+            conn.commit()
             return rows
     except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         return [{"error": str(e)}]
     finally:
         conn.close()
@@ -108,6 +113,6 @@ def call_tool(name: str, **kwargs) -> str:
     if not fn:
         return json.dumps({"error": f"Unknown tool '{name}'."})
     try:
-        return json.dumps(fn(**kwargs), indent=2, ensure_ascii=False)
+        return json.dumps(fn(**kwargs), indent=2, ensure_ascii=False, default=str)
     except Exception as exc:
         return json.dumps({"error": f"Tool execution failed: {exc}"})

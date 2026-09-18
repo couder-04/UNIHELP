@@ -2,10 +2,21 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+# Vercel/POSIX images often start with an ASCII locale. Force UTF-8 so
+# log lines and LLM JSON with arrows/dashes do not raise UnicodeEncodeError.
+os.environ.setdefault("PYTHONUTF8", "1")
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from a2a.server.agent_execution import AgentExecutor
 from a2a.server.events import EventQueue

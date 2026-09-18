@@ -66,7 +66,8 @@ def _conninfo(dbname: str) -> str:
     # ...), never user input, so plain interpolation here is safe.
     return (
         f"host={host} port={port} dbname={dbname} "
-        f"user={user} password={password} sslmode={_sslmode(host)}"
+        f"user={user} password={password} sslmode={_sslmode(host)} "
+        f"client_encoding=UTF8"
     )
 
 
@@ -146,6 +147,7 @@ def _fallback_connection(dbname: str):
             host=host, port=port, dbname=dbname,
             user=user, password=password, connect_timeout=5,
             sslmode=sslmode,
+            client_encoding="UTF8",
         )
 
 

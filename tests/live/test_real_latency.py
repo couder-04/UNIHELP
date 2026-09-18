@@ -1,7 +1,7 @@
 """Live latency cases against a running UniHelp server.
 
 These hit the real planner → executor → specialized-agent path, including
-the Kado LLM and Postgres. They are skipped unless UNIHELP_LIVE=1.
+the OpenRouter LLM and Postgres. They are skipped unless UNIHELP_LIVE=1.
 
   UNIHELP_LIVE=1 .venv/bin/python -m pytest tests/live/test_real_latency.py -v
 """

@@ -118,6 +118,18 @@ def effective_api_key() -> str:
     return _request_api_key.get() or LLM_API_KEY
 
 
+def describe_llm_error(exc: BaseException) -> str:
+    """Turn an LLM SDK failure into a short user-facing sentence."""
+    msg = str(exc)
+    low = msg.lower()
+    if "401" in msg or "authentication" in low or "api key" in low:
+        return (
+            "The LLM API key was rejected. Paste a valid OpenRouter key in Connect, "
+            "or set LLM_API_KEY."
+        )
+    return msg
+
+
 def get_client() -> OpenAI:
     key = effective_api_key()
     client = _clients.get(key)
@@ -129,13 +141,15 @@ def get_client() -> OpenAI:
                     "api_key": key or "missing",
                     "base_url": LLM_BASE_URL,
                 }
+                headers: dict[str, str] = {}
+                base = LLM_BASE_URL or ""
                 # OpenRouter ranks apps that send these; they are optional
                 # but avoid some 4xx on otherwise valid keys.
-                if "openrouter.ai" in (LLM_BASE_URL or ""):
-                    kwargs["default_headers"] = {
-                        "HTTP-Referer": "http://127.0.0.1:8002",
-                        "X-Title": "UniHelp",
-                    }
+                if "openrouter.ai" in base:
+                    headers["HTTP-Referer"] = "http://127.0.0.1:8002"
+                    headers["X-Title"] = "UniHelp"
+                if headers:
+                    kwargs["default_headers"] = headers
                 client = OpenAI(**kwargs)
                 logger.info(
                     "LLM client created base_url=%s model=%s fast_model=%s "

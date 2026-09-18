@@ -2,7 +2,12 @@ import json
 import logging
 
 from llm import cached_system_message, chat_create, identity_message
-from notice_functions import call_tool, view_notices
+from notice_functions import (
+    archive_expired_notices,
+    call_tool,
+    publish_notice,
+    view_notices,
+)
 from fast_parse import format_notice_reply, parse_notice_query
 
 logger = logging.getLogger(__name__)
@@ -14,7 +19,7 @@ class NoticeAgent:
 You are the IIT Patna Notice Board Agent.
 
 Your job is to answer questions and handle notices using your tools.
-Do not ask the user for their role, name, or the current time —
+Do not ask the user for their role, name, or the current time -
 they are provided in the authenticated identity message.
 Use the Time and Date from identity for relative times such as today, now, and notice expiry.
 
@@ -82,11 +87,28 @@ When a user asks to view notices, present them in this Bulletin Feed format.
         time_and_date = user_metadata.get("Time and Date", "Unknown")
 
         parsed = parse_notice_query(user_input, time_and_date)
-        if parsed is not None and parsed.get("action") == "view":
+        if parsed is not None:
             logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
-            audience = "All_Students" if str(role).lower() == "student" else "Staff"
-            rows = view_notices(audience, role)
-            return format_notice_reply(parsed, rows)
+            action = parsed.get("action")
+            if action == "view":
+                audience = "All_Students" if str(role).lower() == "student" else "Staff"
+                rows = view_notices(audience, role)
+                return format_notice_reply(parsed, rows)
+            if action == "archive":
+                result = archive_expired_notices(user=role)
+                return format_notice_reply(parsed, result)
+            if action == "publish":
+                audience = parsed.get("target_audience") or ["All"]
+                result = publish_notice(
+                    content=parsed.get("content") or "",
+                    notice_type=parsed.get("notice_type") or "General",
+                    author_id=name,
+                    author_authority=role,
+                    target_audience=audience,
+                    expires_at=parsed.get("expires_at") or "",
+                    user=role,
+                )
+                return format_notice_reply(parsed, result)
 
         messages = [
             cached_system_message(self.SYSTEM_PROMPT),

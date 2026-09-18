@@ -33,20 +33,49 @@ class TestParseNoticePositive:
     def test_notice_board(self):
         assert parse_notice_query("show the notice board", NOW) == {"action": "view"}
 
+    def test_are_there_notices(self):
+        assert parse_notice_query(
+            "Are there any important student notices?", NOW
+        ) == {"action": "view"}
+
+    def test_add_notice_colon(self):
+        parsed = parse_notice_query("add notice: no class today", NOW)
+        assert parsed is not None
+        assert parsed["action"] == "publish"
+        assert parsed["content"] == "no class today"
+        assert parsed["notice_type"] == "General"
+        assert parsed["target_audience"] == ["All"]
+        assert parsed["expires_at"] == "2026-09-25"
+
+    def test_publish_notice_that(self):
+        parsed = parse_notice_query(
+            "Publish a notice that CS101 lab is cancelled tomorrow",
+            NOW,
+        )
+        assert parsed is not None
+        assert parsed["action"] == "publish"
+        assert parsed["content"] == "CS101 lab is cancelled tomorrow"
+        assert parsed["notice_type"] == "General"
+
+    def test_publish_important_alert_with_expiry(self):
+        parsed = parse_notice_query(
+            "Publish an important alert for all students: midterm on Friday, expires 2026-09-20",
+            NOW,
+        )
+        assert parsed is not None
+        assert parsed["action"] == "publish"
+        assert parsed["notice_type"] == "Important Alert"
+        assert parsed["target_audience"] == ["All_Students"]
+        assert parsed["content"] == "midterm on Friday"
+        assert parsed["expires_at"] == "2026-09-20"
+
+    def test_archive_expired(self):
+        assert parse_notice_query("Archive expired notices", NOW) == {
+            "action": "archive"
+        }
+
 
 class TestParseNoticeNegative:
-    def test_publish_intent(self):
-        assert (
-            parse_notice_query(
-                "Publish a notice that CS101 lab is cancelled tomorrow",
-                NOW,
-            )
-            is None
-        )
-
-    def test_archive_intent(self):
-        assert parse_notice_query("Archive expired notices", NOW) is None
-
     def test_specific_notice_content(self):
         assert (
             parse_notice_query(

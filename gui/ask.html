@@ -322,6 +322,21 @@
     document.getElementById("prompt").addEventListener("keydown", (e) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
     });
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const keyParam = params.get("key");
+      const qParam = params.get("q");
+      if (keyParam) {
+        document.getElementById("key").value = keyParam;
+        sessionStorage.setItem("unihelp_auth_key", keyParam);
+      }
+      if (qParam) {
+        document.getElementById("prompt").value = qParam;
+        if (params.get("autosend") === "1") {
+          send();
+        }
+      }
+    } catch (err) {}
     document.getElementById("clearChat").onclick = () => {
       document.getElementById("thread").innerHTML = "";
     };

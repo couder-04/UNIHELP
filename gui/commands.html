@@ -151,15 +151,22 @@
       white-space: pre-wrap;
       line-height: 1.45;
     }
-    .cmd .copy {
+    .cmd .side {
       flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      margin-top: 3px;
+    }
+    .cmd .copy, .cmd .run {
       font-family: var(--mono);
       font-size: 0.65rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--mist);
-      margin-top: 3px;
     }
+    .cmd .run { color: var(--gold-2); }
     .deny {
       margin-top: 10px;
       color: var(--warn);
@@ -313,7 +320,7 @@
             "Show my bookings",
             "Show my pending requests",
             "Cancel my SAC Hall booking",
-            "Modify my booking to 11–12 instead",
+            "Modify my booking to 11-12 instead",
           ],
         },
         bus: {
@@ -347,7 +354,7 @@
             "Show course attendance for CS101",
             "Show CS101 attendance summary",
             "Who is at risk in CS101?",
-            "Who is unmarked in today’s CS101 class?",
+            "Who is unmarked in today's CS101 class?",
             "List CS101 sessions",
             "Show the CS101 roster",
             "Rank students by attendance in CS101",
@@ -362,9 +369,9 @@
           scope: "View teaching schedule and add, update, or delete slots.",
           commands: [
             "Show my teaching schedule",
-            "Add a CS101 slot on Monday 10–11 in Room 101",
-            "Move the CS101 Monday slot to 11–12",
-            "Delete the CS101 Monday 10–11 slot",
+            "Add a CS101 slot on Monday 10-11 in Room 101",
+            "Move the CS101 Monday slot to 11-12",
+            "Delete the CS101 Monday 10-11 slot",
             "What do I teach on Wednesday?",
             "List all subjects",
             "Which rooms are used for classes?",
@@ -400,7 +407,7 @@
             "Show my bookings",
             "Show my pending requests",
             "Cancel my CLH booking",
-            "Modify my booking to 11–12 instead",
+            "Modify my booking to 11-12 instead",
           ],
           deny: "Faculty cannot book SAC Hall (student-only) or approve/reject requests (admin-only).",
         },
@@ -420,8 +427,8 @@
           commands: [
             "What is today's dinner at Kalam hostel?",
             "Show the weekly menu for Asima",
-            "Change today’s dinner at Kalam to paneer curry (temporary)",
-            "Replace tomorrow’s breakfast at Aryabhatta with poha for today only",
+            "Change today's dinner at Kalam to paneer curry (temporary)",
+            "Replace tomorrow's breakfast at Aryabhatta with poha for today only",
           ],
           deny: "Faculty cannot make permanent menu changes.",
         },
@@ -449,9 +456,9 @@
           commands: [
             "List the rooms used for classes",
             "Show the timetable for Monday",
-            "Add a CS101 slot on Monday 10–11 in Room 101",
-            "Move the CS101 Monday slot to 11–12",
-            "Delete the CS101 Monday 10–11 slot",
+            "Add a CS101 slot on Monday 10-11 in Room 101",
+            "Move the CS101 Monday slot to 11-12",
+            "Delete the CS101 Monday 10-11 slot",
           ],
         },
         complaint: {
@@ -484,7 +491,7 @@
             "Reject request #5 because the hall is reserved",
             "Show booking details",
             "Cancel booking #8",
-            "Modify booking #8 to 11–12",
+            "Modify booking #8 to 11-12",
           ],
           deny: "Admin cannot direct-book SAC Hall (student-only).",
         },
@@ -503,7 +510,7 @@
           commands: [
             "What is today's dinner at Kalam hostel?",
             "Show the weekly menu for Asima",
-            "Change today’s dinner at Kalam to paneer curry (temporary)",
+            "Change today's dinner at Kalam to paneer curry (temporary)",
             "Permanently change Kalam Sunday dinner to dal tadka",
             "What time is lunch served?",
           ],
@@ -550,7 +557,10 @@
         const cmds = block.commands.map((c) =>
           `<button class="cmd" type="button" data-cmd="${encodeURIComponent(c)}">
             <code>${c}</code>
-            <span class="copy">Copy</span>
+            <span class="side">
+              <span class="copy">Copy</span>
+              <span class="run">Run</span>
+            </span>
           </button>`
         ).join("");
         const deny = block.deny ? `<p class="deny">${block.deny}</p>` : "";
@@ -577,10 +587,20 @@
       renderToolbar();
       renderCatalog();
     });
+    const DEMO_KEYS = { student: "student-demo", faculty: "faculty-demo", admin: "admin-demo" };
     document.getElementById("catalog").addEventListener("click", (e) => {
       const btn = e.target.closest(".cmd");
       if (!btn) return;
-      copyText(decodeURIComponent(btn.dataset.cmd), btn);
+      const text = decodeURIComponent(btn.dataset.cmd);
+      if (e.target.closest(".run")) {
+        const url = new URL("/ask", window.location.origin);
+        url.searchParams.set("key", DEMO_KEYS[role]);
+        url.searchParams.set("q", text);
+        url.searchParams.set("autosend", "1");
+        window.location.href = url.toString();
+        return;
+      }
+      copyText(text, btn);
     });
 
     renderToolbar();

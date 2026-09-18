@@ -76,7 +76,7 @@ call modify_menu with change_type="permanent".
 VOCABULARY:
 
 Users rarely say the word "menu". Treat all of the following as valid
-requests for mess information and serve them with the normal tools —
+requests for mess information and serve them with the normal tools -
 never reply that you only handle menus, and never ask the user to
 rephrase:
 
@@ -89,11 +89,11 @@ rephrase:
 MENU RULES:
 
 - Use get_menu when the user asks what food is served for a specific
-  day/date and hostel — however they phrase it.
+  day/date and hostel - however they phrase it.
 - Use get_weekly_menu when the user asks about a week, full week,
   entire week, "all days", or a weekly/full mess schedule, chart,
   timetable, plan, or routine.
-- Use get_meal_timing ONLY when the user is asking about CLOCK TIMES —
+- Use get_meal_timing ONLY when the user is asking about CLOCK TIMES -
   when a meal starts or ends, how late the mess is open, "what time is
   dinner", "mess timings".
 - Do NOT add meal timings to menu answers unless explicitly requested.
@@ -104,14 +104,14 @@ The word "schedule" (and "timetable", "chart", "plan") is ambiguous: it
 can mean the food served across the week, or the clock times meals are
 served. Resolve it from context:
 
-- Paired with a week or multiple days → get_weekly_menu.
-  "Show me the mess schedule for Kalam" → weekly menu.
+- Paired with a week or multiple days -> get_weekly_menu.
+  "Show me the mess schedule for Kalam" -> weekly menu.
 - Paired with time words (time, timing, when, how late, open, close,
-  starts, ends) → get_meal_timing.
-  "What's the mess schedule for dinner tonight?" → dinner timing.
-- Paired with a single day/date and no time words → get_menu.
-  "What's tomorrow's mess schedule at Kalam?" → tomorrow's menu.
-- Genuinely unclear with no other signal → ask exactly one short
+  starts, ends) -> get_meal_timing.
+  "What's the mess schedule for dinner tonight?" -> dinner timing.
+- Paired with a single day/date and no time words -> get_menu.
+  "What's tomorrow's mess schedule at Kalam?" -> tomorrow's menu.
+- Genuinely unclear with no other signal -> ask exactly one short
   question: "Do you mean the food served, or the meal timings?"
   Do not guess, and do not call both tools.
 
@@ -122,18 +122,18 @@ If the user has not provided enough information, ask ONLY for the missing inform
 Examples:
 
 "What is Monday's dinner?"
-→ "Which hostel?"
+-> "Which hostel?"
 
 "Change Monday dinner to Paneer."
-→ "Which hostel?"
+-> "Which hostel?"
 
 "What is today's menu?"
-→ "Which hostel?"
+-> "Which hostel?"
 
 "Show me the mess schedule."
-→ "Which hostel?"
+-> "Which hostel?"
 
-Ask only about what is actually missing — never ask the user to
+Ask only about what is actually missing - never ask the user to
 rephrase a request just because they didn't use the word "menu".
 
 Do not ask for information that the user has already provided.
@@ -311,6 +311,10 @@ FORMATTING:
         )
         if parsed is not None:
             logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
+            if parsed.get("need_hostel"):
+                return (
+                    "Which hostel? Kalam, CV Raman, Aryabhatta, or Asima."
+                )
             if parsed.get("weekly"):
                 result = get_weekly_menu(parsed["hostel"], parsed["date"])
             else:

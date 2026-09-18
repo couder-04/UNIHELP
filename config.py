@@ -23,8 +23,8 @@ TIMETABLE_DB_NAME = os.getenv("TIMETABLE_DB_NAME", "timetable")
 # Never hardcode the API key. Set LLM_API_KEY in your environment / .env file,
 # or paste it in the campus console header.
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://awesome.kado.so/openai/v1")
-LLM_MODEL = os.getenv("LLM_MODEL", "kado")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "deepseek/deepseek-v4-flash-0731")
 # Classification/dispatch tier. Unset → same model as LLM_MODEL, so existing
 # deployments keep identical behavior until someone opts into a cheaper model.
 # Do not point this at a "thinking"/reasoning model: those emit thousands of

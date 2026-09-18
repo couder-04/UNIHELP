@@ -198,9 +198,7 @@ class TestAgentException:
             USER_META,
         )
 
-        payload = json.loads(result)
-        assert payload["status"] == "error"
-        assert payload["message"] == "mess db is down"
+        assert result == "mess db is down"
 
     def test_raising_agent_does_not_block_sibling_tasks(self, executor, monkeypatch):
         llm_calls = []

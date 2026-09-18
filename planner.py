@@ -3,7 +3,7 @@ import logging
 import re
 
 from config import LLM_FAST_MODEL
-from llm import cached_system_message, chat_create, fast_tier_kwargs, get_client
+from llm import cached_system_message, chat_create, describe_llm_error, fast_tier_kwargs, get_client
 from task_conditions import (
     assign_task_ids,
     condition_from_text,
@@ -196,6 +196,7 @@ Return ONLY valid JSON.
         ),
         "notice": (
             "notice", "notices", "notice board", "bulletin",
+            "important alert", "campus-wide", "campus wide",
         ),
         "timetable": (
             "timetable", "class schedule", "next class", "my classes",
@@ -595,33 +596,41 @@ Return ONLY valid JSON.
             (user_input or "")[:200],
         )
 
-        # Ask for guaranteed-JSON output when the gateway supports it; fall
-        # back transparently if this particular model/gateway rejects the
-        # parameter.
-        response = self._planner_chat(messages, json_mode=True)
-        content = response.choices[0].message.content
-        # CRITICAL FIX: this gateway accepts response_format=json_object
-        # but often returns empty content (completion tokens, no text).
-        # An empty body used to become "unsupported" for every multi-domain
-        # request. Retry without the parameter so the model can emit JSON.
-        retried = False
-        if not (content or "").strip():
-            logger.warning(
-                "Planner json_object returned empty content; retrying without it"
-            )
-            response = self._planner_chat(messages, json_mode=False)
+        try:
+            # Ask for guaranteed-JSON output when the gateway supports it; fall
+            # back transparently if this particular model/gateway rejects the
+            # parameter.
+            response = self._planner_chat(messages, json_mode=True)
             content = response.choices[0].message.content
-            retried = True
+            # CRITICAL FIX: this gateway accepts response_format=json_object
+            # but often returns empty content (completion tokens, no text).
+            # An empty body used to become "unsupported" for every multi-domain
+            # request. Retry without the parameter so the model can emit JSON.
+            retried = False
+            if not (content or "").strip():
+                logger.warning(
+                    "Planner json_object returned empty content; retrying without it"
+                )
+                response = self._planner_chat(messages, json_mode=False)
+                content = response.choices[0].message.content
+                retried = True
 
-        plan = self._finalize_plan(self._parse_plan(content))
-        if plan.get("tasks") and not plan_deps_valid(plan) and not retried:
-            logger.warning(
-                "Planner depends_on did not reference a task id; retrying"
-            )
-            response = self._planner_chat(messages, json_mode=False)
-            plan = self._finalize_plan(
-                self._parse_plan(response.choices[0].message.content)
-            )
+            plan = self._finalize_plan(self._parse_plan(content))
+            if plan.get("tasks") and not plan_deps_valid(plan) and not retried:
+                logger.warning(
+                    "Planner depends_on did not reference a task id; retrying"
+                )
+                response = self._planner_chat(messages, json_mode=False)
+                plan = self._finalize_plan(
+                    self._parse_plan(response.choices[0].message.content)
+                )
+        except Exception as exc:
+            logger.exception("Planner LLM failed")
+            return {
+                "tasks": [],
+                "status": "unsupported",
+                "message": describe_llm_error(exc),
+            }
 
         if plan.get("tasks") and plan_deps_valid(plan):
             return plan

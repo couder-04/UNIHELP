@@ -4,7 +4,13 @@ import re
 
 import metrics
 from config import LLM_FAST_MODEL
-from llm import cached_system_message, chat_create, fast_tier_kwargs, get_client
+from llm import (
+    cached_system_message,
+    chat_create,
+    describe_llm_error,
+    fast_tier_kwargs,
+    get_client,
+)
 from mess_agent_1 import MessAgent
 from Bus_agent import BusAgent
 from complaint_agent import ComplaintAgent
@@ -139,7 +145,7 @@ instead of inventing that result.
             try:
                 return fn(request, user_metadata)
             except Exception as exc:
-                return {"status": "error", "message": str(exc)}
+                return describe_llm_error(exc)
 
     def _task_fields(self, task, structured=None, skipped=None):
         cond = task.get("condition")

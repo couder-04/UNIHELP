@@ -1,7 +1,7 @@
 """Attendance agent for the UNIHELP campus assistant.
 
 Takes role metadata (student / faculty / admin), plans tool calls with the
-Kado OpenAI-compatible LLM, then executes tools from attendance_functions.
+OpenRouter LLM, then executes tools from attendance_functions.
 """
 
 from __future__ import annotations

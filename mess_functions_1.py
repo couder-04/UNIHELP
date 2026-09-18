@@ -25,36 +25,45 @@ def _invalidate_menu_cache(hostel: str | None = None, menu_date: str | None = No
 
 def _get_menu_uncached(hostel: str, target_date):
     conn = get_connection()
-    cur = conn.cursor()
-    day_name = target_date.strftime("%A")
-    cur.execute(
-        """
-        SELECT breakfast, lunch, snacks, dinner
-        FROM temporary
-        WHERE LOWER(hostel) = LOWER(%s)
-          AND LOWER(day) = LOWER(%s)
-        """,
-        (hostel, day_name)
-    )
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
+    try:
+        cur = conn.cursor()
+        day_name = target_date.strftime("%A")
+        cur.execute(
+            """
+            SELECT breakfast, lunch, snacks, dinner
+            FROM temporary
+            WHERE LOWER(hostel) = LOWER(%s)
+              AND LOWER(day) = LOWER(%s)
+            """,
+            (hostel, day_name)
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.commit()
 
-    if not row:
+        if not row:
+            return {
+                "status": "not_found",
+                "message": f"No menu found for {hostel} on {target_date.isoformat()} ({day_name})."
+            }
+
+        menu = {"breakfast": row[0], "lunch": row[1], "snacks": row[2], "dinner": row[3], "dessert": None}
+
         return {
-            "status": "not_found",
-            "message": f"No menu found for {hostel} on {target_date.isoformat()} ({day_name})."
+            "status": "success",
+            "hostel": hostel,
+            "date": target_date.isoformat(),
+            "day": day_name,
+            "menu": menu
         }
-
-    menu = {"breakfast": row[0], "lunch": row[1], "snacks": row[2], "dinner": row[3], "dessert": None}
-
-    return {
-        "status": "success",
-        "hostel": hostel,
-        "date": target_date.isoformat(),
-        "day": day_name,
-        "menu": menu
-    }
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return {"status": "error", "message": str(e)}
+    finally:
+        conn.close()
 
 
 def get_menu(hostel: str, menu_date: str):

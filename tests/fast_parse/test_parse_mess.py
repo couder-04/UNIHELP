@@ -101,14 +101,33 @@ class TestParseMessNegative:
             is None
         )
 
+    def test_missing_hostel(self):
+        out = parse_mess_query("What is today's dinner?", NOW)
+        assert out is not None
+        assert out["need_hostel"] is True
+        assert out["meal"] == "dinner"
+        assert out["hostel"] is None
+
+    def test_todays_mess_menu_asks_hostel(self):
+        out = parse_mess_query("today's mess menu", NOW)
+        assert out is not None
+        assert out["need_hostel"] is True
+        assert out["meal"] is None
+
+    def test_aryabhatta_hostel_word(self):
+        out = parse_mess_query(
+            "What is today's dinner at aryabhatta hostel?", NOW
+        )
+        assert out["hostel"] == "Aryabhatta"
+        assert out["meal"] == "dinner"
+
     def test_unrecognized_hostel(self):
-        assert parse_mess_query("today's dinner at Hogwarts", NOW) is None
+        out = parse_mess_query("today's dinner at Hogwarts", NOW)
+        assert out is not None
+        assert out["need_hostel"] is True
 
     def test_garbled_date(self):
         assert parse_mess_query("Kalam dinner on 2026-13-45", NOW) is None
-
-    def test_missing_hostel(self):
-        assert parse_mess_query("What is today's dinner?", NOW) is None
 
     def test_meal_timing_not_menu(self):
         assert parse_mess_query("what time is dinner at Kalam", NOW) is None
