@@ -1,7 +1,11 @@
 import json
+import logging
 
 from llm import cached_system_message, chat_create, identity_message
-from notice_functions import call_tool
+from notice_functions import call_tool, view_notices
+from fast_parse import format_notice_reply, parse_notice_query
+
+logger = logging.getLogger(__name__)
 
 
 class NoticeAgent:
@@ -76,6 +80,13 @@ When a user asks to view notices, present them in this Bulletin Feed format.
         role = user_metadata.get("role", "Unknown")
         name = user_metadata.get("name", "Unknown")
         time_and_date = user_metadata.get("Time and Date", "Unknown")
+
+        parsed = parse_notice_query(user_input, time_and_date)
+        if parsed is not None and parsed.get("action") == "view":
+            logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
+            audience = "All_Students" if str(role).lower() == "student" else "Staff"
+            rows = view_notices(audience, role)
+            return format_notice_reply(parsed, rows)
 
         messages = [
             cached_system_message(self.SYSTEM_PROMPT),

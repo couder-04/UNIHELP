@@ -3,7 +3,7 @@ import logging
 import re
 
 from config import LLM_FAST_MODEL
-from llm import cached_system_message, chat_create, get_client
+from llm import cached_system_message, chat_create, fast_tier_kwargs, get_client
 from task_conditions import (
     assign_task_ids,
     condition_from_text,
@@ -285,6 +285,53 @@ Return ONLY valid JSON.
             ]
         }
 
+    def _independent_and_plan(self, user_input):
+        # PERFORMANCE FIX: "dinner at Kalam and the Bus 02 schedule" used to
+        # miss _fast_path_plan (two domains) and fall through to the LLM
+        # planner. With a thinking FAST_MODEL that call billed ~8k hidden
+        # completion tokens and ~140s for a 300-char JSON plan. Split only
+        # when "and" separates two clauses that each map to exactly one
+        # distinct agent — not when two keywords sit in one clause
+        # ("complaint about the mess food").
+        text = (user_input or "").strip()
+        if not text:
+            return None
+        if (
+            self._IF_UNLESS_WORD.search(text)
+            or self._ELSE_WORD.search(text)
+            or self._THEN_WORD.search(text)
+        ):
+            return None
+        parts = re.split(r"\s+and\s+", text, maxsplit=1)
+        if len(parts) != 2:
+            return None
+        left, right = parts[0].strip(), parts[1].strip()
+        left_agent = self._one_agent(left)
+        right_agent = self._one_agent(right)
+        if not left_agent or not right_agent or left_agent == right_agent:
+            return None
+        logger.info(
+            "Planner and-split: %s + %s (independent, 0 planner LLM calls)",
+            left_agent,
+            right_agent,
+        )
+        return {
+            "tasks": [
+                {
+                    "id": "t1",
+                    "agent": left_agent,
+                    "request": left,
+                    "condition": None,
+                },
+                {
+                    "id": "t2",
+                    "agent": right_agent,
+                    "request": right,
+                    "condition": None,
+                },
+            ]
+        }
+
     def _is_nested_or_ambiguous(self, text):
         # Nested if/else-if is the LLM-planner fallback's job, not regex.
         if self._ELSE_IF.search(text):
@@ -498,6 +545,7 @@ Return ONLY valid JSON.
                 "message": "This service is not currently available."}
 
     def _planner_chat(self, messages, json_mode=True):
+        extras = fast_tier_kwargs()
         if json_mode:
             try:
                 return chat_create(
@@ -505,17 +553,20 @@ Return ONLY valid JSON.
                     messages=messages,
                     response_format={"type": "json_object"},
                     model=LLM_FAST_MODEL,
+                    **extras,
                 )
             except Exception:
                 return chat_create(
                     cache_key="planner",
                     messages=messages,
                     model=LLM_FAST_MODEL,
+                    **extras,
                 )
         return chat_create(
             cache_key="planner",
             messages=messages,
             model=LLM_FAST_MODEL,
+            **extras,
         )
 
     def create_plan(self, user_input):
@@ -529,10 +580,20 @@ Return ONLY valid JSON.
         if fast_plan is not None:
             return self._finalize_plan(fast_plan)
 
+        independent = self._independent_and_plan(user_input)
+        if independent is not None:
+            return self._finalize_plan(independent)
+
         messages = [
             cached_system_message(self.SYSTEM_PROMPT),
             {"role": "user", "content": user_input},
         ]
+        logger.info(
+            "Planner LLM path model=%s prompt_chars=%d user=%r",
+            LLM_FAST_MODEL,
+            sum(len(str(m.get("content") or "")) for m in messages),
+            (user_input or "")[:200],
+        )
 
         # Ask for guaranteed-JSON output when the gateway supports it; fall
         # back transparently if this particular model/gateway rejects the

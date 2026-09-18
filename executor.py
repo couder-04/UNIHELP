@@ -4,7 +4,7 @@ import re
 
 import metrics
 from config import LLM_FAST_MODEL
-from llm import cached_system_message, chat_create, get_client
+from llm import cached_system_message, chat_create, fast_tier_kwargs, get_client
 from mess_agent_1 import MessAgent
 from Bus_agent import BusAgent
 from complaint_agent import ComplaintAgent
@@ -135,11 +135,27 @@ instead of inventing that result.
         # request_scope is active, and a return in finally discards a
         # pending exception. Catch inside the timer so a failed agent
         # still becomes an error result instead of None.
-        with metrics.task_timer(agent_name):
+        with metrics.task_timer(agent_name, **self._task_fields(task)):
             try:
                 return fn(request, user_metadata)
             except Exception as exc:
                 return {"status": "error", "message": str(exc)}
+
+    def _task_fields(self, task, structured=None, skipped=None):
+        cond = task.get("condition")
+        structured = structured if structured is not None else (
+            cond if isinstance(cond, dict) else None
+        )
+        fields = {
+            "task_id": task.get("id"),
+            "agent": task.get("agent"),
+            "condition": cond,
+            "depends_on": (structured or {}).get("depends_on") if structured else None,
+            "condition_type": (structured or {}).get("type") if structured else None,
+        }
+        if skipped is not None:
+            fields["skipped"] = skipped
+        return fields
 
     def _legacy_depends_on(self, cond_text, tasks, index):
         """Resolve a free-text condition's depends_on using the old heuristics."""
@@ -305,6 +321,7 @@ instead of inventing that result.
                 {"role": "user", "content": user_message},
             ],
             model=LLM_FAST_MODEL,
+            **fast_tier_kwargs(),
         )
         answer = (response.choices[0].message.content or "").strip().upper()
         return answer.startswith("YES")
@@ -438,6 +455,7 @@ Do not guess. If the result does not clearly contain what was asked, found must 
                     {"role": "user", "content": user_message},
                 ],
                 model=LLM_FAST_MODEL,
+                **fast_tier_kwargs(),
             )
         except Exception:
             return False, ""
@@ -505,6 +523,7 @@ Do not guess. If the result does not clearly contain what was asked, found must 
                         {"role": "user", "content": user_message},
                     ],
                     model=LLM_FAST_MODEL,
+                    **fast_tier_kwargs(),
                 )
                 content = response.choices[0].message.content or ""
             except Exception:
@@ -626,6 +645,11 @@ Do not guess. If the result does not clearly contain what was asked, found must 
                 collected.append(item)
                 results_by_id[tid] = item
                 skipped_ids.add(tid)
+                metrics.record_task(
+                    task.get("agent") or "unknown",
+                    **self._task_fields(task, structured, skipped=True),
+                    latency_ms=0.0,
+                )
                 continue
 
             ctype = (structured or {}).get("type")
@@ -646,6 +670,11 @@ Do not guess. If the result does not clearly contain what was asked, found must 
                     collected.append(item)
                     results_by_id[tid] = item
                     skipped_ids.add(tid)
+                    metrics.record_task(
+                        task.get("agent") or "unknown",
+                        **self._task_fields(task, structured, skipped=True),
+                        latency_ms=0.0,
+                    )
                     continue
 
             request, extract_error = self._resolve_request(task, results_by_id)
@@ -714,12 +743,40 @@ Do not guess. If the result does not clearly contain what was asked, found must 
             len(skipped),
         )
 
+        # Diagnostic: log what actually goes into the synthesis prompt so
+        # a 10k-token average can be attributed to payload bloat vs. the
+        # model rambling on a small prompt.
+        compact_results = [
+            {
+                "id": item.get("id"),
+                "agent": item.get("agent"),
+                "result": item.get("result"),
+                "skipped": bool(item.get("skipped")),
+            }
+            for item in collected
+        ]
+        raw_dump = json.dumps(collected, indent=2, default=str)
+        compact_dump = json.dumps(compact_results, indent=2, default=str)
+        logger.info(
+            "Executor synthesis payload raw_chars=%d compact_chars=%d "
+            "n_collected=%d n_executed=%d keys=%s",
+            len(raw_dump),
+            len(compact_dump),
+            len(collected),
+            len(executed),
+            sorted({k for item in collected if isinstance(item, dict) for k in item}),
+        )
+        logger.info(
+            "Executor synthesis compact results:\n%s",
+            compact_dump[:4000],
+        )
+
         user_message = f"""
 Original user request:
 {user_input}
 
 Results of the campus-service lookups already performed:
-{json.dumps(collected, indent=2, default=str)}
+{raw_dump}
 
 Write one clear, friendly reply that combines these results.
 """

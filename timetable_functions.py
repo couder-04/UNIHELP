@@ -11,12 +11,14 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 import uuid
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 import db
 from config import TIMETABLE_DB_NAME
+from ttl_cache import TtlCache
 
 WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 _DAY_INDEX = {name: idx for idx, name in enumerate(WEEKDAYS)}
@@ -36,13 +38,30 @@ _SEED_SLOTS = [
 ]
 
 
+_schema_ready = False
+_schema_lock = threading.Lock()
+_tt_cache = TtlCache("timetable", ttl_seconds=60)
+
+
 def get_connection():
+    _ensure_schema_once()
     return db.get_connection(TIMETABLE_DB_NAME)
+
+
+def _ensure_schema_once() -> None:
+    global _schema_ready
+    if _schema_ready:
+        return
+    with _schema_lock:
+        if _schema_ready:
+            return
+        ensure_schema()
+        _schema_ready = True
 
 
 def ensure_schema() -> None:
     """Create rooms/timetable tables if missing; seed demo slots once."""
-    connection = get_connection()
+    connection = db.get_connection(TIMETABLE_DB_NAME)
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -116,9 +135,6 @@ def ensure_schema() -> None:
     connection.commit()
     cursor.close()
     connection.close()
-
-
-ensure_schema()
 
 
 def campus_now() -> datetime:
@@ -347,6 +363,11 @@ def is_group_in_range(student_group: str | None, slot_group: str | None) -> bool
     return False
 
 def get_schedule(target_id: str, target_type: str = "student"):
+    key = f"schedule:{str(target_id).lower()}:{target_type}"
+    return _tt_cache.get(key, lambda: _get_schedule_uncached(target_id, target_type))
+
+
+def _get_schedule_uncached(target_id: str, target_type: str = "student"):
     connection = get_connection()
     cursor = connection.cursor()
     
@@ -408,6 +429,10 @@ def get_schedule(target_id: str, target_type: str = "student"):
     }
 
 def list_subjects():
+    return _tt_cache.get("subjects", _list_subjects_uncached)
+
+
+def _list_subjects_uncached():
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute(
@@ -459,6 +484,11 @@ def resolve_course(course_code: str | None = None, course_name: str | None = Non
 
 
 def get_week(subject: str | None = None, course_code: str | None = None, class_type: str | None = None, student_group: str | None = None):
+    key = f"week:{subject}|{course_code}|{class_type}|{student_group}"
+    return _tt_cache.get(key, lambda: _get_week_uncached(subject, course_code, class_type, student_group))
+
+
+def _get_week_uncached(subject: str | None = None, course_code: str | None = None, class_type: str | None = None, student_group: str | None = None):
     connection = get_connection()
     cursor = connection.cursor()
     course = _find_course(cursor, subject or course_code)
@@ -484,6 +514,22 @@ def get_week(subject: str | None = None, course_code: str | None = None, class_t
 
 
 def get_day(
+    timetable_day: str = "today",
+    subject: str | None = None,
+    course_code: str | None = None,
+    class_type: str | None = None,
+    student_group: str | None = None,
+):
+    key = f"day:{timetable_day}|{subject}|{course_code}|{class_type}|{student_group}"
+    return _tt_cache.get(
+        key,
+        lambda: _get_day_uncached(
+            timetable_day, subject, course_code, class_type, student_group
+        ),
+    )
+
+
+def _get_day_uncached(
     timetable_day: str = "today",
     subject: str | None = None,
     course_code: str | None = None,
@@ -625,6 +671,11 @@ def next_class(
 
 
 def get_free_slots(timetable_day: str | None = None):
+    key = f"free:{timetable_day}"
+    return _tt_cache.get(key, lambda: _get_free_slots_uncached(timetable_day))
+
+
+def _get_free_slots_uncached(timetable_day: str | None = None):
     day = normalize_day(timetable_day) if timetable_day else campus_now().strftime("%A")
     if day is None:
         return {"status": "error", "message": f"Invalid day: {timetable_day}."}
@@ -659,6 +710,10 @@ def get_free_slots(timetable_day: str | None = None):
 
 
 def list_rooms():
+    return _tt_cache.get("rooms", _list_rooms_uncached)
+
+
+def _list_rooms_uncached():
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute(
@@ -769,6 +824,7 @@ def add_slot(
     item = _serialize_row(row[0], row[1], course[1], row[2], row[3], row[4], row[5], row[6], row[7])
     cursor.close()
     connection.close()
+    _tt_cache.clear()
     return {
         "status": "success",
         "query_kind": "add",
@@ -917,6 +973,7 @@ def update_slot(
     )
     cursor.close()
     connection.close()
+    _tt_cache.clear()
     return {
         "status": "success",
         "query_kind": "update",
@@ -972,6 +1029,7 @@ def delete_slot(
     connection.commit()
     cursor.close()
     connection.close()
+    _tt_cache.clear()
     return {
         "status": "success",
         "query_kind": "delete",

@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import db
 from config import ROOM_DB_NAME
+from ttl_cache import TtlCache
 
 try:
     from psycopg.errors import ExclusionViolation
@@ -55,6 +56,20 @@ _FACILITY_ALIASES = {
 
 def get_connection():
     return db.get_connection(ROOM_DB_NAME)
+
+
+_room_cache = TtlCache("room_booking", ttl_seconds=30)
+
+
+def _writes_invalidate(fn):
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        if isinstance(result, dict) and result.get("status") == "success":
+            _room_cache.clear()
+        return result
+    wrapper.__name__ = fn.__name__
+    wrapper.__doc__ = fn.__doc__
+    return wrapper
 
 
 @contextmanager
@@ -403,6 +418,10 @@ def _fetch_request(cursor, request_id):
 
 
 def list_facilities():
+    return _room_cache.get("facilities", _list_facilities_uncached)
+
+
+def _list_facilities_uncached():
     with _cursor() as (_conn, cursor):
         cursor.execute(
             """
@@ -433,6 +452,39 @@ def list_facilities():
 
 
 def check_availability(
+    facility,
+    booking_date=None,
+    start_hour=None,
+    duration_hours=None,
+    check_in=None,
+    check_out=None,
+    room_type=None,
+):
+    key = (
+        "avail",
+        str(facility),
+        str(booking_date),
+        str(start_hour),
+        str(duration_hours),
+        str(check_in),
+        str(check_out),
+        str(room_type),
+    )
+    return _room_cache.get(
+        key,
+        lambda: _check_availability_uncached(
+            facility,
+            booking_date=booking_date,
+            start_hour=start_hour,
+            duration_hours=duration_hours,
+            check_in=check_in,
+            check_out=check_out,
+            room_type=room_type,
+        ),
+    )
+
+
+def _check_availability_uncached(
     facility,
     booking_date=None,
     start_hour=None,
@@ -1114,3 +1166,13 @@ def reject_request(request_id, u, reason=None):
         if reason:
             result["reason"] = reason
         return result
+
+
+create_direct_booking = _writes_invalidate(create_direct_booking)
+create_request = _writes_invalidate(create_request)
+cancel_booking = _writes_invalidate(cancel_booking)
+cancel_request = _writes_invalidate(cancel_request)
+modify_booking = _writes_invalidate(modify_booking)
+modify_request = _writes_invalidate(modify_request)
+approve_request = _writes_invalidate(approve_request)
+reject_request = _writes_invalidate(reject_request)

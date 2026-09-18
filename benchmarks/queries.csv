@@ -1,0 +1,19 @@
+query_id,query_type,user_input,authentication_key
+1,single,"What's today's breakfast at Kalam hostel?",student-demo
+2,single,"What's today's lunch at Kalam hostel?",student-demo
+3,single,"What's today's dinner at Kalam hostel?",student-demo
+4,single,"What is the bus schedule for Bus 02?",student-demo
+5,single,"Show today's notices.",student-demo
+6,single,"What's my timetable today?",student-demo
+7,multi_independent,"What's today's dinner at Kalam and the Bus 02 schedule?",student-demo
+8,multi_independent,"Show my timetable today and today's dinner menu at Kalam.",student-demo
+9,multi_independent,"What are today's notices and the Bus 02 timings?",student-demo
+10,multi_dependent,"What time does my last class end today, and is SAC Hall free right after for a club meeting?",student-demo
+11,multi_dependent,"What's my attendance percentage in CS101, and if it's below 75%, how do I file a complaint about it?",student-demo
+12,ambiguous,"I have a problem with my room.",student-demo
+13,ambiguous,"Write a complaint about the mess food quality being bad today.",student-demo
+14,ambiguous,"Can you explain what this notice about the fest means?",student-demo
+15,edge_unsupported,"Can you help me find a part-time job on campus?",student-demo
+16,edge_invalid_date,"What's the mess menu at Kalam on 45th Novtober?",student-demo
+17,edge_missing_param,"Book SAC Hall for a meeting.",student-demo
+18,edge_authz,"Add a new Bus 100 schedule on Monday at 18:00 from Kalam to Tut Block. Driver is Test Driver, number 9999999999.",student-demo

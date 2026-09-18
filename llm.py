@@ -60,7 +60,21 @@ from typing import Any, Iterable, Iterator, Optional
 from openai import OpenAI
 
 import metrics
-from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from config import LLM_API_KEY, LLM_BASE_URL, LLM_FAST_MODEL, LLM_MODEL
+
+# PERFORMANCE FIX: classification/dispatch (planner JSON, YES/NO gates,
+# extract) used LLM_FAST_MODEL with no max_tokens. On OpenRouter, Qwen3-class
+# "fast" models still emit a hidden reasoning trace billed as completion
+# tokens — Q7's planner call was 8296 completion tokens / 287 chars of JSON
+# / 143s, one HTTP 200, no SDK retry. Cap the completion and ask the
+# gateway to skip reasoning. Domain-agent and synthesis calls stay uncapped
+# so the user-facing reply is not truncated.
+FAST_TIER_MAX_TOKENS = 800
+
+# Surface SDK retry/backoff (default max_retries=2 with exponential wait).
+# Without this, a 429/5xx/timeout retry storm looks like a single slow call.
+logging.getLogger("openai").setLevel(logging.INFO)
+logging.getLogger("httpx").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +137,15 @@ def get_client() -> OpenAI:
                         "X-Title": "UniHelp",
                     }
                 client = OpenAI(**kwargs)
+                logger.info(
+                    "LLM client created base_url=%s model=%s fast_model=%s "
+                    "max_retries=%s timeout=%s",
+                    LLM_BASE_URL,
+                    LLM_MODEL,
+                    LLM_FAST_MODEL,
+                    getattr(client, "max_retries", None),
+                    getattr(client, "timeout", None),
+                )
                 _clients[key] = client
     return client
 
@@ -230,6 +253,39 @@ def _log_cache_usage(cache_key: str, response: Any) -> None:
     )
 
 
+def _content_chars(content: Any) -> int:
+    if content is None:
+        return 0
+    if isinstance(content, str):
+        return len(content)
+    if isinstance(content, list):
+        return sum(_content_chars(part.get("text") if isinstance(part, dict) else part) for part in content)
+    if isinstance(content, dict):
+        return _content_chars(content.get("text") or content.get("content"))
+    return len(str(content))
+
+
+def _messages_chars(messages: Iterable[Any]) -> int:
+    total = 0
+    for message in messages:
+        if isinstance(message, dict):
+            total += _content_chars(message.get("content"))
+        else:
+            content = getattr(message, "content", None)
+            total += _content_chars(content if content is not None else message)
+    return total
+
+
+def fast_tier_kwargs() -> dict[str, Any]:
+    """Extra chat_create kwargs for classification/dispatch on LLM_FAST_MODEL."""
+    return {
+        "max_tokens": FAST_TIER_MAX_TOKENS,
+        "extra_body": {
+            "reasoning": {"effort": "none", "exclude": True},
+        },
+    }
+
+
 def chat_create(
     *,
     cache_key: str,
@@ -244,8 +300,10 @@ def chat_create(
     global _cache_mode
 
     client = get_client()
+    resolved_model = model or LLM_MODEL
+    prompt_chars = _messages_chars(messages)
     request: dict[str, Any] = {
-        "model": model or LLM_MODEL,
+        "model": resolved_model,
         "messages": messages,
         "temperature": temperature,
         **kwargs,
@@ -258,7 +316,18 @@ def chat_create(
     with _mode_lock:
         mode = _cache_mode
 
+    send_attempts = {"n": 0}
+
     def _send(current_mode: str):
+        send_attempts["n"] += 1
+        if send_attempts["n"] > 1:
+            logger.warning(
+                "LLM retry attempt=%s cache_key=%s mode=%s model=%s",
+                send_attempts["n"],
+                cache_key,
+                current_mode,
+                resolved_model,
+            )
         body = dict(request)
         if current_mode == "full":
             body["messages"] = messages
@@ -275,6 +344,21 @@ def chat_create(
             if tools is not None:
                 body["tools"] = _plain_tools(tools)
             body.pop("prompt_cache_key", None)
+        logger.info(
+            "LLM send cache_key=%s model=%s mode=%s attempt=%s "
+            "prompt_chars=%s n_messages=%s n_tools=%s max_tokens=%s "
+            "fast_model=%s default_model=%s",
+            cache_key,
+            resolved_model,
+            current_mode,
+            send_attempts["n"],
+            prompt_chars,
+            len(messages),
+            len(tools) if tools is not None else 0,
+            body.get("max_tokens"),
+            LLM_FAST_MODEL,
+            LLM_MODEL,
+        )
         return client.chat.completions.create(**body)
 
     started = time.perf_counter()
@@ -308,7 +392,37 @@ def chat_create(
     finally:
         latency_ms = (time.perf_counter() - started) * 1000
 
+    choice = (getattr(response, "choices", None) or [None])[0]
+    finish_reason = getattr(choice, "finish_reason", None) if choice is not None else None
+    content = ""
+    if choice is not None:
+        message = getattr(choice, "message", None)
+        content = getattr(message, "content", None) or ""
+    usage = getattr(response, "usage", None)
     _log_cache_usage(cache_key, response)
-    logger.info("LLM [%s] took %.2fs", cache_key, latency_ms / 1000)
-    metrics.record_llm_call(cache_key, response, latency_ms)
+    logger.info(
+        "LLM done cache_key=%s model=%s took=%.2fs prompt_tokens=%s "
+        "completion_tokens=%s cached_tokens=%s finish_reason=%s "
+        "completion_chars=%s send_attempts=%s",
+        cache_key,
+        resolved_model,
+        latency_ms / 1000,
+        getattr(usage, "prompt_tokens", None) if usage else None,
+        getattr(usage, "completion_tokens", None) if usage else None,
+        getattr(getattr(usage, "prompt_tokens_details", None), "cached_tokens", None)
+        if usage
+        else None,
+        finish_reason,
+        len(content) if isinstance(content, str) else 0,
+        send_attempts["n"],
+    )
+    metrics.record_llm_call(
+        cache_key,
+        response,
+        latency_ms,
+        model=resolved_model,
+        prompt_chars=prompt_chars,
+        send_attempts=send_attempts["n"],
+        finish_reason=finish_reason,
+    )
     return response

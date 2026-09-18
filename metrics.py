@@ -82,6 +82,14 @@ def request_scope(
         "tasks": [],
         "status": "running",
         "error": None,
+        "plan": None,
+        "cache_events": [],
+        "cache_hits": 0,
+        "cache_misses": 0,
+        "db_calls": 0,
+        "db_latency_ms": 0.0,
+        "db_by_name": {},
+        "_open_tasks": [],
     }
     token = _current.set(rec)
     with _lock:
@@ -96,6 +104,7 @@ def request_scope(
         rec["error"] = str(exc)
         raise
     finally:
+        rec.pop("_open_tasks", None)
         rec["latency_ms"] = round((time.perf_counter() - started) * 1000, 1)
         with _lock:
             _live.pop(rec["id"], None)
@@ -105,27 +114,84 @@ def request_scope(
 
 
 @contextmanager
-def task_timer(feature: str) -> Iterator[None]:
-    """Wall-clock latency for one planner/executor/specialized-agent task."""
+def task_timer(feature: str, **extra: Any) -> Iterator[None]:
+    """Wall-clock latency for one planner/executor/specialized-agent task.
+
+    Extra kwargs (task_id, agent, depends_on, condition, condition_type,
+    skipped, ...) are stored as additive fields. Existing readers that
+    only use feature/latency_ms are unchanged.
+    """
     started = time.perf_counter()
+    rec = _current.get()
+    task: dict[str, Any] = {"feature": feature_name(feature), **extra}
+    if rec is not None:
+        rec.setdefault("_open_tasks", []).append(task)
     try:
         yield
     finally:
+        task["latency_ms"] = round((time.perf_counter() - started) * 1000, 1)
         rec = _current.get()
         if rec is None:
             return
-        rec["tasks"].append(
-            {
-                "feature": feature_name(feature),
-                "latency_ms": round((time.perf_counter() - started) * 1000, 1),
-            }
-        )
+        open_tasks = rec.get("_open_tasks") or []
+        if open_tasks and open_tasks[-1] is task:
+            open_tasks.pop()
+        rec["tasks"].append(task)
+
+
+def record_task(feature: str, **fields: Any) -> None:
+    """Append a task row without timing (skipped follow-ups, etc.)."""
+    rec = _current.get()
+    if rec is None:
+        return
+    task = {"feature": feature_name(feature), "latency_ms": fields.pop("latency_ms", 0.0)}
+    task.update(fields)
+    rec["tasks"].append(task)
+
+
+def record_cache(source: str, hit: bool) -> None:
+    """Application-level cache event. Distinct from tokens.cached (LLM cache)."""
+    rec = _current.get()
+    if rec is None:
+        return
+    event = {"cache_source": source, "cache_hit": bool(hit)}
+    rec.setdefault("cache_events", []).append(event)
+    if hit:
+        rec["cache_hits"] = int(rec.get("cache_hits") or 0) + 1
+    else:
+        rec["cache_misses"] = int(rec.get("cache_misses") or 0) + 1
+    open_tasks = rec.get("_open_tasks") or []
+    if open_tasks:
+        task = open_tasks[-1]
+        # Last event during this task; a hit on any nested lookup marks the task.
+        if hit or "cache_hit" not in task:
+            task["cache_hit"] = bool(hit)
+        task["cache_source"] = source
+        task.setdefault("cache_events", []).append(event)
+
+
+def record_db(dbname: str, latency_ms: float) -> None:
+    """One get_connection() checkout, timed until the connection is returned."""
+    rec = _current.get()
+    if rec is None:
+        return
+    rec["db_calls"] = int(rec.get("db_calls") or 0) + 1
+    rec["db_latency_ms"] = round(float(rec.get("db_latency_ms") or 0.0) + float(latency_ms), 1)
+    by_name = rec.setdefault("db_by_name", {})
+    row = by_name.setdefault(dbname, {"db_calls": 0, "db_latency_ms": 0.0})
+    row["db_calls"] += 1
+    row["db_latency_ms"] = round(row["db_latency_ms"] + float(latency_ms), 1)
 
 
 def record_llm_call(
     cache_key: str,
     response: Any,
     latency_ms: float,
+    *,
+    model: Optional[str] = None,
+    prompt_chars: Optional[int] = None,
+    send_attempts: Optional[int] = None,
+    finish_reason: Optional[str] = None,
 ) -> None:
     rec = _current.get()
     if rec is None:
@@ -147,17 +213,26 @@ def record_llm_call(
     cached = int(cached or 0)
 
     feature = feature_name(cache_key)
-    rec["llm_calls"].append(
-        {
-            "feature": feature,
-            "cache_key": cache_key,
-            "prompt_tokens": prompt,
-            "completion_tokens": completion,
-            "total_tokens": int(total),
-            "cached_tokens": cached,
-            "latency_ms": round(float(latency_ms), 1),
-        }
-    )
+    entry: dict[str, Any] = {
+        "feature": feature,
+        "cache_key": cache_key,
+        "prompt_tokens": prompt,
+        "completion_tokens": completion,
+        "total_tokens": int(total),
+        "cached_tokens": cached,
+        "latency_ms": round(float(latency_ms), 1),
+    }
+    # Additive diagnostics for latency investigations. Existing readers
+    # ignore unknown keys; do not rename the fields above.
+    if model is not None:
+        entry["model"] = model
+    if prompt_chars is not None:
+        entry["prompt_chars"] = int(prompt_chars)
+    if send_attempts is not None:
+        entry["send_attempts"] = int(send_attempts)
+    if finish_reason is not None:
+        entry["finish_reason"] = finish_reason
+    rec["llm_calls"].append(entry)
     _add_tokens(rec["tokens"], prompt, completion, cached)
 
 

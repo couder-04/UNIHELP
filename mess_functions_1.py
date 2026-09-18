@@ -1,5 +1,6 @@
 import db
 from config import MESS_DB_NAME
+from ttl_cache import TtlCache
 
 
 def get_connection():
@@ -9,23 +10,20 @@ def get_connection():
     return db.get_connection(MESS_DB_NAME)
 
 
-def get_menu(hostel: str, menu_date: str):
-    """Get menu for a specific hostel and date.
-    menu_date: 'today', 'tomorrow', or 'YYYY-MM-DD'."""
-    from datetime import date, timedelta
-    menu_date = menu_date.strip().lower()
-    if menu_date == "today":
-        target_date = date.today()
-    elif menu_date == "tomorrow":
-        target_date = date.today() + timedelta(days=1)
-    else:
-        try:
-            target_date = date.fromisoformat(menu_date)
-        except ValueError:
-            return {
-                "status": "error",
-                "message": f"Invalid date '{menu_date}'. Use 'today', 'tomorrow', or YYYY-MM-DD."
-            }
+_menu_cache = TtlCache("mess_menu", ttl_seconds=60)
+_timing_cache = TtlCache("mess_menu", ttl_seconds=None)
+
+
+def _invalidate_menu_cache(hostel: str | None = None, menu_date: str | None = None):
+    if hostel and menu_date:
+        host = hostel.strip().lower()
+        _menu_cache.pop(f"menu:{host}:{menu_date}")
+        _menu_cache.invalidate_prefix(f"weekly:{host}:")
+        return
+    _menu_cache.clear()
+
+
+def _get_menu_uncached(hostel: str, target_date):
     conn = get_connection()
     cur = conn.cursor()
     day_name = target_date.strftime("%A")
@@ -59,6 +57,27 @@ def get_menu(hostel: str, menu_date: str):
     }
 
 
+def get_menu(hostel: str, menu_date: str):
+    """Get menu for a specific hostel and date.
+    menu_date: 'today', 'tomorrow', or 'YYYY-MM-DD'."""
+    from datetime import date, timedelta
+    raw = menu_date.strip().lower()
+    if raw == "today":
+        target_date = date.today()
+    elif raw == "tomorrow":
+        target_date = date.today() + timedelta(days=1)
+    else:
+        try:
+            target_date = date.fromisoformat(raw)
+        except ValueError:
+            return {
+                "status": "error",
+                "message": f"Invalid date '{menu_date}'. Use 'today', 'tomorrow', or YYYY-MM-DD."
+            }
+    key = f"menu:{hostel.strip().lower()}:{target_date.isoformat()}"
+    return _menu_cache.get(key, lambda: _get_menu_uncached(hostel, target_date))
+
+
 def get_weekly_menu(hostel: str, start_date: str = None):
     """Get weekly menu for a hostel starting from start_date (default: today)."""
     from datetime import date, timedelta
@@ -76,51 +95,58 @@ def get_weekly_menu(hostel: str, start_date: str = None):
     else:
         start = date.today()
 
-    day_names = [(start + timedelta(days=i)).strftime("%A") for i in range(7)]
+    key = f"weekly:{hostel.strip().lower()}:{start.isoformat()}"
 
-    conn = get_connection()
-    cur = conn.cursor()
-    # Single query for the whole week instead of 7 round-trips.
-    cur.execute(
-        """
-        SELECT day, breakfast, lunch, snacks, dinner
-        FROM temporary
-        WHERE LOWER(hostel) = LOWER(%s)
-          AND LOWER(day) = ANY(%s)
-        """,
-        (hostel, [d.lower() for d in day_names])
-    )
-    rows_by_day = {row[0].strip().lower(): row for row in cur.fetchall()}
-    cur.close()
-    conn.close()
+    def _compute():
+        day_names = [(start + timedelta(days=i)).strftime("%A") for i in range(7)]
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT day, breakfast, lunch, snacks, dinner
+            FROM temporary
+            WHERE LOWER(hostel) = LOWER(%s)
+              AND LOWER(day) = ANY(%s)
+            """,
+            (hostel, [d.lower() for d in day_names])
+        )
+        rows_by_day = {row[0].strip().lower(): row for row in cur.fetchall()}
+        cur.close()
+        conn.close()
 
-    week = []
-    for i, day_name in enumerate(day_names):
-        d = start + timedelta(days=i)
-        row = rows_by_day.get(day_name.lower())
-        if row:
-            day_menu = {"day": day_name, "date": d.isoformat(),
-                        "breakfast": row[1], "lunch": row[2], "snacks": row[3], "dinner": row[4], "dessert": None}
-        else:
-            day_menu = {"day": day_name, "date": d.isoformat(),
-                        "breakfast": "—", "lunch": "—", "snacks": "—", "dinner": "—", "dessert": None}
-        week.append(day_menu)
+        week = []
+        for i, day_name in enumerate(day_names):
+            d = start + timedelta(days=i)
+            row = rows_by_day.get(day_name.lower())
+            if row:
+                day_menu = {"day": day_name, "date": d.isoformat(),
+                            "breakfast": row[1], "lunch": row[2], "snacks": row[3], "dinner": row[4], "dessert": None}
+            else:
+                day_menu = {"day": day_name, "date": d.isoformat(),
+                            "breakfast": "—", "lunch": "—", "snacks": "—", "dinner": "—", "dessert": None}
+            week.append(day_menu)
 
-    if all(m["breakfast"] == "—" for m in week):
-        return {"status": "not_found", "message": f"No weekly menu found for {hostel}."}
+        if all(m["breakfast"] == "—" for m in week):
+            return {"status": "not_found", "message": f"No weekly menu found for {hostel}."}
 
-    return {"status": "success", "hostel": hostel, "week_menu": week}
+        return {"status": "success", "hostel": hostel, "week_menu": week}
+
+    return _menu_cache.get(key, _compute)
 
 
 def get_meal_timing(meal: str):
     """Get fixed meal timings (static, not in DB)."""
+    meal_key = meal.strip().lower()
+    return _timing_cache.get(f"timing:{meal_key}", lambda: _get_meal_timing_uncached(meal_key))
+
+
+def _get_meal_timing_uncached(meal: str):
     timings = {
         "breakfast": "07:30 - 09:30",
         "lunch": "12:30 - 14:30",
         "snacks": "17:00 - 18:00",
         "dinner": "20:00 - 22:00"
     }
-    meal = meal.strip().lower()
     if meal not in timings:
         return {"status": "error", "message": f"Unknown meal: {meal}."}
     return {"status": "success", "meal": meal, "timing": timings[meal]}
@@ -181,6 +207,7 @@ def modify_menu(hostel: str, menu_date: str, meal: str, new_items: str, change_t
         if cur.rowcount == 0:
             return {"status": "not_found", "message": f"No menu row for {hostel} on {d.isoformat()} ({day_name}) {meal}."}
         conn.commit()
+        _invalidate_menu_cache(hostel, d.isoformat())
         return {
             "status": "success",
             "message": f"{change_type.capitalize()} menu updated for {hostel} {d.isoformat()} ({day_name}) {meal}.",

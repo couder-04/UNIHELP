@@ -201,3 +201,46 @@ class TestTimetableAgentBypass:
 
         assert "CS101" in result
         assert "B204" in result
+
+
+class TestNoticeAgentBypass:
+    def test_parser_none_reaches_llm(self, monkeypatch):
+        import Notice_agent
+
+        llm_calls = []
+
+        def fake_chat_create(**kwargs):
+            llm_calls.append(kwargs)
+            return fake_chat_response("llm notice reply")
+
+        monkeypatch.setattr(Notice_agent, "parse_notice_query", lambda *a, **k: None)
+        monkeypatch.setattr(Notice_agent, "chat_create", fake_chat_create)
+
+        agent = Notice_agent.NoticeAgent()
+        result = agent.chat("unclear notice question", USER_META)
+
+        assert result == "llm notice reply"
+        assert len(llm_calls) == 1
+
+    def test_parser_hit_skips_llm(self, monkeypatch):
+        import Notice_agent
+
+        rows = [
+            {
+                "notice_type": "General",
+                "publish_timestamp": "2026-09-18 10:00:00",
+                "author_id": "PF001",
+                "content": "Fest this weekend",
+            }
+        ]
+        monkeypatch.setattr(
+            Notice_agent, "parse_notice_query", lambda *a, **k: {"action": "view"}
+        )
+        monkeypatch.setattr(Notice_agent, "view_notices", lambda *a, **k: rows)
+        monkeypatch.setattr(Notice_agent, "chat_create", _raise_if_llm_called)
+
+        agent = Notice_agent.NoticeAgent()
+        result = agent.chat("Show today's notices.", USER_META)
+
+        assert "Fest this weekend" in result
+        assert "Active Notices" in result

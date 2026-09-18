@@ -50,6 +50,52 @@ class TestConditionalPlan:
         assert "timetable" in plan["tasks"][1]["request"].lower()
 
 
+class TestIndependentAndSplit:
+    def test_dinner_and_bus_skips_llm(self, planner, monkeypatch):
+        _patch_llm(monkeypatch, _raise_if_llm_called)
+
+        plan = planner.create_plan(
+            "What's today's dinner at Kalam and the Bus 02 schedule?"
+        )
+
+        assert [t["agent"] for t in plan["tasks"]] == ["mess", "bus"]
+        assert all(t["condition"] is None for t in plan["tasks"])
+
+    def test_timetable_and_mess_skips_llm(self, planner, monkeypatch):
+        _patch_llm(monkeypatch, _raise_if_llm_called)
+
+        plan = planner.create_plan(
+            "Show my timetable today and today's dinner menu at Kalam."
+        )
+
+        assert [t["agent"] for t in plan["tasks"]] == ["timetable", "mess"]
+
+    def test_two_keywords_in_one_clause_still_uses_llm(self, planner, monkeypatch):
+        llm_calls = []
+
+        def fake_chat_create(**kwargs):
+            llm_calls.append(kwargs)
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=(
+                                '{"tasks":[{"id":"t1","agent":"bus",'
+                                '"request":"bus timetable","condition":null}]}'
+                            )
+                        )
+                    )
+                ]
+            )
+
+        _patch_llm(monkeypatch, fake_chat_create)
+
+        plan = planner.create_plan("Show me the bus timetable")
+
+        assert llm_calls, "one-clause two-keyword request must still use the LLM"
+        assert plan.get("tasks")
+
+
 class TestKeywordFallback:
     def test_empty_llm_still_plans_mess_and_bus(self, planner, monkeypatch):
         def fake_chat_create(**kwargs):

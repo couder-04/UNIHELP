@@ -27,8 +27,11 @@ Install with:  pip install "psycopg[binary,pool]"
 
 import os
 import threading
+import time
 
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD
+
+import metrics
 
 try:
     from psycopg_pool import ConnectionPool
@@ -84,16 +87,25 @@ class _PooledConnection:
     """Proxies a real psycopg connection. `.close()` returns it to the pool
     instead of dropping the socket, so existing call sites don't change."""
 
-    __slots__ = ("_pool", "_conn", "_returned")
+    __slots__ = ("_pool", "_conn", "_returned", "_dbname", "_started")
 
-    def __init__(self, pool, conn):
+    def __init__(self, pool, conn, dbname):
         self._pool = pool
         self._conn = conn
         self._returned = False
+        self._dbname = dbname
+        self._started = time.perf_counter()
 
     def close(self):
         if not self._returned:
             self._returned = True
+            try:
+                metrics.record_db(
+                    self._dbname,
+                    (time.perf_counter() - self._started) * 1000,
+                )
+            except Exception:
+                pass
             try:
                 self._pool.putconn(self._conn)
             except Exception:
@@ -137,15 +149,45 @@ def _fallback_connection(dbname: str):
         )
 
 
+class _TrackedConnection:
+    """Times a fallback (unpooled) connection from checkout to close."""
+
+    def __init__(self, conn, dbname):
+        self._conn = conn
+        self._dbname = dbname
+        self._started = time.perf_counter()
+        self._closed = False
+
+    def close(self):
+        if not self._closed:
+            self._closed = True
+            try:
+                metrics.record_db(
+                    self._dbname,
+                    (time.perf_counter() - self._started) * 1000,
+                )
+            except Exception:
+                pass
+            self._conn.close()
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
 def get_connection(dbname: str):
     """Return a connection for `dbname`. Pooled when psycopg_pool is
-    installed, otherwise a plain unpooled connection."""
+    installed, otherwise a plain unpooled connection.
+
+    Each checkout is counted in metrics.db_calls / db_latency_ms (time
+    from get_connection until close), rather than instrumenting every
+    *_functions.py query path.
+    """
     if not _POOLING_AVAILABLE:
-        return _fallback_connection(dbname)
+        return _TrackedConnection(_fallback_connection(dbname), dbname)
 
     pool = _get_pool(dbname)
     conn = pool.getconn()
-    return _PooledConnection(pool, conn)
+    return _PooledConnection(pool, conn, dbname)
 
 
 def close_all_pools():

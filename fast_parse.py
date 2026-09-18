@@ -1,4 +1,4 @@
-"""Deterministic fast-path parsers for unambiguous mess/bus/timetable queries.
+"""Deterministic fast-path parsers for unambiguous mess/bus/timetable/notice queries.
 
 Every public parser returns a fully populated argument dict, or None.
 Nothing is guessed: missing hostel/route, write intent, mixed schedule/
@@ -503,3 +503,82 @@ def format_timetable_reply(parsed: dict[str, Any], result: Any) -> str:
         room = item.get("room_id") or "—"
         lines.append(f"| {slot} | {course} | {room} |")
     return "\n".join(lines)
+
+
+_NOTICE_WRITE_RE = re.compile(
+    r"\b(publish|post|create|add|archive|delete|remove|expire|update|edit)\b",
+    re.I,
+)
+_NOTICE_CONTENT_RE = re.compile(
+    r"\b(explain|means?|about this|this notice|notice about)\b",
+    re.I,
+)
+_NOTICE_WORD_RE = re.compile(
+    r"\b(notices?|notice board|bulletin)\b",
+    re.I,
+)
+_NOTICE_VIEW_RE = re.compile(
+    r"\b(today|today's|todays|current|active|show|list|view|what are|"
+    r"notice board|bulletin)\b",
+    re.I,
+)
+_NOTICE_OTHER_DATE_RE = re.compile(
+    r"\b(yesterday|last week|tomorrow|\d{4}-\d{2}-\d{2})\b",
+    re.I,
+)
+_NOTICE_TYPE_FILTER_RE = re.compile(
+    r"\b(important alert|notice type|of type)\b",
+    re.I,
+)
+
+
+def parse_notice_query(
+    user_input: str, time_and_date: Optional[str]
+) -> Optional[dict[str, Any]]:
+    """Resolve an unqualified 'show current notices' lookup, or None.
+
+    Audience/authority are never parsed from text — the agent fills them
+    from user_metadata, same as timetable's roll number.
+    """
+    if not user_input or not str(user_input).strip():
+        return None
+    text = str(user_input).strip()
+    if _NOTICE_WRITE_RE.search(text):
+        return None
+    if _NOTICE_CONTENT_RE.search(text):
+        return None
+    if _NOTICE_OTHER_DATE_RE.search(text):
+        return None
+    if _NOTICE_TYPE_FILTER_RE.search(text):
+        return None
+    if not _NOTICE_WORD_RE.search(text):
+        return None
+    if not _NOTICE_VIEW_RE.search(text):
+        return None
+    # time_and_date is part of the shared parser contract; view_notices
+    # already returns currently active rows, so no date is resolved here.
+    _ = time_and_date
+    return {"action": "view"}
+
+
+def format_notice_reply(parsed: dict[str, Any], result: Any) -> str:
+    """Bulletin feed matching Notice_agent FORMATTING RULES."""
+    if isinstance(result, dict) and result.get("error"):
+        return str(result.get("error") or result)
+    if isinstance(result, list) and result and isinstance(result[0], dict) and result[0].get("error"):
+        return str(result[0].get("error"))
+    rows = result if isinstance(result, list) else []
+    if not rows:
+        return "No active notices."
+    lines = ["### Active Notices", ""]
+    for row in rows:
+        ntype = row.get("notice_type") or "Notice"
+        date = row.get("publish_timestamp") or ""
+        if date:
+            date = str(date).split(" ")[0]
+        author = row.get("author_id") or row.get("author") or "—"
+        content = row.get("content") or ""
+        lines.append(f"**{ntype}** | *{date}* | By: {author}")
+        lines.append(f"> {content}")
+        lines.append("")
+    return "\n".join(lines).rstrip()

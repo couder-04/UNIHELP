@@ -388,7 +388,12 @@ def _run_authenticated_request(user_input, authentication_key, llm_api_key=""):
 
             with metrics.task_timer("planner"):
                 plan = _planner.create_plan(user_input)
-            logger.info("Planner took %.2fs", time.time() - started)
+            rec["plan"] = plan
+            logger.info(
+                "Planner took %.2fs plan=%s",
+                time.time() - started,
+                json.dumps(plan, default=str)[:1500],
+            )
 
             result = _executor.execute(user_input, plan, user_metadata)
             logger.info("Total took %.2fs", time.time() - started)

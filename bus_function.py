@@ -19,6 +19,7 @@ import time
 import threading
 
 import db
+import metrics
 from config import BUS_DB_NAME
 
 try:
@@ -140,10 +141,12 @@ def _topology_cached(key, compute_fn):
     with _topology_cache_lock:
         entry = _topology_cache.get(key)
         if entry is not None and time.time() < entry[0]:
+            metrics.record_cache("bus_schedule", True)
             return entry[1]
     value = compute_fn()
     with _topology_cache_lock:
         _topology_cache[key] = (time.time() + _TOPOLOGY_CACHE_TTL_SECONDS, value)
+    metrics.record_cache("bus_schedule", False)
     return value
 
 
@@ -179,27 +182,33 @@ def _match_stop(want: str, stops: List[str]) -> Optional[str]:
 def query_schedule(route_name: str, day: Optional[str] = None,
                    date: Optional[str] = None) -> Result:
     """Timetable for a bus; optional day or date filter."""
-    try:
-        on_date = _parse_date(date) if date else None
-    except ValueError:
-        return _error(f"'{date}' is not a valid date — use YYYY-MM-DD, e.g. '2026-09-15'.")
+    cache_key = f"sched:{route_name}|{day}|{date}"
 
-    if on_date:
-        day = on_date.strftime("%A")
+    def _compute():
+        try:
+            on_date = _parse_date(date) if date else None
+        except ValueError:
+            return _error(f"'{date}' is not a valid date — use YYYY-MM-DD, e.g. '2026-09-15'.")
 
-    rows = _fetch("SELECT * FROM bus_schedule ORDER BY time")
-    bus, matched = _resolve_bus(route_name, rows)
-    if bus is None:
-        return _error(f"I couldn't find a route called '{route_name}'.",
-                      available_options=matched)
-    if day:
-        want = day.strip().lower()
-        matched = [r for r in matched if (r["day"] or "").strip().lower() == want]
-        if not matched:
-            days = sorted({r["day"] for r in rows if r["bus_name"] == bus})
-            return _error(f"No departures for '{bus}' on '{day}'.",
-                          available_options=days)
-    return [_row_to_dict(r) for r in matched]
+        resolved_day = day
+        if on_date:
+            resolved_day = on_date.strftime("%A")
+
+        rows = _fetch("SELECT * FROM bus_schedule ORDER BY time")
+        bus, matched = _resolve_bus(route_name, rows)
+        if bus is None:
+            return _error(f"I couldn't find a route called '{route_name}'.",
+                          available_options=matched)
+        if resolved_day:
+            want = resolved_day.strip().lower()
+            matched = [r for r in matched if (r["day"] or "").strip().lower() == want]
+            if not matched:
+                days = sorted({r["day"] for r in rows if r["bus_name"] == bus})
+                return _error(f"No departures for '{bus}' on '{resolved_day}'.",
+                              available_options=days)
+        return [_row_to_dict(r) for r in matched]
+
+    return _topology_cached(cache_key, _compute)
 
 
 # ── 2. query_active_buses ───────────────────────────────────────────────── #

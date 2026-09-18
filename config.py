@@ -27,4 +27,6 @@ LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://awesome.kado.so/openai/v1")
 LLM_MODEL = os.getenv("LLM_MODEL", "kado")
 # Classification/dispatch tier. Unset → same model as LLM_MODEL, so existing
 # deployments keep identical behavior until someone opts into a cheaper model.
+# Do not point this at a "thinking"/reasoning model: those emit thousands of
+# hidden completion tokens on a tiny JSON plan (see llm.fast_tier_kwargs).
 LLM_FAST_MODEL = os.getenv("LLM_FAST_MODEL", LLM_MODEL)

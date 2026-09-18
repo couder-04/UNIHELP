@@ -13,9 +13,10 @@ except ImportError:
     UniqueViolation = tuple()
 
 
-# ============================================================
-# DATABASE
-# ============================================================
+# Intentionally not cached: complaints are per-caller, mutate often relative
+# to re-read frequency, and a stale "your open complaints" list is worse
+# than a cheap extra SELECT.
+
 
 def get_connection():
     """Pooled connection when psycopg_pool is installed (see db.py)."""
