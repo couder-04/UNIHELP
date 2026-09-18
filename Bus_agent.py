@@ -3,13 +3,16 @@ import logging
 import time
 
 from llm import cached_system_message, chat_create, get_client, identity_message
-from bus_function import call_tool
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
+from bus_function import call_tool, query_schedule
+from fast_parse import format_bus_reply, parse_bus_query
 
 logger = logging.getLogger(__name__)
 
 class BusAgent:
 
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
+
 You are the IIT Patna Bus Agent.
 
 Your job is to answer questions and perform authorized bus schedule operations
@@ -28,11 +31,6 @@ WRITE OPERATIONS:
 - Add a bus schedule.
 - Remove a bus schedule.
 - Change a bus schedule.
-
-The authenticated user role, name, roll number, and Time and Date (IST)
-are supplied separately by the application.
-Use Time and Date for next-departure and "today" / "now" queries.
-Never ask the user to provide their role.
 
 For write operations:
 - Students are not authorized.
@@ -218,7 +216,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "add_schedule",
-                    "description": "Add a new bus schedule. Only faculty and admin users are authorized.",
+                    "description": "Add a new bus schedule.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -261,7 +259,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "remove_schedule",
-                    "description": "Remove a bus schedule. Only faculty and admin users are authorized.",
+                    "description": "Remove a bus schedule.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -277,7 +275,7 @@ in plain language.
                 "type": "function",
                 "function": {
                     "name": "change_schedule",
-                    "description": "Change one or more fields of an existing bus schedule. Only faculty and admin users are authorized.",
+                    "description": "Change one or more fields of an existing bus schedule.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -316,6 +314,18 @@ in plain language.
 
         role = str(user_metadata.get("role", "")).lower().strip()
 
+        parsed = parse_bus_query(
+            user_input, user_metadata.get("Time and Date")
+        )
+        if parsed is not None:
+            logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
+            result = query_schedule(
+                parsed["route_name"],
+                day=parsed["day"],
+                date=parsed["date"],
+            )
+            return format_bus_reply(parsed, result)
+
         messages = [
             cached_system_message(self.SYSTEM_PROMPT),
             identity_message({
@@ -342,6 +352,8 @@ in plain language.
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
+                # observed LLM max 515; long schedule round 739 in metrics fixture
+                max_tokens=800,
             )
             logger.debug("Bus LLM round took %.2fs", time.time() - start)
             message = response.choices[0].message

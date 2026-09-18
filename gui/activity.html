@@ -233,7 +233,7 @@
           </header>
           <div style="color:var(--mist);margin:6px 0;font-size:0.88rem">${(r.query || "").slice(0, 180)}</div>
           <div class="num" style="font-size:0.78rem;color:var(--gold-2)">
-            ${tok((r.tokens || {}).total)} tokens · ${fmt((r.llm_calls || []).length)} LLM calls · tasks: ${tasks}
+            ${tok((r.tokens || {}).total)} tokens · ${fmt((r.llm_calls || []).length)} LLM calls · LLM sum ${ms(r.llm_sum_ms)} · overhead ${ms(r.overhead_ms)} · tasks: ${tasks}
           </div>
           <details>
             <summary>LLM calls</summary>

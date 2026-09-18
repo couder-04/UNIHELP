@@ -25,3 +25,6 @@ TIMETABLE_DB_NAME = os.getenv("TIMETABLE_DB_NAME", "timetable")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://awesome.kado.so/openai/v1")
 LLM_MODEL = os.getenv("LLM_MODEL", "kado")
+# Classification/dispatch tier. Unset → same model as LLM_MODEL, so existing
+# deployments keep identical behavior until someone opts into a cheaper model.
+LLM_FAST_MODEL = os.getenv("LLM_FAST_MODEL", LLM_MODEL)

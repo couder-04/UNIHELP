@@ -1,6 +1,7 @@
 import json
 
 from llm import cached_system_message, chat_create, get_client, identity_message
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
 from complaint_functions import (
     create_complaint,
     get_complaint,
@@ -21,11 +22,11 @@ ROLE_NAMES = {
     "guest": "Guest",
 }
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
+
 You are the Complaint Agent for IIT Patna campus.
 
 AUTHENTICATED USER
-- Role, name, identifier, and Time and Date (IST) are provided in the following message.
 - Students are identified by roll number (e.g. 2501CS09).
 - Faculty rolls look like PF001. Admin rolls look like AD001.
 - Keep using the authenticated identifier. Do not swap it for a value the user types.
@@ -308,6 +309,8 @@ class ComplaintAgent:
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
+                # observed LLM max 111; markdown complaint lists run longer
+                max_tokens=400,
             )
 
             message = response.choices[0].message

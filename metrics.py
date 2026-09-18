@@ -198,6 +198,15 @@ def snapshot() -> dict[str, Any]:
                 "llm_calls": 0,
                 "llm_latency_ms": 0.0,
                 "avg_llm_latency_ms": 0.0,
+                # avg_llm_latency_ms is per *call*. A typical agent task is
+                # two sequential rounds (pick tool, then write the answer),
+                # so avg_task_latency_ms ≈ 2 × avg_llm_latency_ms even when
+                # non-LLM work is a few dozen milliseconds. Compare a task
+                # to avg_llm_sum_ms (sum of that feature's LLM rounds /
+                # tasks) to see real overhead.
+                "avg_llm_sum_ms": 0.0,
+                "avg_overhead_ms": 0.0,
+                "avg_llm_calls_per_task": 0.0,
                 "tokens": _empty_tokens(),
             }
             by_feature[name] = row
@@ -239,6 +248,16 @@ def snapshot() -> dict[str, Any]:
         if rec.get("role"):
             urow["role"] = rec["role"]
 
+        llm_calls = rec.get("llm_calls") or []
+        tasks = rec.get("tasks") or []
+        llm_sum = sum(float(c.get("latency_ms") or 0) for c in llm_calls)
+        task_sum = sum(float(t.get("latency_ms") or 0) for t in tasks)
+        rec["llm_sum_ms"] = round(llm_sum, 1)
+        rec["task_sum_ms"] = round(task_sum, 1)
+        rec["llm_call_count"] = len(llm_calls)
+        if rec.get("latency_ms") is not None:
+            rec["overhead_ms"] = round(float(rec["latency_ms"]) - llm_sum, 1)
+
         for task in rec.get("tasks") or []:
             frow = _feature(task.get("feature") or "unknown")
             frow["tasks"] += 1
@@ -268,6 +287,15 @@ def snapshot() -> dict[str, Any]:
         if frow["tasks"]:
             frow["avg_task_latency_ms"] = round(
                 frow["task_latency_ms"] / frow["tasks"], 1
+            )
+            frow["avg_llm_sum_ms"] = round(
+                frow["llm_latency_ms"] / frow["tasks"], 1
+            )
+            frow["avg_overhead_ms"] = round(
+                frow["avg_task_latency_ms"] - frow["avg_llm_sum_ms"], 1
+            )
+            frow["avg_llm_calls_per_task"] = round(
+                frow["llm_calls"] / frow["tasks"], 2
             )
         if frow["llm_calls"]:
             frow["avg_llm_latency_ms"] = round(

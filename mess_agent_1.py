@@ -1,6 +1,9 @@
 import json
+import logging
 
 from llm import cached_system_message, chat_create, get_client, identity_message
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
+from fast_parse import format_mess_reply, parse_mess_query
 
 from mess_functions_1 import (
     get_menu,
@@ -9,15 +12,14 @@ from mess_functions_1 import (
     modify_menu
 )
 
+logger = logging.getLogger(__name__)
+
 
 class MessAgent:
 
-    SYSTEM_PROMPT = """
-You are the Mess Agent for IIT Patna campus.
+    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
 
-The authenticated user's role, name, roll number, and Time and Date
-(IST) are provided in the following message. Use Time and Date to
-resolve relative times such as today, tomorrow, tonight, and now.
+You are the Mess Agent for IIT Patna campus.
 
 You handle:
 - Daily mess menus
@@ -46,11 +48,6 @@ Admin:
 - Can ask for meal timings.
 - Can make TEMPORARY menu modifications.
 - Can make PERMANENT menu modifications.
-
-IMPORTANT:
-The authenticated role is provided by the application.
-Never ask the user for their role.
-Never attempt to determine or change the user's role.
 
 Before calling modify_menu, check the authority rules.
 
@@ -302,6 +299,17 @@ FORMATTING:
 
         role = user_metadata["role"].lower().strip()
 
+        parsed = parse_mess_query(
+            user_input, user_metadata.get("Time and Date")
+        )
+        if parsed is not None:
+            logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
+            if parsed.get("weekly"):
+                result = get_weekly_menu(parsed["hostel"], parsed["date"])
+            else:
+                result = get_menu(parsed["hostel"], parsed["date"])
+            return format_mess_reply(parsed, result)
+
         messages = [
             cached_system_message(self.SYSTEM_PROMPT),
             identity_message({
@@ -326,6 +334,8 @@ FORMATTING:
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
+                # observed LLM max 104; weekly mess table ~230 tokens
+                max_tokens=500,
             )
 
             message = response.choices[0].message

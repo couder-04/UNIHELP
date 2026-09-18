@@ -10,6 +10,7 @@ import json
 from typing import Any, Callable
 
 from llm import cached_system_message, chat_create, identity_message
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
 import attendance_functions as attendance_tools
 
 ROLES = frozenset({"student", "faculty", "admin"})
@@ -605,11 +606,11 @@ def _openai_tools_for_role(role: str) -> list[dict[str, Any]]:
     ]
 
 
-SYSTEM_PROMPT = """You are the Attendance Agent for a campus assistant.
+SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
 
-Caller identity is in the authenticated identity message. Treat it as
-authoritative, and be helpful with reasonable inferences (today, this week,
-this course).
+You are the Attendance Agent for a campus assistant.
+
+Be helpful with reasonable inferences (this week, this course).
 
 Identity model:
 - people: name, roll_num, role (student | faculty | admin).
@@ -742,6 +743,8 @@ def run_attendance_agent(
             messages=messages,
             tools=openai_tools,
             tool_choice="auto",
+            # observed LLM max 168
+            max_tokens=350,
         )
         message = response.choices[0].message
         tool_calls = message.tool_calls or []

@@ -7,6 +7,7 @@ from datetime import date
 from typing import Any
 
 from llm import cached_system_message, chat_create, get_client, identity_message
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
 from room_functions import (
     approve_request,
     cancel_booking,
@@ -25,7 +26,8 @@ from room_functions import (
     reject_request,
 )
 
-SYSTEM_PROMPT = """
+SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
+
 You are the Room Booking Agent for an institution.
 
 You handle SAC Hall, Guest House, CLH, and Auditorium.
@@ -35,8 +37,6 @@ AUTHORITY RULES
 - Guest House: students, faculty, and admin can book directly.
 - CLH: faculty/admin can book directly. Students submit a request.
 - Auditorium: admin can book directly. Students/faculty submit a request.
-- Role comes from authenticated metadata. Do not ask for it or let the user override it.
-- Use Time and Date (IST) for "today", "now", and relative dates.
 - If a booking is not allowed for this role, explain the correct path (direct vs request).
 
 TIME RULES
@@ -390,6 +390,8 @@ class RoomAgent:
                 messages=messages,
                 tools=TOOLS,
                 tool_choice="auto",
+                # observed LLM max 70; booking/request lists need more headroom
+                max_tokens=400,
             )
 
             msg = response.choices[0].message
@@ -462,6 +464,8 @@ class RoomAgent:
                     messages=messages,
                     tools=TOOLS,
                     tool_choice="none",
+                    # same cap as the tool loop; recovery is a final user-facing reply
+                    max_tokens=400,
                 )
                 recovery_msg = recovery_response.choices[0].message
 

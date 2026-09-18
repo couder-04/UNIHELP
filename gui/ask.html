@@ -241,14 +241,16 @@
       const maxTok = Math.max(...rows.map((r) => r.tokens.total || 0), 1);
       el.innerHTML = `<table>
         <thead><tr>
-          <th>Feature</th><th>Task latency</th><th>LLM latency</th><th>LLM calls</th><th>Tokens</th>
+          <th>Feature</th><th>Task avg</th><th>LLM sum / task</th><th>LLM avg / call</th><th>Overhead</th><th>Calls / task</th><th>Tokens</th>
         </tr></thead>
         <tbody>
           ${rows.map((r) => `<tr>
             <td>${r.label}<div class="bar"><span style="width:${Math.round(100 * (r.tokens.total || 0) / maxTok)}%"></span></div></td>
-            <td class="num">${r.tasks ? ms(r.avg_task_latency_ms) + " avg" : "—"}</td>
-            <td class="num">${r.llm_calls ? ms(r.avg_llm_latency_ms) + " avg" : "—"}</td>
-            <td class="num">${fmt(r.llm_calls)}</td>
+            <td class="num">${r.tasks ? ms(r.avg_task_latency_ms) : "—"}</td>
+            <td class="num">${r.tasks ? ms(r.avg_llm_sum_ms) : "—"}</td>
+            <td class="num">${r.llm_calls ? ms(r.avg_llm_latency_ms) : "—"}</td>
+            <td class="num">${r.tasks ? ms(r.avg_overhead_ms) : "—"}</td>
+            <td class="num">${r.tasks ? fmt(r.avg_llm_calls_per_task, 1) : "—"}</td>
             <td class="num">${tok(r.tokens.total)} <span style="color:var(--mist)">(${tok(r.tokens.prompt)} in / ${tok(r.tokens.completion)} out)</span></td>
           </tr>`).join("")}
         </tbody>

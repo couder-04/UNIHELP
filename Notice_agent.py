@@ -1,15 +1,31 @@
 import json
-import time
-from openai import OpenAI
 
-from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
-from llm import chat_create
+from llm import cached_system_message, chat_create, identity_message
 from notice_functions import call_tool
+from prompt_common import COMMON_AGENT_INSTRUCTIONS
+
 
 class NoticeAgent:
 
+    SYSTEM_PROMPT = COMMON_AGENT_INSTRUCTIONS + """
+
+You are the IIT Patna Notice Board Agent.
+
+Your job is to answer questions and handle notices using your tools.
+
+Students can view notices. Faculty and admin can publish or archive.
+If a tool returns an authorization error, explain it clearly.
+
+FORMATTING RULES:
+When a user asks to view notices, present them in this Bulletin Feed format.
+
+### Active Notices
+
+**[Notice Type]** | *[Date]* | By: [Author]
+> [Content of the notice]
+"""
+
     def __init__(self):
-        self.client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
         self.tools = [
             {
                 "type": "function",
@@ -60,39 +76,23 @@ class NoticeAgent:
         name = user_metadata.get("name", "Unknown")
         time_and_date = user_metadata.get("Time and Date", "Unknown")
 
-        system_prompt = f"""
-    You are the IIT Patna Notice Board Agent.
+        messages = [
+            cached_system_message(self.SYSTEM_PROMPT),
+            identity_message(
+                {"name": name, "role": role, "Time and Date": time_and_date},
+                label="Authenticated user",
+            ),
+            {"role": "user", "content": user_input},
+        ]
 
-    AUTHENTICATED USER:
-    - Name: {name}
-    - Role: {role}
-    - Time and Date: {time_and_date}
-
-    Your job is to answer questions and handle notices using your tools.
-    Do not ask the user for their role, name, or the current time.
-    Use Time and Date for relative times such as today, now, and notice expiry.
-
-    Students can view notices. Faculty and admin can publish or archive.
-    If a tool returns an authorization error, explain it clearly.
-
-    FORMATTING RULES:
-    When a user asks to view notices, present them in this Bulletin Feed format.
-
-    ### Active Notices
-
-    **[Notice Type]** | *[Date]* | By: [Author]
-    > [Content of the notice]
-    """
-        
-        # This line is now perfectly aligned with system_prompt
-        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}]
-
-        while True:
+        for _ in range(5):
             response = chat_create(
                 cache_key="notice",
                 messages=messages,
                 tools=self.tools,
                 tool_choice="auto",
+                # observed LLM max 251 (tool-call round)
+                max_tokens=450,
             )
             message = response.choices[0].message
             if not message.tool_calls:
@@ -117,3 +117,5 @@ class NoticeAgent:
 
                 result = call_tool(tool_name, **arguments)
                 messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
+
+        return "ERROR: Notice agent exceeded the maximum number of tool rounds."

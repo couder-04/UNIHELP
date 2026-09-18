@@ -7,6 +7,44 @@ Every agent should:
 
 That lets the gateway reuse the expensive prefix (system prompt + tool schemas)
 instead of billing it as fresh input tokens on every request and every tool round.
+
+Model tiering
+-------------
+chat_create(model=None) falls back to config.LLM_MODEL (the stronger, user-facing
+tier). Classification/dispatch sites pass model=LLM_FAST_MODEL explicitly.
+LLM_FAST_MODEL defaults to LLM_MODEL, so unset env → identical behavior.
+
+Call sites (production). Tests that stub chat_create are omitted.
+
+Classification / dispatch — decides *what to do*, not *what to say*.
+Uses LLM_FAST_MODEL:
+
+- planner.py _planner_chat (json_object, json_object fallback, and
+  json_mode=False retry)  cache_key="planner"
+  create_plan() routing JSON. Fast path / if-then splitter skip this entirely.
+- executor.py _llm_condition_met  cache_key="executor"
+  YES/NO gate for a predicate that cannot be evaluated from numbers.
+- executor.py _extract_value  cache_key="extract"
+  Pull one value out of a prior agent result to fill {{var}}.
+- executor.py _resolve_request (multi-fill)  cache_key="extract"
+  Same extraction job for several vars in one call.
+
+Final answer — the reply the user reads. Default LLM_MODEL (no model=):
+
+- executor.py multi-task synthesis  cache_key="executor"
+  Combines already-fetched agent results into one friendly reply.
+  Judged closer to "phrasing known facts" than routing, *but kept on the
+  strong tier*: it is the user-facing natural-language answer for multi-task
+  plans, the same job as a domain agent's last (post-tool) round. Domain
+  agents stay on LLM_MODEL for that reason; synthesis follows them.
+- mess_agent_1.py MessAgent.chat  cache_key="mess"
+- Bus_agent.py BusAgent.chat  cache_key="bus"
+- complaint_agent.py ComplaintAgent.chat  cache_key="complaint"
+- room_booking_agent.py RoomBookingAgent.chat (tool loop + recovery)
+  cache_key="room_booking"
+- attendance_agent.py run_attendance_agent  cache_key="attendance-{role}"
+- Notice_agent.py NoticeAgent.chat  cache_key="notice"
+- timetable_agent.py run_timetable_agent  cache_key="timetable-{role}"
 """
 
 from __future__ import annotations
@@ -73,7 +111,18 @@ def get_client() -> OpenAI:
         with _client_lock:
             client = _clients.get(key)
             if client is None:
-                client = OpenAI(api_key=key or "missing", base_url=LLM_BASE_URL)
+                kwargs: dict[str, Any] = {
+                    "api_key": key or "missing",
+                    "base_url": LLM_BASE_URL,
+                }
+                # OpenRouter ranks apps that send these; they are optional
+                # but avoid some 4xx on otherwise valid keys.
+                if "openrouter.ai" in (LLM_BASE_URL or ""):
+                    kwargs["default_headers"] = {
+                        "HTTP-Referer": "http://127.0.0.1:8002",
+                        "X-Title": "UniHelp",
+                    }
+                client = OpenAI(**kwargs)
                 _clients[key] = client
     return client
 
