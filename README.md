@@ -117,49 +117,32 @@ Notes:
 - Any OpenAI-compatible endpoint works: set `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`.
 - Optional pool tuning: `DB_POOL_MIN_SIZE` (default `1`) and `DB_POOL_MAX_SIZE` (default `10`). Keep the pool max ≥ 8, the server's concurrent-request cap.
 
-## 4. Create the eight databases
+## 4. Load the full databases
 
-The app does **not** create databases for you. Names must match the `*_DB_NAME` values above.
-
-```bash
-createdb -h localhost -p 5432 -U postgres campus_agent
-createdb -h localhost -p 5432 -U postgres mess_menu
-createdb -h localhost -p 5432 -U postgres bus_schedule
-createdb -h localhost -p 5432 -U postgres room_booking
-createdb -h localhost -p 5432 -U postgres complaints
-createdb -h localhost -p 5432 -U postgres organization_agent
-createdb -h localhost -p 5432 -U postgres notice_board
-createdb -h localhost -p 5432 -U postgres timetable
-```
-
-If `createdb` asks for a password, either type it or export it first:
-
-```bash
-export PGPASSWORD='your_postgres_password_here'
-```
-
-## 5. Load schemas and demo data
-
-From the repo root, with the same host/port/user as `.env`:
+The complete dump is in `database/` (schema + live rows for all eight databases). Names must match the `*_DB_NAME` values above.
 
 ```bash
 export PGHOST=localhost PGPORT=5432 PGUSER=postgres
+export PGPASSWORD='your_postgres_password_here'
 
-psql -d postgres -f unihelp_databases.sql
-
-# Optional: load the 1,500+ student roster into timetable.people
-psql -d timetable -c "\\copy people(roll_num, name, role, student_group) FROM 'timetable_users.csv' DELIMITER ',' CSV HEADER"
+psql -d postgres -v ON_ERROR_STOP=1 -f database/unihelp_full.sql
 ```
 
-`unihelp_databases.sql` creates the eight databases if needed, then `\connect`s into each one to load tables, seed rows, and indexes. Run it with `psql` (not another client).
+Or:
 
-The room-booking, attendance, and timetable sections drop and recreate their tables. Re-running the file **wipes** existing rows in those databases.
+```bash
+PGUSER=postgres PGPASSWORD='your_postgres_password_here' database/restore.sh
+```
 
-The timetable section creates `people`, `courses`, `rooms`, and `timetable`, and seeds faculty/admin, courses, rooms, and 12 class slots. `timetable_users.csv` is the student roster (about 1,537 rows: `roll_num,name,role,student_group`). Load the SQL first, then `\copy` the CSV. The CSV has no faculty/admin rows; those come from the dump (`AD001` / `AD002` plus faculty `PF001`, `PF006` … `PF016`).
+`database/unihelp_full.sql` creates the eight databases if needed, then restores every table, including ~81k attendance rows, enrollments, complaints, and the full timetable roster. Re-running it **replaces** existing tables in those databases. Run it with `psql` (not another client).
+
+Per-database files are also in `database/` (`campus_agent.sql`, `mess_menu.sql`, …). `database/timetable_users.csv` is the student roster; it is already baked into the timetable dump.
+
+Seed-only alternative (much smaller, demo keys only): `psql -d postgres -f unihelp_databases.sql` then `\copy` from `timetable_users.csv`.
 
 ### Demo login keys
 
-These keys are inserted by `unihelp_databases.sql` (campus_agent / complaints / organization_agent sections):
+These keys are in `database/unihelp_full.sql` (campus_agent / complaints / organization_agent):
 
 | Key | Role | Name | `roll_number` |
 | --- | --- | --- | --- |
@@ -196,7 +179,7 @@ INSERT INTO people (roll_num, name, role, student_group)
 VALUES ('2501CS99', 'Your Name', 'student', 'G-1');
 ```
 
-## 6. Run the server
+## 5. Run the server
 
 ```bash
 source .venv/bin/activate
@@ -245,7 +228,7 @@ More example prompts (same envelope, change `parts[0].text` and the key):
 - Faculty: `Publish a notice that CS101 lab is cancelled tomorrow`
 - Admin: `The water cooler on my floor is broken` (files a hostel complaint)
 
-## 7. Run the timetable agent (CLI)
+## 6. Run the timetable agent (CLI)
 
 Uses `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` from the project `.env`, and the `timetable` database (`TIMETABLE_DB_NAME`).
 
@@ -290,7 +273,7 @@ Helpers without the LLM:
 python -c "import timetable_functions as T; print(T.list_subjects())"
 ```
 
-## 8. Tests
+## 7. Tests
 
 Attendance tool tests talk to the live `organization_agent` database (they insert and delete rows prefixed `HXTEST`):
 
@@ -339,8 +322,10 @@ SQL dumps:
 
 | File | Database |
 | --- | --- |
-| `unihelp_databases.sql` | all eight UniHelp databases (schema + seed + indexes) |
-| `timetable_users.csv` | student roster for `timetable.people` (load after `unihelp_databases.sql`) |
+| `database/unihelp_full.sql` | **full** dump of all eight UniHelp databases (schema + live data) |
+| `database/*.sql` | per-database dumps |
+| `database/timetable_users.csv` | student roster (already included in the timetable dump) |
+| `unihelp_databases.sql` | seed-only combined dump |
 
 ## Common failures
 
@@ -349,13 +334,13 @@ SQL dumps:
 | `connection refused` on port 5432/5434 | Postgres not running, or `PGPORT` does not match the cluster |
 | `password authentication failed` | `PGUSER` / `PGPASSWORD` in `.env` |
 | `database "…" does not exist` | `createdb` step skipped or name mismatch with `*_DB_NAME` |
-| `ERROR: KEY NOT FOUND` | Wrong `authentication_key`, or `unihelp_databases.sql` not loaded |
+| `ERROR: KEY NOT FOUND` | Wrong `authentication_key`, or `database/unihelp_full.sql` not loaded |
 | LLM errors / empty plans | Missing `LLM_API_KEY`, or `LLM_BASE_URL` / `LLM_MODEL` wrong |
 | Bus queries crash under `pg8000` | Install `psycopg[binary,pool]` as in `requirements.txt` |
 | Attendance tests fail | `organization_agent` not restored, or `.env` points at a different cluster |
 | Timetable agent: no API key / empty plans | `LLM_API_KEY` missing from the project `.env` |
 | Timetable: `database "timetable" does not exist` | `createdb timetable` or `TIMETABLE_DB_NAME` mismatch |
-| Timetable: empty student schedules | `timetable_users.csv` not copied into `timetable.people` |
+| Timetable: empty student schedules | `database/unihelp_full.sql` not restored |
 | `role "postgres" does not exist` | Homebrew Postgres uses your macOS username. Set `PGUSER` to that name (and often no password) |
 
 ## Security
