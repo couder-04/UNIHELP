@@ -587,7 +587,12 @@ async def _lifespan(app):
     Starlette 1.x dropped the on_startup/on_shutdown kwargs in favor of a
     single lifespan context manager.
     """
-    await asyncio.to_thread(ensure_canonical_people)
+    try:
+        await asyncio.to_thread(ensure_canonical_people)
+    except Exception:
+        logger.exception(
+            "Canonical people migration failed; auth will keep trying people"
+        )
     yield
     await asyncio.to_thread(db.close_all_pools)
 

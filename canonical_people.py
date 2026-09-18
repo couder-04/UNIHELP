@@ -117,7 +117,15 @@ def _ensure_campus_people(cursor) -> None:
         role_n = (role or "").strip().lower()
         external_id = "" if roll is None else str(roll).strip()
         if role_n == "student":
-            identity.validate_student_external_id(external_id)
+            try:
+                identity.validate_student_external_id(external_id)
+            except org_profile.OrgProfileError:
+                logger.warning(
+                    "Skipping people backfill for student %r: id does not match %s",
+                    external_id,
+                    identity.student_id_pattern,
+                )
+                continue
         person_id = uuid.uuid4()
         cursor.execute(
             """
