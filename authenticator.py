@@ -1,3 +1,4 @@
+import hashlib
 import time
 import threading
 
@@ -45,23 +46,31 @@ def invalidate_auth_cache(key: str = None):
             _cache.pop(key, None)
 
 
+def _hash_auth_key(key: str) -> str:
+    return hashlib.sha256((key or "").encode("utf-8")).hexdigest()
+
+
 def list_users():
-    """Return every campus_agent.users row for the GUI directory."""
+    """Return every campus_agent.people row for the GUI directory.
+
+    authentication_key is still returned so the GUI keeps working; it is
+    stored on people for this release alongside auth_key_hash.
+    """
     connection = _get_connection()
     try:
         cursor = connection.cursor()
         cursor.execute(
             """
-            SELECT authentication_key, role, names, roll_number
-            FROM users
+            SELECT authentication_key, role, display_name, external_id
+            FROM people
             ORDER BY
               CASE LOWER(role)
                 WHEN 'admin' THEN 0
                 WHEN 'faculty' THEN 1
                 ELSE 2
               END,
-              names,
-              roll_number
+              display_name,
+              external_id
             """
         )
         rows = cursor.fetchall()
@@ -94,11 +103,12 @@ def authenticate(key):
 
         cursor.execute(
             """
-            SELECT authentication_key, role, names, roll_number
-            FROM users
+            SELECT authentication_key, role, display_name, external_id, id::text
+            FROM people
             WHERE authentication_key = %s
+               OR auth_key_hash = %s
             """,
-            (key,)
+            (key, _hash_auth_key(key)),
         )
 
         row = cursor.fetchone()
@@ -116,6 +126,9 @@ def authenticate(key):
             "name": row[2],
             "roll_number": str(row[3]) if row[3] is not None else None,
         }
+        # person_id is extra; cache tests still pass with a 4-tuple fake row.
+        if len(row) > 4 and row[4]:
+            user["person_id"] = str(row[4])
 
         _cache_set(key, user)
         return user

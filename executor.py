@@ -3,6 +3,7 @@ import logging
 import re
 
 import metrics
+from agent_registry import enabled_call_map, ensure_agent
 from config import LLM_FAST_MODEL
 from llm import (
     cached_system_message,
@@ -11,13 +12,6 @@ from llm import (
     fast_tier_kwargs,
     get_client,
 )
-from mess_agent_1 import MessAgent
-from Bus_agent import BusAgent
-from complaint_agent import ComplaintAgent
-from room_booking_agent import RoomBookingAgent
-from attendance_agent import AttendanceAgent
-from Notice_agent import NoticeAgent
-from timetable_agent import TimetableAgent
 from task_conditions import (
     assign_task_ids,
     canonical_gate_key,
@@ -51,73 +45,16 @@ instead of inventing that result.
     def __init__(self):
         self.client = get_client()
 
-        self.mess_agent = MessAgent()
-        self.bus_agent = BusAgent()
-        self.complaint_agent = ComplaintAgent()
-        self.room_booking_agent = RoomBookingAgent()
-        self.attendance_agent = AttendanceAgent()
-        self.notice_agent = NoticeAgent()
-        self.timetable_agent = TimetableAgent()
-
         # PERFORMANCE FIX: the planner already returns structured
         # {agent, request} tasks. A dict lookup replaces the LLM
         # tool-calling loop that previously re-selected among the same
-        # seven agents on every request.
-        self._agent_map = {
-            "mess": self._call_mess_agent,
-            "bus": self._call_bus_agent,
-            "complaint": self._call_complaint_agent,
-            "room_booking": self._call_room_booking_agent,
-            "attendance": self._call_attendance_agent,
-            "notice": self._call_notice_agent,
-            "timetable": self._call_timetable_agent,
-        }
-
-    def _call_mess_agent(self, request, user_metadata):
-        return self.mess_agent.chat(
-            request,
-            user_metadata
-        )
-
-    def _call_bus_agent(self, request, user_metadata):
-        return self.bus_agent.chat(
-            request,
-            user_metadata
-        )
-
-    def _call_complaint_agent(self, request, user_metadata):
-        # ComplaintAgent uses (role, user_identifier). roll_number is the
-        # user's id string (campus_agent.users.roll_number = complaints.users.id).
-        # Staff email lookup still works when an email is present.
-        role = user_metadata.get("role", "")
-        user_identifier = user_metadata.get("roll_number") or user_metadata.get("name")
-        return self.complaint_agent.chat(
-            request, role, user_identifier, user_metadata
-        )
-
-    def _call_room_booking_agent(self, request, user_metadata):
-        return self.room_booking_agent.chat(
-            request,
-            user_metadata
-        )
-
-    def _call_attendance_agent(self, request, user_metadata):
-        return self.attendance_agent.chat(
-            request,
-            user_metadata
-        )
-
-    def _call_notice_agent(self, request, user_metadata):
-        return self.notice_agent.chat(
-            request,
-            user_metadata
-        )
-
-    def _call_timetable_agent(self, request, user_metadata):
-        return self.timetable_agent.chat(
-            request,
-            user_metadata
-        )
+        # seven agents on every request. enabled_agents is what makes
+        # this org-profile-aware, not just a refactor for its own sake.
+        self._agent_map = enabled_call_map()
+        # PERFORMANCE FIX: still construct enabled agents once at startup
+        # so the first request does not pay seven OpenAI-client setups.
+        for name in self._agent_map:
+            ensure_agent(name)
 
     def _run_task(self, task, user_metadata, request=None):
         # PERFORMANCE FIX: the planner already named the agent, so dispatch

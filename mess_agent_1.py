@@ -1,6 +1,7 @@
 import json
 import logging
 
+import org_profile
 from llm import cached_system_message, chat_create, get_client, identity_message
 from fast_parse import format_mess_reply, parse_mess_query
 
@@ -312,9 +313,15 @@ FORMATTING:
         if parsed is not None:
             logger.debug("fast_parse hit: %s -> %s", user_input, parsed)
             if parsed.get("need_hostel"):
-                return (
-                    "Which hostel? Kalam, CV Raman, Aryabhatta, or Asima."
-                )
+                hostels = [item.name for item in org_profile.ORG.catalog.hostels]
+                if len(hostels) == 0:
+                    return "Which hostel?"
+                if len(hostels) == 1:
+                    return f"Which hostel? {hostels[0]}."
+                if len(hostels) == 2:
+                    return f"Which hostel? {hostels[0]} or {hostels[1]}."
+                listed = ", ".join(hostels[:-1])
+                return f"Which hostel? {listed}, or {hostels[-1]}."
             if parsed.get("weekly"):
                 result = get_weekly_menu(parsed["hostel"], parsed["date"])
             else:

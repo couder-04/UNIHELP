@@ -68,24 +68,39 @@ def _normalize_role(role):
     return mapping.get(role.strip().lower(), role.strip())
 
 
-def _resolve_user(user_identifier: str):
+def _resolve_user(user_identifier: str, person_id: str | None = None):
     """
     Resolve a user identifier to internal DB user data.
 
-    Public API accepts:
-      - student/staff roll number (stored as TEXT, equal to users.id)
-      - staff/faculty email
-
-    Returns:
-      (internal_user_id, role, roll_number, email, names)
+    Prefer campus_agent.people's person_id when the caller already
+    authenticated. Fall back to roll/email lookup on complaints.users
+    because that table still holds the in-database FK target.
     """
     identifier = _clean(user_identifier)
-    if not identifier:
+    if not identifier and not person_id:
         return None, None, None, None, None
 
     conn = get_connection()
     cur = conn.cursor()
     try:
+        if person_id:
+            cur.execute(
+                """
+                SELECT id, COALESCE(hierarchy_level, role), roll_number, email, names
+                FROM users
+                WHERE person_id::text = %s
+                  AND is_active = TRUE
+                LIMIT 1
+                """,
+                (str(person_id),),
+            )
+            row = cur.fetchone()
+            if row:
+                return row[0], row[1], row[2], row[3], row[4]
+
+        if not identifier:
+            return None, None, None, None, None
+
         cur.execute(
             """
             SELECT id, COALESCE(hierarchy_level, role), roll_number, email, names
@@ -215,6 +230,7 @@ def create_complaint(
     floor: str = None,
     location: str = None,
     asset_name: str = None,
+    person_id: str = None,
 ):
     """Create a complaint tagged academic, hostel, or mess."""
     # Extra kwargs are accepted so older agent tool calls still parse,
@@ -233,7 +249,9 @@ def create_complaint(
     if not title or not description:
         return {"status": "error", "message": "title and description are required"}
 
-    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(
+        user_identifier, person_id=person_id
+    )
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use student roll number or staff email."}
 
@@ -267,16 +285,16 @@ def create_complaint(
             """
             INSERT INTO complaints (
                 complaint_number, user_id, name, roll_number, title, description,
-                category, status, created_at, updated_at
+                category, status, created_at, updated_at, person_id
             ) VALUES (
                 %s, %s, %s, %s, %s, %s,
-                %s, 'PENDING_VERIFICATION', %s, %s
+                %s, 'PENDING_VERIFICATION', %s, %s, %s
             )
             RETURNING id
             """,
             (
                 complaint_number, user_db_id, user_name, user_roll or user_db_id,
-                title, description, category, now, now,
+                title, description, category, now, now, person_id,
             ),
         )
         complaint_db_id = cur.fetchone()[0]
@@ -323,14 +341,16 @@ def create_complaint(
         conn.close()
 
 
-def get_complaint(complaint_number: str, user_identifier: str = None):
+def get_complaint(complaint_number: str, user_identifier: str = None, person_id: str = None):
     """Get a complaint using its human complaint number, e.g. C-123456."""
     if not complaint_number:
         return {"status": "error", "message": "complaint_number is required"}
     if not user_identifier:
         return {"status": "forbidden", "message": "Authenticated user identifier is required"}
 
-    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(
+        user_identifier, person_id=person_id
+    )
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use roll number or email."}
     role = _normalize_role(role)
@@ -372,13 +392,16 @@ def list_complaints(
     category: str = None,
     visibility: str = None,
     limit: int = 50,
+    person_id: str = None,
 ):
     """List complaints visible to the authenticated user."""
     _ = visibility
     if not user_identifier:
         return {"status": "forbidden", "message": "Authenticated user identifier is required"}
 
-    user_db_id, role, user_roll, _, user_name = _resolve_user(user_identifier)
+    user_db_id, role, user_roll, _, user_name = _resolve_user(
+        user_identifier, person_id=person_id
+    )
     if not user_db_id:
         return {"status": "error", "message": "User not found. Use roll number or email."}
     role = _normalize_role(role)
@@ -434,9 +457,11 @@ def list_complaints(
         conn.close()
 
 
-def verify_complaint(complaint_number: str, verifier_identifier: str):
+def verify_complaint(complaint_number: str, verifier_identifier: str, person_id: str = None):
     """Admin/faculty verify a pending complaint and move it to PROGRESS."""
-    verifier_db_id, verifier_role, _, _, _ = _resolve_user(verifier_identifier)
+    verifier_db_id, verifier_role, _, _, _ = _resolve_user(
+        verifier_identifier, person_id=person_id
+    )
     if not verifier_db_id:
         return {"status": "error", "message": "Verifier not found. Use staff email or roll number."}
     verifier_role = _normalize_role(verifier_role)
@@ -493,9 +518,11 @@ def verify_complaint(complaint_number: str, verifier_identifier: str):
         conn.close()
 
 
-def complete_complaint(complaint_number: str, actor_identifier: str):
+def complete_complaint(complaint_number: str, actor_identifier: str, person_id: str = None):
     """Admin/faculty mark a complaint in PROGRESS as COMPLETED."""
-    actor_db_id, actor_role, _, _, _ = _resolve_user(actor_identifier)
+    actor_db_id, actor_role, _, _, _ = _resolve_user(
+        actor_identifier, person_id=person_id
+    )
     if not actor_db_id:
         return {"status": "error", "message": "Actor not found. Use staff email or roll number."}
     actor_role = _normalize_role(actor_role)

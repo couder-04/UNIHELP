@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UniHelp — Campus generalization and admin setup</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1c1c1c;
+      font: 11px/1.45 "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    h1 { font-size: 22px; line-height: 1.2; font-weight: 650; margin: 0 0 6px; }
+    h2 { font-size: 13.5px; line-height: 1.3; font-weight: 650; margin: 18px 0 6px; }
+    h3 { font-size: 12px; font-weight: 650; margin: 14px 0 6px; }
+    p { margin: 0 0 8px; }
+    .lede { color: #555; font-size: 11.5px; max-width: 720px; }
+    .tiny { color: #7a7a7a; font-size: 9.5px; margin-top: 4px; }
+    code {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 0.92em;
+      background: #f3f3f1;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .kicker {
+      color: #6a6a6a;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 12px;
+    }
+    .stat {
+      border: 1px solid #e6e6e4;
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    .stat .v { font-size: 18px; font-weight: 650; line-height: 1.15; }
+    .stat .l { color: #6a6a6a; font-size: 10px; margin-top: 2px; }
+    .ok { color: #1a7f4c; }
+    .warn { color: #9a6700; }
+    .callout {
+      border: 1px solid #d8eadf;
+      background: #f4faf6;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin: 10px 0 12px;
+    }
+    .callout.danger {
+      border-color: #f0d4d0;
+      background: #fdf6f5;
+    }
+    .callout.note {
+      border-color: #d9e3f5;
+      background: #f5f8fd;
+    }
+    .callout strong { display: block; margin-bottom: 3px; }
+    h2, h3 { page-break-after: avoid; }
+    table, .callout, .card, .split, .cards, .stats, .prompt, .flow {
+      page-break-inside: avoid;
+    }
+    thead { display: table-header-group; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 6px 0 10px;
+    }
+    th, td {
+      border-bottom: 1px solid #ecece8;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      color: #444;
+      background: #f7f7f5;
+      font-size: 10px;
+    }
+    tbody tr:nth-child(even) td { background: #fafaf8; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 8px 0 12px;
+    }
+    .card {
+      border: 1px solid #e6e6e4;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .card .h { font-size: 10px; color: #6a6a6a; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .card .v { font-size: 13px; font-weight: 650; margin-bottom: 4px; }
+    hr { border: 0; border-top: 1px solid #e6e6e4; margin: 16px 0 10px; }
+    .footer {
+      margin-top: 12px;
+      color: #8a8a8a;
+      font-size: 9px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 10px 0 12px;
+    }
+    .flow .step {
+      border: 1px solid #e6e6e4;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fafaf8;
+    }
+    .flow .n {
+      font-size: 9.5px;
+      color: #6a6a6a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+    .flow .t { font-weight: 650; font-size: 11.5px; }
+    .prompt {
+      border: 1px solid #e6e6e4;
+      border-left: 3px solid #3b6fd8;
+      background: #fafaf8;
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      margin: 6px 0 10px;
+      font-size: 10.5px;
+    }
+    .prompt .who {
+      font-size: 9.5px;
+      color: #6a6a6a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+    ol.setup { margin: 6px 0 10px; padding-left: 18px; }
+    ol.setup li { margin: 0 0 6px; }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 8px 0;
+    }
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="kicker">UniHelp operator briefing · 19 Sep 2026</div>
+  <h1>How UniHelp generalizes — and how an admin sets up a new campus</h1>
+  <p class="lede">
+    UniHelp is one runtime, many campuses. IIT Patna is the default
+    profile, not the product. A second residential campus is configured
+    in chat by an authenticated admin: catalog, people, and optional
+    extra services. The seven domain agents stay the same.
+  </p>
+
+  <div class="stats">
+    <div class="stat"><div class="v">1 runtime</div><div class="l">Planner → executor → agents</div></div>
+    <div class="stat"><div class="v">3 layers</div><div class="l">Profile · people · domain data</div></div>
+    <div class="stat"><div class="v">Admin chat</div><div class="l">Configure, import, add features</div></div>
+    <div class="stat"><div class="v">No raw SQL</div><div class="l">Model never gets the database</div></div>
+  </div>
+
+  <div class="callout">
+    <strong class="ok">The rule</strong>
+    Same shape of campus (hostels, mess, buses, rooms, timetable) =
+    config + data, not a code rewrite. A hospital or a day college with
+    no hostels is a different product: turn unused agents off, and add a
+    real new agent in code — not a prompt.
+  </div>
+
+  <h2>1. What stays the same vs what changes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>What it is</th>
+        <th>Who changes it</th>
+        <th>IIT Patna example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Runtime</strong></td>
+        <td>Auth, planner, executor, seven agents, <code>chat(input, metadata)</code></td>
+        <td>Engineers. Frozen for a campus rollout.</td>
+        <td>Same process on port 8002</td>
+      </tr>
+      <tr>
+        <td><strong>Org profile</strong></td>
+        <td>YAML: name, timezone, roll regex, enabled agents, catalog names + aliases</td>
+        <td>Admin, via setup prompts (or <code>orgs/&lt;id&gt;.yaml</code>)</td>
+        <td>Kalam, Bus 02, SAC Hall</td>
+      </tr>
+      <tr>
+        <td><strong>People</strong></td>
+        <td>Canonical <code>campus_agent.people</code> (role, external id, auth key)</td>
+        <td>Admin import prompt, or CSV</td>
+        <td><code>student-demo</code> → Aarav Sharma / 2501CS09</td>
+      </tr>
+      <tr>
+        <td><strong>Domain rows</strong></td>
+        <td>Menus, bus trips, bookings, attendance, notices, timetable slots</td>
+        <td>Admin/faculty through the existing domain agents</td>
+        <td>“Change Kalam dinner to dal”</td>
+      </tr>
+      <tr>
+        <td><strong>Custom features</strong></td>
+        <td>JSON-backed extra service (library, lost-and-found). Shared tables, not new DDL.</td>
+        <td>Admin “add a feature” prompt</td>
+        <td>Optional — none on the default profile</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. How generalization actually works</h2>
+  <p>
+    Requests still authenticate, plan, and dispatch the same way. What
+    changed is <em>where names come from</em>.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="h">Catalog-driven parse</div>
+      <div class="v">fast_parse</div>
+      <p>
+        Hostel, bus, room, and meal matches read
+        <code>ORG.catalog</code>. Aliases (“arya bhatta”, “CV Raman”)
+        are optional. No match → <code>None</code>, never a guess.
+      </p>
+    </div>
+    <div class="card">
+      <div class="h">Agent registry</div>
+      <div class="v">planner + executor</div>
+      <p>
+        The seven agents are listed once. The planner prompt and
+        dispatch map are generated from that list, filtered by
+        <code>enabled_agents</code>.
+      </p>
+    </div>
+    <div class="card">
+      <div class="h">One identity table</div>
+      <div class="v">people</div>
+      <p>
+        <code>authenticate()</code> reads <code>campus_agent.people</code>.
+        Domain agents keep receiving the same
+        <code>user_metadata</code>. Student ids are checked against the
+        org regex.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    The setup agent is <strong>admin-only</strong>. It is always
+    dispatchable, but it is not listed in the student planner prompt, so
+    a student saying “add a feature” is not routed there. Every setup
+    tool re-checks <code>role == admin</code>.
+  </p>
+
+  <div class="callout note">
+    <strong>What “add a feature” means</strong>
+    The model does not write Python or <code>CREATE TABLE</code>. Admin
+    supplies a name, keywords, and a field schema
+    (<code>string | number | boolean | date</code>). Rows live in
+    <code>custom_feature_records</code> as JSON. The planner then routes
+    e.g. “search the library” to that feature.
+  </div>
+
+  <h2>3. New admin: first-hour setup (all in chat)</h2>
+  <p>
+    Sign in as admin (<code>admin-demo</code> on the seed database, or
+    the key issued at import). The server must already be running with
+    the setup agent loaded (<code>python main.py</code> on
+    <code>127.0.0.1:8002</code>).
+  </p>
+
+  <div class="flow">
+    <div class="step"><div class="n">Step 1</div><div class="t">Name the campus</div><p class="tiny">Display name, timezone, roll-number pattern, which of the seven agents are on.</p></div>
+    <div class="step"><div class="n">Step 2</div><div class="t">Fill the catalog</div><p class="tiny">Hostels, buses, rooms, meals, complaint categories, plus everyday aliases.</p></div>
+    <div class="step"><div class="n">Step 3</div><div class="t">Import people</div><p class="tiny">CSV or a JSON list. Invalid student rolls abort the batch. Generated keys are shown once.</p></div>
+    <div class="step"><div class="n">Step 4</div><div class="t">Seed domain data</div><p class="tiny">Use the existing agents: menus, bus trips, notices, timetable slots.</p></div>
+    <div class="step"><div class="n">Step 5</div><div class="t">Optional feature</div><p class="tiny">“Add a library…” — JSON service, then smoke-test as a student.</p></div>
+  </div>
+
+  <h3>Prompts the admin can paste</h3>
+
+  <div class="prompt">
+    <div class="who">Configure campus · setup agent</div>
+    <div>Rename us to IIT Mandi, timezone Asia/Kolkata. Hostels: Chandra (alias “C hostel”), Suvalsar. Rooms: SAC Hall, Guest House. Buses 01, 02, 03, 04. Meals: breakfast, lunch, snacks, dinner. Complaint categories: academic, hostel, mess. Student rolls match <code>^[0-9]{4}[A-Z]{2}[0-9]{2}$</code>. Keep all seven agents enabled.</div>
+  </div>
+
+  <div class="prompt">
+    <div class="who">Import people · setup agent</div>
+    <div>Import these people as CSV:<br>
+    <span class="mono">role,name,roll_number
+admin,Campus Admin,AD001
+faculty,Priya Patel,PF001
+student,Asha Rao,2501CS99</span>
+    </div>
+  </div>
+  <p class="tiny">
+    Columns accepted: <code>role</code>, <code>display_name</code> or
+    <code>name</code>, <code>external_id</code> or
+    <code>roll_number</code>, optional <code>authentication_key</code>.
+    At most 500 rows per prompt. Missing keys are generated —
+    copy them out of the reply; they are not shown again.
+  </p>
+
+  <div class="prompt">
+    <div class="who">Seed operational data · existing domain agents</div>
+    <div>
+      Set today’s Chandra breakfast to poha and tea.<br>
+      Add Bus 01 weekdays 08:00 from Chandra to the academic block, driver Test, phone 9999999999.<br>
+      Publish a notice: “Orientation Monday 9am, Auditorium.”
+    </div>
+  </div>
+
+  <div class="prompt">
+    <div class="who">Add a feature · setup agent</div>
+    <div>Add a library feature. Keywords: library, book, isbn. Fields: title (string, required), author (string, required), isbn (string, optional). Students can search books and add a hold.</div>
+  </div>
+
+  <div class="prompt">
+    <div class="who">Smoke-test as a student</div>
+    <div>
+      What’s today’s breakfast at Chandra?<br>
+      What is the bus schedule for Bus 01?<br>
+      Search the library for algorithms.
+    </div>
+  </div>
+
+  <h2>4. What the admin prompt will not do</h2>
+  <table>
+    <thead>
+      <tr><th>Request</th><th>What actually happens</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>“Run this SQL” / “create a fees table”</td>
+        <td>Rejected. Setup has no SQL tool. Invalid org YAML is refused before the file is replaced (previous copy kept as <code>.bak</code>).</td>
+      </tr>
+      <tr>
+        <td>“Add a hospital agent with its own schema”</td>
+        <td>Not a JSON feature. That needs a real agent in the registry — engineering work.</td>
+      </tr>
+      <tr>
+        <td>Empty catalog (no hostels, no buses)</td>
+        <td>Startup and save fail loud. A missing field must not silently disable a route.</td>
+      </tr>
+      <tr>
+        <td>Student or faculty trying setup</td>
+        <td>Planner does not offer setup. The agent itself also refuses.</td>
+      </tr>
+      <tr>
+        <td>Reuse a built-in name (<code>mess</code>, <code>bus</code>, …)</td>
+        <td><code>add_feature</code> returns an error. Reserved slugs cannot be overwritten.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Built-in agents the admin can leave on or turn off</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Agent</th>
+        <th>Student can</th>
+        <th>Admin/faculty can also</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>mess</td><td>Read menus</td><td>Change menus</td></tr>
+      <tr><td>bus</td><td>Read schedules</td><td>Add / remove / edit trips</td></tr>
+      <tr><td>complaint</td><td>File and list</td><td>Verify and complete</td></tr>
+      <tr><td>room_booking</td><td>Check / request</td><td>Approve, reject, book directly</td></tr>
+      <tr><td>attendance</td><td>Own percentages</td><td>Mark, courses, enrollments</td></tr>
+      <tr><td>notice</td><td>Read board</td><td>Publish; admin can archive</td></tr>
+      <tr><td>timetable</td><td>Own classes</td><td>Add / update / delete slots</td></tr>
+    </tbody>
+  </table>
+  <p class="tiny">
+    Disable with: “Turn off mess and bus; we are a day college.”
+    <code>enabled_agents</code> must still name agents that exist in this
+    repo.
+  </p>
+
+  <div class="split">
+    <div>
+      <h2 style="margin-top:0">Checklist before you hand it to students</h2>
+      <ol class="setup">
+        <li>Admin prompt updated display name and catalog; a hostel alias resolves.</li>
+        <li>People imported; at least one student, faculty, and admin key works.</li>
+        <li>One live query per enabled agent returns campus-correct names, not IIT Patna leftovers.</li>
+        <li>If a custom feature was added, a student query using its keyword hits that feature, not setup.</li>
+        <li>Generated authentication keys stored offline; they are not re-printed.</li>
+      </ol>
+    </div>
+    <div>
+      <h2 style="margin-top:0">If YAML was edited on disk</h2>
+      <p>
+        Admin can say “Reload the org profile.”
+        <code>update_org_profile</code> and <code>add_feature</code>
+        already reload routing. Reload is only for a manual file edit.
+      </p>
+      <div class="callout danger" style="margin-top:8px">
+        <strong>Do not skip validation</strong>
+        A bad regex or empty hostel list fails the save. That is
+        intentional: silent misconfig is how a campus “loses” a hostel.
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <p class="footer">
+    UniHelp campus generalization · Admin setup briefing · 19 Sep 2026.
+    Default profile: <code>orgs/iit_patna.yaml</code> via
+    <code>ORG_PROFILE_PATH</code>. Setup tools:
+    <code>show_org_profile</code>, <code>update_org_profile</code>,
+    <code>import_people</code>, <code>add_feature</code>,
+    <code>disable_feature</code>, <code>reload_campus</code>.
+  </p>
+</body>
+</html>

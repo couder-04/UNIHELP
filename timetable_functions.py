@@ -72,6 +72,11 @@ def ensure_schema() -> None:
         )
         """
     )
+    # SUPERSEDED as identity by campus_agent.people; person_id is the link.
+    # roll_num stays the PK this release (no domain FKs point at people here).
+    cursor.execute(
+        "ALTER TABLE people ADD COLUMN IF NOT EXISTS person_id UUID"
+    )
     cursor.execute(
         """
         ALTER TABLE people ADD COLUMN IF NOT EXISTS student_group VARCHAR(64)

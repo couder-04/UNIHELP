@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UniHelp — how latency and token usage drop</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 13mm 13mm 15mm 13mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1c1c1c;
+      font: 11px/1.45 "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    h1 { font-size: 22px; line-height: 1.15; font-weight: 650; margin: 0 0 6px; }
+    h2 { font-size: 13.5px; line-height: 1.3; font-weight: 650; margin: 11px 0 5px; }
+    h3 { font-size: 11.5px; font-weight: 650; margin: 12px 0 5px; }
+    p { margin: 0 0 7px; }
+    .lede { color: #555; font-size: 11.5px; max-width: 740px; }
+    .tiny { color: #7a7a7a; font-size: 9.5px; margin-top: 3px; }
+    .kicker {
+      color: #6a6a6a;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    code {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 0.92em;
+      background: #f3f3f1;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .ok { color: #1a7f4c; }
+    .bad { color: #b42318; }
+    .warn { color: #9a6700; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 12px 0 10px;
+    }
+    .stat {
+      border: 1px solid #e6e6e4;
+      padding: 9px 10px;
+      border-radius: 6px;
+    }
+    .stat .v { font-size: 18px; font-weight: 650; line-height: 1.1; }
+    .stat .l { color: #6a6a6a; font-size: 9.5px; margin-top: 3px; }
+    .callout {
+      border: 1px solid #d8eadf;
+      background: #f4faf6;
+      padding: 9px 12px;
+      border-radius: 6px;
+      margin: 8px 0 10px;
+    }
+    .callout.note {
+      border-color: #e6e6e4;
+      background: #fafaf8;
+    }
+    .callout strong { display: block; margin-bottom: 2px; }
+    .split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 16px;
+      align-items: start;
+      margin: 6px 0 4px;
+    }
+    .split-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 6px 0 2px;
+    }
+    .card {
+      border: 1px solid #e6e6e4;
+      border-radius: 6px;
+      padding: 9px 11px;
+    }
+    .card .h { font-size: 10px; color: #6a6a6a; margin-bottom: 3px; }
+    .card .v { font-size: 13px; font-weight: 650; margin-bottom: 4px; }
+    h2, h3, .kicker { page-break-after: avoid; break-after: avoid; }
+    h2, h3, .stat, .card, .callout, table, .pipeline, .split, .split-3 {
+      page-break-inside: avoid;
+    }
+    thead { display: table-header-group; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 6px 0 4px;
+    }
+    th, td {
+      border-bottom: 1px solid #ecece8;
+      padding: 4px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      color: #444;
+      background: #f7f7f5;
+      font-size: 10px;
+    }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:nth-child(even) td { background: #fafaf8; }
+    .pipeline {
+      border: 1px solid #e6e6e4;
+      border-radius: 6px;
+      padding: 10px 12px 6px;
+      margin: 8px 0 10px;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .step {
+      border: 1px solid #e6e6e4;
+      border-radius: 5px;
+      padding: 7px 8px;
+      min-height: 86px;
+    }
+    .step .n {
+      font-size: 9px;
+      color: #6a6a6a;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 3px;
+    }
+    .step .t { font-weight: 650; font-size: 11px; margin-bottom: 3px; }
+    .step .d { font-size: 9.5px; color: #444; }
+    .step.skip { background: #f4faf6; border-color: #d8eadf; }
+    .step.llm { background: #f7f8fc; border-color: #d9e2f5; }
+    .arrow-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: #6a6a6a;
+      margin: 4px 2px 2px;
+    }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 10px; color: #444; margin: 2px 0 8px; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    hr { border: 0; border-top: 1px solid #e6e6e4; margin: 12px 0 8px; }
+    .footer {
+      margin-top: 8px;
+      color: #8a8a8a;
+      font-size: 9px;
+    }
+    svg text { font-family: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif; }
+    ol.tight { margin: 4px 0 6px 18px; padding: 0; }
+    ol.tight li { margin: 0 0 4px; }
+    ul.tight { margin: 4px 0 6px 16px; padding: 0; }
+    ul.tight li { margin: 0 0 3px; }
+    .keep {
+      page-break-inside: avoid;
+    }
+    .page-break {
+      break-before: page;
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+  <div class="kicker">UniHelp performance briefing · 19 Sep 2026</div>
+  <h1>How UniHelp cuts latency and token usage</h1>
+  <p class="lede">
+    The system does not make campus lookups cheaper by shrinking prompts.
+    It skips the language model whenever a deterministic path can answer
+    the request. On the 18-query benchmark that is the difference between
+    a 27-second mean and a 5.6-second mean.
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="v ok">−35%</div>
+      <div class="l">LLM calls / request<br>1.48 → 0.96</div>
+    </div>
+    <div class="stat">
+      <div class="v ok">−60%</div>
+      <div class="l">Tokens / request<br>3,832 → 1,547</div>
+    </div>
+    <div class="stat">
+      <div class="v ok">−80%</div>
+      <div class="l">Mean latency<br>27.4s → 5.6s</div>
+    </div>
+    <div class="stat">
+      <div class="v ok">−53%</div>
+      <div class="l">P50 latency<br>6.1s → 2.9s</div>
+    </div>
+    <div class="stat">
+      <div class="v ok">−80%</div>
+      <div class="l">P95 latency<br>126s → 25s</div>
+    </div>
+  </div>
+  <p class="tiny">
+    Source: <code>benchmarks/comparison_fixed.md</code> — 54 successful requests
+    (18 queries × 3 repeats), same query set before and after the fast-path
+    and dispatch work. Positive % change means the after number is lower.
+  </p>
+
+  <div class="callout">
+    <strong class="ok">The rule</strong>
+    Use an LLM only to decide among ambiguous agents, to run a write or a
+    tool loop that cannot be parsed, or to phrase a multi-result reply.
+    Mess, bus, notices, and timetable lookups with a clear catalog match
+    never call a model. A single-agent plan is a function call, not a
+    planner-plus-executor chat.
+  </div>
+
+  <div class="split">
+    <div>
+      <h2 style="margin-top:0">Where the time went</h2>
+      <p>
+        The naive campus-agent stack paid for three LLM round-trips on
+        almost every request: planner (which agent?), executor (which
+        tool?), then the domain agent (call the tool and write the
+        answer). Independent two-part queries stacked those loops
+        sequentially and could sit near two minutes.
+      </p>
+      <p>
+        UniHelp inverts that. Most traffic never reaches a model.
+        Remaining LLM work is either a capped fast-tier JSON plan or one
+        user-facing completion.
+      </p>
+      <div class="legend">
+        <span><i class="swatch" style="background:#b42318"></i> Before</span>
+        <span><i class="swatch" style="background:#1a7f4c"></i> After</span>
+      </div>
+      <svg viewBox="0 0 460 148" width="460" height="148" role="img" aria-label="Before vs after latency and tokens">
+        <text x="0" y="14" font-size="10" fill="#444">Mean latency (seconds)</text>
+        <rect x="132" y="22" width="318" height="14" fill="#f3f3f1"/>
+        <rect x="132" y="22" width="318" height="14" fill="#b42318"/>
+        <text x="454" y="33" font-size="9" fill="#b42318" text-anchor="end">27.4s</text>
+        <rect x="132" y="40" width="64" height="14" fill="#1a7f4c"/>
+        <text x="200" y="51" font-size="9" fill="#1a7f4c">5.6s</text>
+        <text x="0" y="78" font-size="10" fill="#444">Tokens / request</text>
+        <rect x="132" y="86" width="318" height="14" fill="#b42318"/>
+        <text x="454" y="97" font-size="9" fill="#b42318" text-anchor="end">3,832</text>
+        <rect x="132" y="104" width="128" height="14" fill="#1a7f4c"/>
+        <text x="264" y="115" font-size="9" fill="#1a7f4c">1,547</text>
+        <text x="132" y="140" font-size="9" fill="#888">Bar length is linear in the measured mean. Same 18-query harness.</text>
+      </svg>
+    </div>
+    <div>
+      <h2 style="margin-top:0">Campus-typical mix</h2>
+      <p class="lede" style="font-size:11px">
+        Weighted from query shapes, not the 18-prompt share.
+        Fast-path lookups are 0 tokens.
+      </p>
+      <svg viewBox="0 0 280 168" width="280" height="168" role="img" aria-label="Campus mix donut">
+        <g transform="translate(78,86)">
+          <circle r="42" fill="none" stroke="#e8e8e6" stroke-width="18"/>
+          <circle r="42" fill="none" stroke="#1a7f4c" stroke-width="18"
+            stroke-dasharray="131.95 131.95" stroke-dashoffset="0"
+            transform="rotate(-90)"/>
+          <circle r="42" fill="none" stroke="#3b6fd8" stroke-width="18"
+            stroke-dasharray="92.36 171.53" stroke-dashoffset="-131.95"
+            transform="rotate(-90)"/>
+          <circle r="42" fill="none" stroke="#8a8a86" stroke-width="18"
+            stroke-dasharray="39.58 224.31" stroke-dashoffset="-224.31"
+            transform="rotate(-90)"/>
+          <text text-anchor="middle" y="-2" font-size="12" font-weight="650" fill="#1c1c1c">Campus day</text>
+          <text text-anchor="middle" y="14" font-size="9" fill="#6a6a6a">LLM only if needed</text>
+        </g>
+        <g font-size="10" fill="#333">
+          <rect x="158" y="52" width="10" height="10" fill="#1a7f4c"/>
+          <text x="174" y="61">Fast-path 50%</text>
+          <rect x="158" y="74" width="10" height="10" fill="#3b6fd8"/>
+          <text x="174" y="83">Domain LLM 35%</text>
+          <rect x="158" y="96" width="10" height="10" fill="#8a8a86"/>
+          <text x="174" y="105">Synthesis 15%</text>
+        </g>
+      </svg>
+      <p class="tiny">
+        Same mix as the daily-cost briefing. Fast-path = mess / bus /
+        notices / timetable when phrasing is unambiguous.
+      </p>
+    </div>
+  </div>
+
+  <h2>The request pipeline — skip first, generate last</h2>
+  <div class="pipeline">
+    <div class="steps">
+      <div class="step skip">
+        <div class="n">1 · 0 LLM</div>
+        <div class="t">Auth cache</div>
+        <div class="d">300s hit / 30s miss. No Postgres on a hot key.</div>
+      </div>
+      <div class="step skip">
+        <div class="n">2 · 0 LLM</div>
+        <div class="t">Planner shortcuts</div>
+        <div class="d">If/then split, one-agent keywords, or “X and Y” across two domains.</div>
+      </div>
+      <div class="step skip">
+        <div class="n">3 · 0 LLM</div>
+        <div class="t">Fast parse</div>
+        <div class="d">Catalog regex fills tool args and formats the reply from Postgres.</div>
+      </div>
+      <div class="step skip">
+        <div class="n">4 · 0 LLM</div>
+        <div class="t">Direct dispatch</div>
+        <div class="d">Executor is a dict lookup. Single-task plans return the agent string as-is.</div>
+      </div>
+      <div class="step llm">
+        <div class="n">5 · fast model</div>
+        <div class="t">Planner LLM</div>
+        <div class="d">Only if the text is ambiguous. JSON plan, 800-token cap, reasoning off.</div>
+      </div>
+      <div class="step llm">
+        <div class="n">6 · strong model</div>
+        <div class="t">Domain / synthesis</div>
+        <div class="d">Tool loop for writes and complaints. One synthesis call only if 2+ results ran.</div>
+      </div>
+    </div>
+    <p class="tiny">
+      A hit at steps 2–4 never pays for steps 5–6. “What’s today’s breakfast
+      at Kalam?” finishes at ~0.3 ms with 0 tokens.
+    </p>
+  </div>
+
+  <div class="page-break"></div>
+  <div class="kicker">Mechanisms</div>
+  <h2 style="margin-top:2px">Five layers that remove LLM work</h2>
+
+  <h3>1. Catalog-driven fast parse — the zero-token path</h3>
+  <p>
+    <code>fast_parse.py</code> turns an unambiguous mess, bus, notice, or
+    timetable question into a fully populated argument dict. Names and
+    aliases come from the org profile (hostels, buses, meals), not from a
+    hardcoded guess. If the query is a write, names two hostels, or has an
+    unparseable date, the parser returns <code>None</code> and the agent
+    falls through to the model.
+  </p>
+  <div class="split-3">
+    <div class="card">
+      <div class="h">Example hit</div>
+      <div class="v">“What’s today’s breakfast at Kalam hostel?”</div>
+      <p>Parser extracts hostel + meal + date, <code>get_menu()</code> runs, a template formats the reply. <strong>0 LLM calls, 0 tokens, &lt;2 ms.</strong></p>
+    </div>
+    <div class="card">
+      <div class="h">Same for</div>
+      <div class="v">Bus, notices, timetable</div>
+      <p>“Bus 02 schedule”, “show today’s notices”, “what’s my timetable today” all bypass the agent tool loop the same way.</p>
+    </div>
+    <div class="card">
+      <div class="h">Conservative miss</div>
+      <div class="v">Do not guess</div>
+      <p>A mess query with no hostel asks which hostel from the catalog. Mixed timing language (“next departure”) falls through to the LLM.</p>
+    </div>
+  </div>
+
+  <h3>2. Planner shortcuts — skip the routing model</h3>
+  <p>
+    The planner used to be an LLM call on every request. It now tries
+    deterministic plans first, in this order:
+  </p>
+  <ol class="tight">
+    <li><strong>Conditionals</strong> — regex splits <code>if / then / else / unless</code> into gated tasks with structured <code>depends_on</code>. Nested or ambiguous connectives still go to the model.</li>
+    <li><strong>One-agent keywords</strong> — “dinner at Kalam” matches only mess → a single task, no planner LLM.</li>
+    <li><strong>Independent “and”</strong> — “dinner at Kalam and the Bus 02 schedule” used to miss the one-agent path (two domains) and hit the planner. A thinking fast-model call billed ~8k hidden completion tokens and ~140s for a 300-character JSON plan. The splitter now emits two independent tasks when each clause maps to a distinct agent.</li>
+  </ol>
+  <p>
+    Only leftover ambiguous text calls <code>LLM_FAST_MODEL</code>, with
+    <code>max_tokens=800</code> and gateway reasoning disabled. That stops
+    a “fast” model from emitting a long hidden trace before a tiny JSON plan.
+  </p>
+
+  <h3>3. Direct executor dispatch — no tool-calling loop to pick the agent</h3>
+  <p>
+    The planner already names the agent. The executor is a dictionary
+    lookup, not a second model that re-selects among seven tools.
+  </p>
+  <ul class="tight">
+    <li>Empty or unsupported plans return the planner message immediately.</li>
+    <li>A <strong>single-task</strong> plan calls that agent and returns its string. No executor LLM.</li>
+    <li>A <strong>gated follow-up</strong> is skipped when the condition fails, so attendance below a threshold never pays for a complaint or timetable call that should not run.</li>
+    <li>After skips, if only one result remains, that result is returned. Synthesis is <strong>one</strong> completion, and only when two or more lookups actually ran.</li>
+  </ul>
+  <p class="tiny">
+    The old executor prompt taught a tool-calling model how to pick among
+    seven agents. That text is gone. Dispatch does not need it; synthesis
+    only combines already-fetched results.
+  </p>
+
+  <h3>4. Model tiering and prompt-prefix cache</h3>
+  <div class="split">
+    <div>
+      <p>
+        Classification (planner JSON, YES/NO gates, value extraction)
+        uses the fast tier. The reply the user reads — domain-agent final
+        round and multi-task synthesis — stays on the strong tier so the
+        answer is not truncated.
+      </p>
+      <p>
+        Every production call goes through <code>chat_create</code> with a
+        stable system prompt marked cacheable. Identity (name, roll,
+        role) is a later uncached message, so per-user fields do not bust
+        the shared prefix. The gateway can reuse planner, mess, bus, and
+        complaint prefixes instead of re-billing them as fresh input.
+      </p>
+    </div>
+    <div class="card">
+      <div class="h">What this avoids</div>
+      <div class="v">Paying full input tokens twice</div>
+      <p>Without a cache breakpoint, tool-loop agents resend the system prompt and tool schemas on every round. Cached prefixes turn that into a cheap cache-read on subsequent calls in the same window.</p>
+    </div>
+  </div>
+
+  <h3>5. Data-path work that is not the LLM</h3>
+  <p>
+    When a fast-path query still needs Postgres, UniHelp keeps that off
+    the critical path of a round-trip to a model:
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>What it does</th>
+        <th>Why it matters</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TTL caches</td>
+        <td>Mess menus 60s; meal timings sticky; bus topology 60s; notices 60s; timetable 60s; room facilities 30s</td>
+        <td>Repeated “today’s menu” / “Bus 02” hits memory, not SQL. Writes invalidate the relevant keys.</td>
+      </tr>
+      <tr>
+        <td>Auth cache</td>
+        <td>Hits 300s, misses 30s</td>
+        <td>Every request authenticates. A hot student key does not open Postgres first.</td>
+      </tr>
+      <tr>
+        <td>Connection pools</td>
+        <td>One <code>psycopg</code> pool per database, default max 10</td>
+        <td>Removes connect/auth handshake per query; avoids exhausting <code>max_connections</code>.</td>
+      </tr>
+      <tr>
+        <td>Query shape</td>
+        <td>Weekly menu is one <code>ANY(%s)</code> query, not seven day loops</td>
+        <td>Cuts N+1 round-trips on the remaining DB work.</td>
+      </tr>
+      <tr>
+        <td>Server</td>
+        <td>Planner and Executor built once; blocking work in <code>asyncio.to_thread</code>; semaphore of 8</td>
+        <td>One slow LLM no longer blocks every other campus user on the event loop.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <div class="kicker">Measured impact</div>
+  <h2 style="margin-top:2px">What each query type actually costs now</h2>
+  <p class="lede">
+    Same 18-query set, paired. Singles went to zero LLM. Independent
+    multi-task queries kept one synthesis call and dropped the ~11k-token
+    planner dump.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Query type</th>
+        <th class="num">LLM calls</th>
+        <th class="num">Tokens</th>
+        <th class="num">Mean latency</th>
+        <th>What changed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>single</td>
+        <td class="num">0.39 → 0.00 (−100%)</td>
+        <td class="num">408 → 0 (−100%)</td>
+        <td class="num">2.2s → 5 ms</td>
+        <td>Keyword plan + fast parse. No model on the path.</td>
+      </tr>
+      <tr>
+        <td>multi_independent</td>
+        <td class="num">2.89 → 1.00 (−65%)</td>
+        <td class="num">11,058 → 553 (−95%)</td>
+        <td class="num">113s → 3.2s</td>
+        <td>And-split skips planner LLM. Agents fast-parse. One synthesis call.</td>
+      </tr>
+      <tr>
+        <td>multi_dependent</td>
+        <td class="num">1.17 → 1.00 (−14%)</td>
+        <td class="num">2,524 → 2,127 (−16%)</td>
+        <td class="num">8.8s → 3.9s</td>
+        <td>Regex if/then; unmet gates skip the follow-up agent.</td>
+      </tr>
+      <tr>
+        <td>ambiguous</td>
+        <td class="num">2.56 → 2.67 (+4%)</td>
+        <td class="num">5,830 → 4,224 (−28%)</td>
+        <td class="num">29s → 20s</td>
+        <td>Still needs the planner LLM. Tokens drop from cheaper prefixes and no dump.</td>
+      </tr>
+      <tr>
+        <td>edge_*</td>
+        <td class="num">1.42 → 1.08 (−24%)</td>
+        <td class="num">2,706 → 2,314 (−15%)</td>
+        <td class="num">9.0s → 5.3s</td>
+        <td>Unsupported / empty plans return immediately instead of looping.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tiny">
+    Per-feature LLM calls: Planner 0.28 → 0.11 (−60%), Notice 0.52 → 0.17
+    (−68%). Executor synthesis stayed at 0.17 — already one call on
+    multi-task rows; the win is not calling it on singles.
+  </p>
+
+  <h2>Two request traces</h2>
+  <div class="split">
+    <div class="card">
+      <div class="h">Single lookup · 0 LLM</div>
+      <div class="v">“What’s today’s breakfast at Kalam hostel?”</div>
+      <ol class="tight">
+        <li>Keyword plan → one <code>mess</code> task. No planner LLM.</li>
+        <li>Executor dict lookup; <code>parse_mess_query</code> fills args.</li>
+        <li>Menu from the 60s cache or one SQL. Template reply.</li>
+        <li>Measured: 0.2–2 ms, 0 tokens.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="h">Independent pair · 1 LLM</div>
+      <div class="v">“Dinner at Kalam and the Bus 02 schedule”</div>
+      <ol class="tight">
+        <li>And-split → mess + bus. No planner LLM. Both fast-parse.</li>
+        <li>Two results ran → one synthesis call on the strong model.</li>
+        <li>Before: ~11k tokens / ~113s. After: 553 tokens / 3.2s.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>Why latency falls more than call count</h2>
+  <p>
+    Mean LLM calls fell 35%, but mean latency and P95 each fell 80%
+    because the missing calls were the expensive ones. A thinking
+    fast-model planner could bill thousands of hidden tokens and sit
+    near two minutes for a short JSON plan — that path is now skipped
+    or capped at 800 tokens. Singles left the network entirely, so P50
+    is no longer mess/bus. Independent pairs no longer stack planner +
+    two tool loops + a dump. Unmet gates skip the follow-up agent.
+  </p>
+
+  <h2>Why tokens fall</h2>
+  <div class="split-3">
+    <div class="card">
+      <div class="h">Zero-token majority</div>
+      <div class="v">Singles = 0 tokens</div>
+      <p>About half a campus day never sends a prompt. That slice used to cost ~408 tokens of planner system text.</p>
+    </div>
+    <div class="card">
+      <div class="h">No 8k dumps</div>
+      <div class="v">Multi-independent −95%</div>
+      <p>Max output in the fixed run is 552 tokens. The 8,500-token thinking dumps are gone from measured traffic.</p>
+    </div>
+    <div class="card">
+      <div class="h">Cheaper remaining calls</div>
+      <div class="v">Prefix cache + short plans</div>
+      <p>Static system prompts, identity split out, fast-tier JSON. Ambiguous rows still call the planner; billed tokens there dropped 28%.</p>
+    </div>
+  </div>
+
+  <div class="callout note">
+    <strong>What still uses an LLM — by design</strong>
+    Writes (complaints, room booking) stay on a tool-calling agent.
+    Ambiguous phrasing still needs the planner. Two-plus results still
+    get one synthesis completion. That is the 35% + 15% campus mix, not
+    a leftover bug.
+  </div>
+
+  <p class="tiny" style="margin-top:8px">
+    Sources: <code>benchmarks/comparison_fixed.md</code> (18 Sep 2026).
+    Later org-profile run: 0.89 LLM calls, 1,701 tokens, 5.2s mean.
+    Code: <code>fast_parse.py</code>, <code>planner.py</code>,
+    <code>executor.py</code>, <code>llm.py</code>, <code>ttl_cache.py</code>,
+    <code>db.py</code>, <code>main.py</code>.
+    Application TTL hits are distinct from provider <code>cached_tokens</code>.
+  </p>
+</body>
+</html>

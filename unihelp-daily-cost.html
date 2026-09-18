@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UniHelp daily cost at 3,000 users</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1c1c1c;
+      font: 11px/1.45 "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    body { padding: 0; }
+    h1 { font-size: 22px; line-height: 1.2; font-weight: 650; margin: 0 0 6px; }
+    h2 { font-size: 13.5px; line-height: 1.3; font-weight: 650; margin: 18px 0 6px; }
+    h3 { font-size: 12px; font-weight: 650; margin: 14px 0 6px; }
+    p { margin: 0 0 8px; }
+    .lede { color: #555; font-size: 11.5px; max-width: 720px; }
+    .muted { color: #6a6a6a; font-size: 10px; }
+    .tiny { color: #7a7a7a; font-size: 9.5px; margin-top: 4px; }
+    code {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 0.92em;
+      background: #f3f3f1;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .kicker {
+      color: #6a6a6a;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 12px;
+    }
+    .stat {
+      border: 1px solid #e6e6e4;
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    .stat .v { font-size: 20px; font-weight: 650; line-height: 1.15; }
+    .stat .l { color: #6a6a6a; font-size: 10px; margin-top: 2px; }
+    .ok { color: #1a7f4c; }
+    .bad { color: #b42318; }
+    .warn { color: #9a6700; }
+    .callout {
+      border: 1px solid #d8eadf;
+      background: #f4faf6;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin: 10px 0 12px;
+    }
+    .callout.danger {
+      border-color: #f0d4d0;
+      background: #fdf6f5;
+    }
+    .callout strong { display: block; margin-bottom: 3px; }
+    .split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 18px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .split-2 {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      align-items: start;
+      margin: 8px 0;
+    }
+    h2, h3 { page-break-after: avoid; }
+    table, .callout, .card, .split, .split-2, .cards, .stats {
+      page-break-inside: avoid;
+    }
+    thead { display: table-header-group; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 6px 0 4px;
+    }
+    th, td {
+      border-bottom: 1px solid #ecece8;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: 600;
+      color: #444;
+      background: #f7f7f5;
+      font-size: 10px;
+    }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:nth-child(even) td { background: #fafaf8; }
+    .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .dot-ok { background: #1a7f4c; }
+    .dot-info { background: #3b6fd8; }
+    .dot-warn { background: #c69026; }
+    .dot-bad { background: #b42318; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .card {
+      border: 1px solid #e6e6e4;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .card .h { font-size: 10px; color: #6a6a6a; margin-bottom: 4px; }
+    .card .v { font-size: 18px; font-weight: 650; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 10px; color: #444; margin: 4px 0 8px; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .assumptions p { margin: 0 0 6px; }
+    hr { border: 0; border-top: 1px solid #e6e6e4; margin: 16px 0 10px; }
+    .footer {
+      margin-top: 10px;
+      color: #8a8a8a;
+      font-size: 9px;
+    }
+    svg text { font-family: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="kicker">UniHelp cost briefing · 19 Sep 2026</div>
+  <h1>UniHelp daily cost at 3,000 users</h1>
+  <p class="lede">
+    3,000 users × 15 queries = 45,000 requests/day. LLM tokens from
+    <code>benchmarks/fixed.csv</code> (18 Sep 2026 20:13 IST), not the older
+    <code>current</code> harness that still had 8k-token synthesis dumps.
+    Infra is a small always-on app + Postgres, not serverless.
+  </p>
+
+  <div class="stats">
+    <div class="stat"><div class="v">45k</div><div class="l">Queries / day</div></div>
+    <div class="stat"><div class="v ok">$4</div><div class="l">Likely total / day</div></div>
+    <div class="stat"><div class="v">$120</div><div class="l">Likely total / month</div></div>
+    <div class="stat"><div class="v">$0.00005</div><div class="l">LLM cost / query (DeepSeek Flash)</div></div>
+  </div>
+
+  <div class="callout">
+    <strong class="ok">What the fixed run changed</strong>
+    Mess, bus, notices, and timetable singles are all zero tokens (~5 ms).
+    Multi-independent “dinner and bus” replies dropped from 11,058 tokens
+    to 553. Max output in this run is 552 — the ~8,500-token dumps are
+    gone from measured traffic. DeepSeek as-run falls from $16/day to
+    $3.59/day, so the harness is no longer an outlier versus a campus day.
+  </div>
+
+  <div class="split">
+    <div>
+      <h2 style="margin-top:0">Campus-typical mix</h2>
+      <p class="lede">
+        50% fast-path lookups (0 tokens), 35% domain-agent LLM
+        (complaint / room / leftover mess), 15% multi-task synthesis.
+        Weighted from <code>fixed.csv</code> query shapes, not the 18-prompt
+        harness share.
+      </p>
+      <p class="tiny">
+        Share of a campus day, not of the 54-row benchmark. Fast-path is
+        mess, bus, notices, and timetable when the phrasing is obvious.
+        Source: <code>benchmarks/fixed.csv</code> + <code>benchmarks/queries.csv</code>.
+      </p>
+    </div>
+    <div>
+      <!-- Donut: r=42, C=263.89. 50% / 35% / 15% -->
+      <svg viewBox="0 0 280 180" width="280" height="180" role="img" aria-label="Campus mix donut">
+        <g transform="translate(80,90)">
+          <circle r="42" fill="none" stroke="#e8e8e6" stroke-width="18"/>
+          <circle r="42" fill="none" stroke="#1a7f4c" stroke-width="18"
+            stroke-dasharray="131.95 131.95" stroke-dashoffset="0"
+            transform="rotate(-90)"/>
+          <circle r="42" fill="none" stroke="#3b6fd8" stroke-width="18"
+            stroke-dasharray="92.36 171.53" stroke-dashoffset="-131.95"
+            transform="rotate(-90)"/>
+          <circle r="42" fill="none" stroke="#8a8a86" stroke-width="18"
+            stroke-dasharray="39.58 224.31" stroke-dashoffset="-224.31"
+            transform="rotate(-90)"/>
+          <text text-anchor="middle" y="-2" font-size="13" font-weight="650" fill="#1c1c1c">Campus day</text>
+          <text text-anchor="middle" y="14" font-size="9" fill="#6a6a6a">45k queries</text>
+        </g>
+        <g font-size="10" fill="#333">
+          <rect x="168" y="52" width="10" height="10" fill="#1a7f4c"/>
+          <text x="184" y="61">Fast-path 50%</text>
+          <rect x="168" y="74" width="10" height="10" fill="#3b6fd8"/>
+          <text x="184" y="83">Domain LLM 35%</text>
+          <rect x="168" y="96" width="10" height="10" fill="#8a8a86"/>
+          <text x="184" y="105">Synthesis 15%</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <h2>Daily total by model (LLM + $1.50 infra)</h2>
+  <p class="lede">
+    GPT-4o is omitted from the plot — it is ~$127/day on the same mix
+    and would flatten the useful comparison. The dashed line is the $4
+    planning number.
+  </p>
+  <div class="legend">
+    <span><i class="swatch" style="background:#3b6fd8"></i> Campus-typical (USD/day)</span>
+    <span><i class="swatch" style="background:#8a8a86"></i> Benchmark harness as-run (USD/day)</span>
+    <span><i class="swatch" style="background:#1a7f4c;height:2px;margin-top:4px"></i> $4 plan</span>
+  </div>
+  <!-- max 24.02, plot height 120, y from 148 down -->
+  <svg viewBox="0 0 520 210" width="520" height="210" role="img" aria-label="Daily total by model">
+    <line x1="48" y1="28" x2="500" y2="28" stroke="#eee" />
+    <line x1="48" y1="68" x2="500" y2="68" stroke="#eee" />
+    <line x1="48" y1="108" x2="500" y2="108" stroke="#eee" />
+    <line x1="48" y1="148" x2="500" y2="148" stroke="#ccc" />
+    <!-- $4 line: 4/26 * 120 = 18.46 from bottom → y=148-18.46=129.5 -->
+    <line x1="48" y1="129.5" x2="500" y2="129.5" stroke="#1a7f4c" stroke-dasharray="4 3" />
+    <text x="504" y="133" font-size="9" fill="#1a7f4c">$4</text>
+    <text x="8" y="32" font-size="8" fill="#888">$26</text>
+    <text x="8" y="72" font-size="8" fill="#888">$18</text>
+    <text x="8" y="112" font-size="8" fill="#888">$10</text>
+    <text x="14" y="152" font-size="8" fill="#888">$0</text>
+    <!-- groups at x 110, 250, 390. bar w=28, gap 6 -->
+    <!-- DeepSeek 3.77 → 17.4px, 5.09 → 23.5 -->
+    <rect x="96" y="130.6" width="28" height="17.4" fill="#3b6fd8"/>
+    <rect x="128" y="124.5" width="28" height="23.5" fill="#8a8a86"/>
+    <text x="110" y="126" font-size="8" fill="#3b6fd8" text-anchor="middle">$3.77</text>
+    <text x="142" y="120" font-size="8" fill="#555" text-anchor="middle">$5.09</text>
+    <text x="126" y="166" font-size="10" text-anchor="middle" fill="#333">DeepSeek Flash</text>
+    <!-- mini 9.01 → 41.6, 14.14 → 65.3 -->
+    <rect x="236" y="106.4" width="28" height="41.6" fill="#3b6fd8"/>
+    <rect x="268" y="82.7" width="28" height="65.3" fill="#8a8a86"/>
+    <text x="250" y="102" font-size="8" fill="#3b6fd8" text-anchor="middle">$9.01</text>
+    <text x="282" y="78" font-size="8" fill="#555" text-anchor="middle">$14.14</text>
+    <text x="266" y="166" font-size="10" text-anchor="middle" fill="#333">GPT-4o-mini</text>
+    <!-- Qwen 15.49 → 71.5, 24.02 → 110.9 -->
+    <rect x="376" y="76.5" width="28" height="71.5" fill="#3b6fd8"/>
+    <rect x="408" y="37.1" width="28" height="110.9" fill="#8a8a86"/>
+    <text x="390" y="72" font-size="8" fill="#3b6fd8" text-anchor="middle">$15.49</text>
+    <text x="422" y="33" font-size="8" fill="#555" text-anchor="middle">$24.02</text>
+    <text x="406" y="166" font-size="10" text-anchor="middle" fill="#333">Qwen 3.8 27B</text>
+    <text x="48" y="186" font-size="9" fill="#888">Y-axis: estimated USD per day (LLM + $1.50 infra).</text>
+  </svg>
+  <p class="tiny">
+    DeepSeek V4 Flash 0731 = OpenRouter StreamLake $0.05412 / $0.1624 / $0.001722
+    per 1M (in / out / cache read), 19 Sep 2026. Qwen 3.8 27B = $0.15 / $1.875 / $0.0375.
+    GPT-4o-mini = $0.15 / $0.60 / $0.075.
+  </p>
+
+  <div class="callout danger">
+    <strong class="bad">GPT-4o on every request is ~$127/day</strong>
+    Same campus mix, OpenAI list $2.50 / $10.00 / $1.25 per 1M. That is
+    ~$3,800/month before infra. Do not put a frontier model on mess and
+    bus lookups.
+  </div>
+
+  <h2>LLM only — four traffic mixes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Mix</th>
+        <th class="num">DeepSeek Flash</th>
+        <th class="num">GPT-4o-mini</th>
+        <th class="num">Qwen 3.8 27B</th>
+        <th class="num">GPT-4o</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dot dot-ok"></span>Campus-typical (use this)</td>
+        <td class="num">$2.27 · ₹200</td>
+        <td class="num">$7.51 · ₹661</td>
+        <td class="num">$14 · ₹1,231</td>
+        <td class="num">$125 · ₹11,017</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-info"></span>70% fast-path campus day</td>
+        <td class="num">$1.32 · ₹116</td>
+        <td class="num">$4.40 · ₹387</td>
+        <td class="num">$8.27 · ₹728</td>
+        <td class="num">$73 · ₹6,451</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-warn"></span>Benchmark harness as-run</td>
+        <td class="num">$3.59 · ₹316</td>
+        <td class="num">$13 · ₹1,112</td>
+        <td class="num">$23 · ₹1,982</td>
+        <td class="num">$211 · ₹18,543</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-bad"></span>Campus + 8% 8k-token synthesis (not observed)</td>
+        <td class="num">$7.24 · ₹637</td>
+        <td class="num">$26 · ₹2,277</td>
+        <td class="num">$71 · ₹6,281</td>
+        <td class="num">$431 · ₹37,945</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tiny">
+    USD/day and ≈ INR/day at ₹88/USD. Infra is not in this table.
+    <code>fixed.csv</code> has zero rows with output &gt; 552 tokens, so the last
+    row is a residual risk (executor synthesis is still uncapped), not the live measurement.
+  </p>
+
+  <h2>DeepSeek Flash — before vs after the dump fix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Mix</th>
+        <th class="num">current.csv (before)</th>
+        <th class="num">fixed.csv (now)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dot dot-ok"></span>Campus-typical LLM / day</td>
+        <td class="num">$2.41</td>
+        <td class="num">$2.27</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-ok"></span>Harness as-run LLM / day</td>
+        <td class="num">$16.09</td>
+        <td class="num">$3.59</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-warn"></span>Campus + 8% 8k dumps</td>
+        <td class="num">$7.37 (measured mix)</td>
+        <td class="num">$7.24 (hypothetical)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tiny">
+    Mean tokens/request 3,832 → 1,547 (−60%). Multi-independent 11,058 → 553 (−95%).
+    Single-query LLM calls 0.39 → 0.00 (notices joined the fast path).
+    Source: <code>benchmarks/comparison_fixed.md</code>.
+  </p>
+
+  <div class="split-2">
+    <div>
+      <h2 style="margin-top:0">Where a $4 day goes</h2>
+      <p class="lede">
+        Campus-typical + DeepSeek Flash 0731 + $1.50 infra. Almost all of the
+        LLM line is uncached input; prompt cache is already cheap, and output
+        is no longer the dump-driven half of the bill.
+      </p>
+      <svg viewBox="0 0 480 150" width="460" height="150" role="img" aria-label="Where a $4 day goes">
+        <!-- max 1.50, bar max width 280. 1.50→280, 1.40→261, 0.86→160, 0.01→2 -->
+        <text x="118" y="18" font-size="10" text-anchor="end" fill="#333">Uncached input</text>
+        <rect x="128" y="8" width="261" height="14" fill="#3b6fd8"/>
+        <text x="394" y="19" font-size="9" fill="#333">$1.40</text>
+
+        <text x="118" y="48" font-size="10" text-anchor="end" fill="#333">Cached input</text>
+        <rect x="128" y="38" width="4" height="14" fill="#3b6fd8"/>
+        <text x="138" y="49" font-size="9" fill="#333">$0.01</text>
+
+        <text x="118" y="78" font-size="10" text-anchor="end" fill="#333">Output tokens</text>
+        <rect x="128" y="68" width="160" height="14" fill="#3b6fd8"/>
+        <text x="294" y="79" font-size="9" fill="#333">$0.86</text>
+
+        <text x="118" y="108" font-size="10" text-anchor="end" fill="#333">VM + Postgres</text>
+        <rect x="128" y="98" width="280" height="14" fill="#3b6fd8"/>
+        <text x="414" y="109" font-size="9" fill="#333">$1.50</text>
+        <text x="128" y="136" font-size="9" fill="#888">X-axis: USD / day. 25.9M uncached in, 6.2M cached in, 5.3M out.</text>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="h">Cost by query shape · per request</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Shape</th>
+            <th class="num">DeepSeek / q</th>
+            <th class="num">If all 45k</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Mess / bus / notices / timetable</td><td class="num">$0</td><td class="num">$0</td></tr>
+          <tr><td>Multi synthesis (dinner + bus)</td><td class="num">$0.00004</td><td class="num">$1.98</td></tr>
+          <tr><td>Domain agent (complaint / room)</td><td class="num">$0.00013</td><td class="num">$5.87</td></tr>
+          <tr><td>Ambiguous / multi-round</td><td class="num">$0.00019</td><td class="num">$8.34</td></tr>
+        </tbody>
+      </table>
+      <p class="tiny">
+        The old “multi + 8k synthesis” shape was ~$0.0014 / q ($63 if all 45k).
+        It does not appear in <code>fixed.csv</code>.
+      </p>
+    </div>
+  </div>
+
+  <h2>Setup comparison</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Setup</th>
+        <th class="num">LLM / day</th>
+        <th class="num">Total / day (incl. ~$1.50 infra)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dot dot-ok"></span>Kado gateway free / subsidized</td>
+        <td class="num">$0</td>
+        <td class="num">$1–2.50</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-ok"></span>Both tiers DeepSeek Flash (recommended)</td>
+        <td class="num">$2.27</td>
+        <td class="num">~$4</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-warn"></span>Live .env: Qwen planner + Flash answers</td>
+        <td class="num">~$3–4</td>
+        <td class="num">~$5</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-info"></span>GPT-4o-mini everywhere</td>
+        <td class="num">$7.51</td>
+        <td class="num">~$9</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-bad"></span>GPT-4o on every request</td>
+        <td class="num">$125</td>
+        <td class="num">~$127</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="tiny">
+    <code>config.py</code> and <code>.env.example</code> default to OpenRouter
+    <code>deepseek/deepseek-v4-flash-0731</code>. This machine’s <code>.env</code> still sets
+    <code>LLM_FAST_MODEL=qwen/qwen3.8-27b</code>. Planner-only Qwen, capped at
+    <code>FAST_TIER_MAX_TOKENS=800</code>, adds about $1/day on the harness and
+    less on a campus mix. Putting Qwen on user-facing answers is the expensive
+    path ($14 LLM / day campus-typical).
+  </p>
+
+  <h2>Infra (almost independent of query count at this scale)</h2>
+  <p>
+    45k requests/day is 0.5 QPS average. Meal-time bursts are mostly
+    fast-path DB reads. The app already waits on an external LLM, so
+    you want an always-on process, not Vercel-style billed duration.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Line</th>
+        <th>What</th>
+        <th class="num">Daily</th>
+        <th class="num">Monthly</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>App server</td>
+        <td>2 vCPU / 4–8 GB always-on (Hetzner / Railway / a small cloud VM)</td>
+        <td class="num">$0.40–1.20</td>
+        <td class="num">$12–35</td>
+      </tr>
+      <tr>
+        <td>Postgres</td>
+        <td>Eight small DBs, ~3k users. Same VM or Neon/RDS tiny</td>
+        <td class="num">$0.30–0.80</td>
+        <td class="num">$10–25</td>
+      </tr>
+      <tr>
+        <td>Backups / egress</td>
+        <td>Campus payload is tiny</td>
+        <td class="num">$0.10–0.30</td>
+        <td class="num">$3–10</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-ok"></span>Infra total</td>
+        <td>Floor if the LLM line is $0</td>
+        <td class="num">$1.00–2.50</td>
+        <td class="num">$30–75</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Monthly (30 days)</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="h">Kado free + infra only</div>
+      <div class="v ok">$30–75</div>
+      <p class="tiny">₹2,640–₹6,600. LLM billed at $0.</p>
+    </div>
+    <div class="card">
+      <div class="h">DeepSeek Flash, campus mix</div>
+      <div class="v">~$120</div>
+      <p class="tiny">₹5,993 LLM + ₹3,960 infra. Planning number.</p>
+    </div>
+    <div class="card">
+      <div class="h">GPT-4o, same mix</div>
+      <div class="v bad">~$3.8k</div>
+      <p class="tiny">Do not put a frontier model on every campus lookup.</p>
+    </div>
+  </div>
+
+  <hr />
+  <h3>Assumptions that move the bill</h3>
+  <div class="assumptions">
+    <p>Fast-path now zeros mess, bus, notices, and timetable when the phrasing is obvious. If real traffic is 70%+ those lookups, the DeepSeek LLM line drops toward $1.30/day.</p>
+    <p>Paid estimates use OpenRouter DeepSeek Flash 0731. There is still no public per-token list for <code>LLM_MODEL=kado</code> on <code>awesome.kado.so</code>; if that gateway is free, you only pay infra.</p>
+    <p><code>LLM_FAST_MODEL=qwen/qwen3.8-27b</code> is not a cheaper planner. Qwen output is ~11× DeepSeek ($1.875 vs $0.162 / 1M). Keep both tiers on Flash unless you need Qwen for quality. The 800-token fast-tier cap stops planner dumps; it does not cap executor synthesis.</p>
+    <p>Cap completion tokens on executor synthesis if the 8k-token bug class returns. That single failure mode still triples a campus-typical DeepSeek day if ~8% of live traffic hits it.</p>
+    <p class="muted">FX ₹88/USD is a round conversion, not a live rate. Prices are list, not committed discounts.</p>
+  </div>
+  <p class="footer">
+    Generated from the UniHelp daily cost canvas · tokens: benchmarks/fixed.csv · prices: OpenRouter / OpenAI list, 19 Sep 2026.
+  </p>
+</body>
+</html>

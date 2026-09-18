@@ -14,38 +14,87 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
+import org_profile
+from org_profile import CatalogItem
+
 logger = logging.getLogger(__name__)
 
 TIME_AND_DATE_FMT = "%A, %Y-%m-%d %H:%M:%S IST"
 
-# Canonical hostel names as stored / accepted by mess_functions_1.get_menu
-# (case-insensitive DB match). Aliases cover the phrasings the mess agent
-# already treats as those hostels (tool schema + commented examples).
-_HOSTEL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\bc\s*\.?\s*v\s*\.?\s*raman\b", re.I), "CV Raman"),
-    (re.compile(r"\bcvraman\b", re.I), "CV Raman"),
-    (re.compile(r"\bcv-raman\b", re.I), "CV Raman"),
-    (re.compile(r"\baryabhatta\b", re.I), "Aryabhatta"),
-    (re.compile(r"\barya\s+bhatta\b", re.I), "Aryabhatta"),
-    (re.compile(r"\bkalam\b", re.I), "Kalam"),
-    (re.compile(r"\basima\b", re.I), "Asima"),
-]
-
 # query_schedule expects the bus_schedule.bus_name form, e.g. "Bus 02".
-_KNOWN_BUS_NUMBERS = frozenset({"01", "02", "03", "04", "05"})
+# Known numbers come from ORG.catalog.buses — see _bus_number_to_name().
 _BUS_RE = re.compile(
     r"\b(?:bus|route)\s*0?([1-9]\d?)\b",
     re.I,
 )
 
-_MEAL_ALIASES = {
-    "breakfast": "breakfast",
-    "lunch": "lunch",
-    "snacks": "snacks",
-    "snack": "snacks",
-    "dinner": "dinner",
-    "supper": "dinner",
-}
+
+def _label_pattern(label: str) -> re.Pattern[str]:
+    """Word-boundary match with optional dots/spaces between tokens.
+
+    "CV Raman" matches "CV Raman" / "cvraman"; alias "c v raman" reproduces
+    the previous `c\\s*\\.?\\s*v\\s*\\.?\\s*raman` hostel regex.
+    """
+    tokens = [t for t in re.split(r"[\s\-]+", label.strip()) if t]
+    if not tokens:
+        return re.compile(r"(?!x)x")
+    inner = r"\s*\.?\s*".join(re.escape(t) for t in tokens)
+    collapsed = "".join(tokens)
+    if len(tokens) == 1:
+        return re.compile(rf"\b{inner}\b", re.I)
+    return re.compile(rf"\b(?:{inner}|{re.escape(collapsed)})\b", re.I)
+
+
+def _resolve_catalog_item(
+    user_input: str, items: tuple[CatalogItem, ...]
+) -> Optional[str]:
+    """Return the unique canonical catalog name mentioned, or None.
+
+    Confidence contract is unchanged: 0 or >1 hits is not a guess.
+    Aliases are checked with the same word-boundary matcher as names;
+    an entry with no aliases matches exactly as a bare name did before.
+    """
+    hits: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        for label in item.labels:
+            if _label_pattern(label).search(user_input) and item.name not in seen:
+                seen.add(item.name)
+                hits.append(item.name)
+                break
+    if len(hits) != 1:
+        return None
+    return hits[0]
+
+
+def _bus_number_to_name() -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for bus in org_profile.ORG.catalog.buses:
+        for label in bus.labels:
+            match = re.search(r"(\d+)", label)
+            if match:
+                mapping.setdefault(match.group(1).zfill(2), bus.name)
+    return mapping
+
+
+def _meal_alias_map() -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for meal in org_profile.ORG.catalog.meals:
+        canonical = meal.name.lower()
+        mapping[canonical] = canonical
+        for alias in meal.aliases:
+            mapping[alias.lower()] = canonical
+    return mapping
+
+
+def _meal_named_re() -> re.Pattern[str]:
+    keys = sorted(_meal_alias_map(), key=len, reverse=True)
+    if not keys:
+        return re.compile(r"(?!x)x")
+    return re.compile(
+        r"\b(" + "|".join(re.escape(key) for key in keys) + r")\b",
+        re.I,
+    )
 
 _WEEKDAY_INDEX = {
     "monday": 0,
@@ -98,10 +147,6 @@ _TIMING_RE = re.compile(
 )
 _WEEKLY_RE = re.compile(
     r"\b(weekly|full week|entire week|whole week|all days|this week|all week)\b",
-    re.I,
-)
-_MEAL_NAMED_RE = re.compile(
-    r"\b(breakfast|lunch|snacks?|dinner|supper)\b",
     re.I,
 )
 _MENU_CONTENT_RE = re.compile(
@@ -196,15 +241,7 @@ def _resolve_date(user_input: str, now: datetime) -> Optional[datetime]:
 
 
 def _resolve_hostel(user_input: str) -> Optional[str]:
-    hits: list[str] = []
-    seen: set[str] = set()
-    for pattern, canonical in _HOSTEL_PATTERNS:
-        if pattern.search(user_input) and canonical not in seen:
-            seen.add(canonical)
-            hits.append(canonical)
-    if len(hits) != 1:
-        return None
-    return hits[0]
+    return _resolve_catalog_item(user_input, org_profile.ORG.catalog.hostels)
 
 
 def _resolve_meal(user_input: str) -> Optional[str]:
@@ -212,14 +249,12 @@ def _resolve_meal(user_input: str) -> Optional[str]:
 
     None is a defined value (full-day / weekly lookup), not a guess.
     """
+    aliases = _meal_alias_map()
+    named = _meal_named_re()
     found: list[str] = []
     seen: set[str] = set()
-    for match in re.finditer(
-        r"\b(breakfast|lunch|snacks?|dinner|supper)\b",
-        user_input,
-        re.I,
-    ):
-        canonical = _MEAL_ALIASES[match.group(1).lower()]
+    for match in named.finditer(user_input):
+        canonical = aliases[match.group(1).lower()]
         if canonical not in seen:
             seen.add(canonical)
             found.append(canonical)
@@ -252,7 +287,7 @@ def parse_mess_query(
 
     # Mixed menu + meal-timing / ambiguous "schedule" language → LLM.
     if _SCHEDULE_AMBIGUOUS_RE.search(text) and (
-        _TIMING_RE.search(text) or _MEAL_NAMED_RE.search(text)
+        _TIMING_RE.search(text) or _meal_named_re().search(text)
     ):
         return None
     # Clock-time questions ("when is dinner", "mess timings") are not
@@ -284,7 +319,7 @@ def parse_mess_query(
     if hostel is None:
         looks_like_menu = bool(
             _MENU_CONTENT_RE.search(text)
-            or _MEAL_NAMED_RE.search(text)
+            or _meal_named_re().search(text)
             or re.search(r"\bmess\b", text, re.I)
         )
         if not looks_like_menu:
@@ -331,9 +366,10 @@ def parse_bus_query(
     if not bus_hit:
         return None
     number = bus_hit.group(1).zfill(2)
-    if number not in _KNOWN_BUS_NUMBERS:
+    known = _bus_number_to_name()
+    if number not in known:
         return None
-    route_name = f"Bus {number}"
+    route_name = known[number]
 
     resolved = _resolve_date(text, now)
     if resolved is None:
@@ -351,7 +387,12 @@ def parse_timetable_query(
     time_and_date: Optional[str],
     user_metadata: Optional[dict[str, Any]],
 ) -> Optional[dict[str, Any]]:
-    """Resolve a personal day-schedule lookup for the authenticated caller."""
+    """Resolve a personal day-schedule lookup for the authenticated caller.
+
+    No hostel/route/room/meal name checks live here — those catalogs are
+    consumed by parse_mess_query / parse_bus_query. Room phrasing
+    ("which room") still falls through to the LLM, unchanged.
+    """
     if not user_input or not str(user_input).strip():
         return None
     text = str(user_input).strip()
@@ -609,7 +650,8 @@ def parse_notice_query(
     """Resolve view / publish / archive notice intents, or None.
 
     Audience/authority are never parsed from text — the agent fills them
-    from user_metadata, same as timetable's roll number.
+    from user_metadata, same as timetable's roll number. Inventory found
+    no hostel/route/room/meal literals in this parser to catalog-drive.
     """
     if not user_input or not str(user_input).strip():
         return None

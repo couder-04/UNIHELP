@@ -26,7 +26,14 @@ _HERE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_HERE))
 # pytest puts tests/ on sys.path, so sibling packages shadow production modules.
 sys.modules.pop("fast_parse", None)
-sys.modules.pop("metrics", None)
+# CRITICAL FIX: popping metrics after llm/executor already imported it
+# creates a second metrics module. request_scope would then record on
+# the new copy while chat_create writes to the original, so
+# llm_call_count stays 0. Only drop a shadowed/missing metrics module.
+_metrics = sys.modules.get("metrics")
+_metrics_file = (getattr(_metrics, "__file__", "") or "").replace("\\", "/")
+if _metrics is None or "/tests/" in _metrics_file:
+    sys.modules.pop("metrics", None)
 
 import llm  # noqa: E402
 import metrics  # noqa: E402

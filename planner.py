@@ -2,6 +2,12 @@ import json
 import logging
 import re
 
+from agent_registry import (
+    SETUP_PLANNER_ADDENDUM,
+    SETUP_SPEC,
+    build_planner_system_prompt,
+    fast_path_keywords,
+)
 from config import LLM_FAST_MODEL
 from llm import cached_system_message, chat_create, describe_llm_error, fast_tier_kwargs, get_client
 from task_conditions import (
@@ -19,154 +25,12 @@ class Planner:
     def __init__(self):
         self.client = get_client()
 
-    # The original prompt carried ~10 worked examples, most of which taught
-    # the same single rule ("mess words -> mess agent"). Every example is
-    # resent on every request, so they were a fixed per-request token cost
-    # for very little routing benefit. Trimmed to one example per agent plus
-    # one multi-task example — the cases that actually teach something
-    # distinct. Keep this prompt a stable, unchanging string: identical
-    # prefixes are what let the gateway (and most inference servers) reuse a
-    # cached prefix instead of reprocessing it.
-    SYSTEM_PROMPT = """
-You are the planner of the IIT Patna Organization Management Agent.
-
-Break the user's natural-language request into simple tasks and assign
-each task to the appropriate specialized agent. Route generously: if the
-intent is close to a supported service, send it there rather than
-refusing. Ambiguous or mixed requests may become multiple tasks.
-
-Supported agents: mess, bus, complaint, room_booking, attendance, notice, timetable
-
-Do not decide authorization yourself. Specialized agents handle domain
-logic and access control. If a request could reasonably be served, plan it.
-
-For every task provide:
-1. id         - short unique id ("t1", "t2", ...)
-2. agent      - the specialized agent responsible
-3. request    - a clear, self-contained request for that agent
-   (or request_template + fill when a later task needs a value from an earlier result)
-4. condition  - null, or a structured object:
-   {"depends_on": "<task id>", "type": "threshold"|"ordering"|"predicate"|"extract", ...}
-   - threshold: {"depends_on","type":"threshold","field","op":"<"|">"|"<="|">="|"==","value"}
-   - ordering:  {"depends_on","type":"ordering"}  (just run after that task)
-   - predicate: {"depends_on","type":"predicate","text":"<YES/NO check>"}
-     optional "negate": true inverts the predicate
-   - extract:   {"depends_on","type":"extract"} with request_template / fill (see below)
-   An if/else pair is two tasks on the SAME depends_on: one op and its inverse
-   (e.g. "<" and ">=" against the same value), or a predicate and negate:true.
-   Nested "if X then if Y then Z" is a chain: t2.depends_on=t1, t3.depends_on=t2.
-   Two tasks MAY target the same agent when their conditions differ.
-
-To pass a VALUE from one result into the next request, do not guess it at
-plan time. Use:
-{"request_template":"...{{var}}...","fill":[{"var":"<name>","depends_on":"<id>","extract":"<what to pull out>"}],"condition":{"depends_on":"<id>","type":"extract"}}
-
-AGENT RESPONSIBILITIES
-
-mess:
-- Daily and weekly mess menus, food served in a hostel
-- Breakfast, lunch, snacks, dinner menus; meal timings
-- Authorized mess menu modifications
-
-bus:
-- Bus availability, schedules, routes, destinations
-- Driver information, next departures
-- Authorized bus schedule modifications
-
-complaint:
-- Creating, viewing, and listing complaints
-- Admin/faculty verification then PROGRESS then COMPLETED
-- Categories: academic, hostel, mess
-- Duplicate open complaints are not logged again
-
-room_booking:
-- SAC Hall, Guest House, CLH, and Auditorium
-- Availability checks, direct bookings, and booking requests
-- Cancelling and modifying bookings and requests
-- Admin approval and rejection of pending requests
-
-attendance:
-- Viewing attendance records, percentages, skip budget, and charts
-- Weekly, monthly, semester, and today's attendance
-- Faculty/admin marking, editing, and deleting attendance
-- Courses, rosters, enrollments, at-risk students
-- Admin management of people, courses, and enrollments
-
-notice:
-- Viewing the campus notice board
-- Publishing notices (faculty/admin)
-- Archiving expired notices (faculty/admin)
-
-timetable:
-- Personal and weekly class timetables, next class, and free slots
-- Classes on a given day, course lookup, room list for lectures/labs
-- Faculty/admin add, update, or delete class slots
-
-DISAMBIGUATION
-- A request to SEE the menu is "mess". A request to COMPLAIN about food
-  quality is "complaint" with category mess.
-- A request about bus timings is "bus". A complaint about a bus not
-  arriving is "complaint".
-- Hostel facilities (water, electricity, rooms) are "complaint" with
-  category hostel. Classes, exams, or faculty issues are category academic.
-- Checking attendance, marks present/absent, skip budget, or course
-  enrollment is "attendance". Complaining about a class, faculty, or
-  being marked wrongly as a grievance is "complaint" with category academic.
-- Viewing, publishing, or archiving campus notices is "notice".
-  Complaining about a notice or announcement is "complaint".
-- Class timetable, next lecture/lab, or "what classes do I have" is
-  "timetable". A bus timetable is "bus". Booking SAC/Guest House/CLH/
-  Auditorium is "room_booking", not timetable.
-
-EXAMPLES
-
-User: "What is for dinner in Kalam today?"
-{"tasks":[{"id":"t1","agent":"mess","request":"Tell me today's dinner menu for Kalam hostel","condition":null}]}
-
-User: "When is the next bus from Aryabhatta to Tut Block?"
-{"tasks":[{"id":"t1","agent":"bus","request":"Find the next bus from Aryabhatta to Tut Block","condition":null}]}
-
-User: "The water cooler on my floor is broken"
-{"tasks":[{"id":"t1","agent":"complaint","request":"Create a hostel complaint about a broken water cooler","condition":null}]}
-
-User: "Book SAC Hall on 2030-02-10 from 10 to 11 for a club meeting"
-{"tasks":[{"id":"t1","agent":"room_booking","request":"Book SAC Hall on 2030-02-10 from 10 to 11 for a club meeting","condition":null}]}
-
-User: "What is my attendance percentage in CS101?"
-{"tasks":[{"id":"t1","agent":"attendance","request":"Show my attendance percentage for CS101","condition":null}]}
-
-User: "Show me the current notices"
-{"tasks":[{"id":"t1","agent":"notice","request":"Show me the current notices","condition":null}]}
-
-User: "What is my class timetable today?"
-{"tasks":[{"id":"t1","agent":"timetable","request":"Show my class timetable for today","condition":null}]}
-
-User: "Tell me today's dinner at Kalam and the Bus 02 schedule"
-{"tasks":[{"id":"t1","agent":"mess","request":"Tell me today's dinner menu for Kalam hostel","condition":null},{"id":"t2","agent":"bus","request":"Show me the Bus 02 schedule","condition":null}]}
-
-User: "What is my attendance percentage in CS101 if it is less than 20% then send me today's timetable"
-{"tasks":[{"id":"t1","agent":"attendance","request":"Show my attendance percentage for CS101","condition":null},{"id":"t2","agent":"timetable","request":"Show my class timetable for today","condition":{"depends_on":"t1","type":"threshold","field":"value","op":"<","value":20}}]}
-
-User: "If my attendance is less than 20% then send today's timetable else show the next bus"
-{"tasks":[{"id":"t1","agent":"attendance","request":"Show my attendance percentage","condition":null},{"id":"t2","agent":"timetable","request":"Show my class timetable for today","condition":{"depends_on":"t1","type":"threshold","field":"value","op":"<","value":20}},{"id":"t3","agent":"bus","request":"Find the next bus","condition":{"depends_on":"t1","type":"threshold","field":"value","op":">=","value":20}}]}
-
-User: "What is my attendance percentage in CS101 if it is less than 20% then tell me my skip budget"
-{"tasks":[{"id":"t1","agent":"attendance","request":"Show my attendance percentage for CS101","condition":null},{"id":"t2","agent":"attendance","request":"Show my skip budget for CS101","condition":{"depends_on":"t1","type":"threshold","field":"value","op":"<","value":20}}]}
-
-User: "If my attendance is less than 20% then if I have a class today send me the next bus to that class"
-{"tasks":[{"id":"t1","agent":"attendance","request":"Show my attendance percentage","condition":null},{"id":"t2","agent":"timetable","request":"Show my class timetable for today","condition":{"depends_on":"t1","type":"threshold","field":"value","op":"<","value":20}},{"id":"t3","agent":"bus","request":"Find the next bus to today's class building","condition":{"depends_on":"t2","type":"predicate","text":"only if there is a class today"}}]}
-
-If a task depends on another, place it after that task and set condition.
-depends_on MUST be an id of a task in this same plan. A follow-up that
-should run only when a previous result satisfies a check belongs in
-condition (not as an independent task).
-
-If the request is clearly unrelated to campus services, return:
-{"tasks":[],"status":"unsupported","message":"This service is not currently available."}
-Otherwise prefer a best-effort plan over an empty one.
-
-Return ONLY valid JSON.
-"""
+    # Generated from AGENT_REGISTRY filtered by ORG.enabled_agents. For the
+    # default IIT Patna all-seven-enabled profile this is byte-for-byte the
+    # previous hand-written prompt (see tests/planner/test_prompt_generation.py).
+    # Keep it a stable, unchanging string so the gateway can reuse a cached
+    # prefix instead of reprocessing it.
+    SYSTEM_PROMPT = build_planner_system_prompt()
 
     # Cheap keyword routing for the overwhelmingly common case: a request
     # that clearly belongs to exactly one agent. When it fires we skip the
@@ -174,35 +38,7 @@ Return ONLY valid JSON.
     # prompt tokens) from the critical path. Anything ambiguous, empty, or
     # matching more than one domain falls through to the LLM planner, so
     # this only ever shortcuts the unambiguous cases.
-    _FAST_PATH_KEYWORDS = {
-        "mess": (
-            "menu", "breakfast", "lunch", "dinner", "snacks", "mess timing",
-            "meal timing", "weekly menu",
-        ),
-        "bus": (
-            "bus", "shuttle", "departure", "driver", "route",
-        ),
-        "complaint": (
-            "complaint", "complain", "broken", "not working", "leaking",
-            "grievance",
-        ),
-        "room_booking": (
-            "book a room", "room booking", "booking", "clh", "seminar hall",
-            "classroom", "sac hall", "guest house", "auditorium", "guest house",
-        ),
-        "attendance": (
-            "attendance", "skip budget", "mark attendance",
-            "enrollment", "at-risk", "unmarked", "roster",
-        ),
-        "notice": (
-            "notice", "notices", "notice board", "bulletin",
-            "important alert", "campus-wide", "campus wide",
-        ),
-        "timetable": (
-            "timetable", "class schedule", "next class", "my classes",
-            "classes on", "lecture slot",
-        ),
-    }
+    _FAST_PATH_KEYWORDS = fast_path_keywords()
 
     # SOURCE if COND then CONSEQUENCE  (existing two-task split)
     _SOURCE_IF_THEN = re.compile(
@@ -570,9 +406,27 @@ Return ONLY valid JSON.
             **extras,
         )
 
-    def create_plan(self, user_input):
+    def _setup_fast_path(self, user_input):
+        """Admin-only: config/onboard/import/add-feature skip the LLM planner."""
+        text = (user_input or "").lower()
+        if not text.strip():
+            return None
+        if not any(k in text for k in SETUP_SPEC.keywords):
+            return None
+        return {
+            "tasks": [
+                {"id": "t1", "agent": "setup", "request": user_input, "condition": None}
+            ]
+        }
+
+    def create_plan(self, user_input, role=None):
         # Conditionals first so same-agent if/then is not swallowed by the
         # single-domain fast path (attendance + skip budget is still one agent).
+        if str(role or "").strip().lower() == "admin":
+            setup_plan = self._setup_fast_path(user_input)
+            if setup_plan is not None:
+                return self._finalize_plan(setup_plan)
+
         conditional = self._conditional_plan(user_input)
         if conditional is not None:
             return self._finalize_plan(conditional)
@@ -586,7 +440,13 @@ Return ONLY valid JSON.
             return self._finalize_plan(independent)
 
         messages = [
-            cached_system_message(self.SYSTEM_PROMPT),
+            cached_system_message(
+                self.SYSTEM_PROMPT + (
+                    SETUP_PLANNER_ADDENDUM
+                    if str(role or "").strip().lower() == "admin"
+                    else ""
+                )
+            ),
             {"role": "user", "content": user_input},
         ]
         logger.info(

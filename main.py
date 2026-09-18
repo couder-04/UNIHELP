@@ -45,10 +45,21 @@ import uvicorn
 
 import db
 import metrics
+import org_profile
+from agent_registry import (
+    build_planner_system_prompt,
+    build_skill_services_block,
+    enabled_call_map,
+    ensure_agent,
+    fast_path_keywords,
+    skill_tags,
+)
 from authenticator import authenticate, list_users
+from canonical_people import ensure_canonical_people
 from llm import effective_api_key, using_api_key
 from planner import Planner
 from executor import Executor
+from setup_functions import register_reload
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -121,7 +132,8 @@ def _handshake_reply(authentication_key: str) -> str:
     if user is None:
         return "ERROR: KEY NOT FOUND"
     return (
-        "Connected to IIT Patna Organization Management Agent. "
+        "Connected to "
+        f"{org_profile.ORG.display_name} Organization Management Agent. "
         f"Authenticated as {user['name']} ({user['role']}). "
         "Ready for campus requests. Keep using this authentication_key in "
         "request-level metadata for the rest of the conversation."
@@ -134,11 +146,11 @@ def _request_auth_key(metadata: dict | None) -> str:
 
 
 agent_card = AgentCard(
-    name="IIT Patna Organization Management Agent",
+    name=f"{org_profile.ORG.display_name} Organization Management Agent",
 
     description=(
         "This is an A2A JSON-RPC agent that acts as the entry point "
-        "to the IIT Patna Organization Management system. Other agents "
+        f"to the {org_profile.ORG.display_name} Organization Management system. Other agents "
         "can invoke this agent by sending a SendMessage (A2A v1.0) or "
         "message/send (A2A v0.3) request to the endpoint specified in "
         "supportedInterfaces. The user's request must be provided as "
@@ -185,46 +197,9 @@ agent_card = AgentCard(
 
             description=(
                 "Use this skill to submit organization-related requests "
-                "to the IIT Patna Organization Management system.\n\n"
-
-                "CURRENTLY SUPPORTED SERVICES:\n"
-                "1. Mess services:\n"
-                "   - Daily and weekly mess menus\n"
-                "   - Meal timings\n"
-                "   - Authorized mess menu modifications\n\n"
-                "2. Bus services:\n"
-                "   - Bus schedules\n"
-                "   - Bus routes and destinations\n"
-                "   - Driver information\n"
-                "   - Next departures\n"
-                "   - Bus availability\n"
-                "   - Authorized bus schedule modifications\n\n"
-                "3. Complaint services:\n"
-                "   - Create, view, and list complaints tagged academic, hostel, or mess\n"
-                "   - Admin/faculty verify, then mark PROGRESS, then COMPLETED\n"
-                "   - Duplicate open complaints are not logged again\n\n"
-                "4. Room booking services:\n"
-                "   - SAC Hall, Guest House, CLH, and Auditorium\n"
-                "   - Availability, direct bookings, and booking requests\n"
-                "   - Cancel or modify bookings and requests\n"
-                "   - Admin approve/reject of pending requests\n\n"
-                "5. Attendance services:\n"
-                "   - Attendance records, percentages, skip budget, and charts\n"
-                "   - Weekly, monthly, semester, and today's attendance\n"
-                "   - Faculty/admin marking, editing, and deleting attendance\n"
-                "   - Courses, rosters, enrollments, and at-risk students\n"
-                "   - Admin management of people, courses, and enrollments\n\n"
-                "6. Notice board services:\n"
-                "   - View campus notices\n"
-                "   - Faculty/admin publish notices\n"
-                "   - Faculty/admin archive expired notices\n\n"
-                "7. Timetable services:\n"
-                "   - Personal and weekly class timetables\n"
-                "   - Next class, classes on a given day, and free slots\n"
-                "   - Course lookup and lecture/lab rooms\n"
-                "   - Faculty/admin add, update, or delete class slots\n\n"
-
-                "INVOCATION:\n"
+                f"to the {org_profile.ORG.display_name} Organization Management system.\n\n"
+                + build_skill_services_block()
+                + "INVOCATION:\n"
                 "1. Send an A2A JSON-RPC request to the endpoint in "
                 "supportedInterfaces.\n"
                 "2. Use method 'SendMessage' (v1.0) or 'message/send' (v0.3).\n"
@@ -267,22 +242,7 @@ agent_card = AgentCard(
                 "authentication credential."
             ),
 
-            tags=[
-                "a2a",
-                "jsonrpc",
-                "organization",
-                "campus",
-                "mess",
-                "bus",
-                "complaint",
-                "room booking",
-                "attendance",
-                "notice",
-                "timetable",
-                "planning",
-                "authentication",
-                "authorization",
-            ],
+            tags=skill_tags(),
 
             examples=[
                 (
@@ -341,6 +301,23 @@ _planner = Planner()
 _executor = Executor()
 
 
+def _refresh_routing():
+    """Admin setup writes YAML/features then calls this so the next request
+    uses the new catalog, planner prompt, and agent map without restart."""
+    prompt = build_planner_system_prompt()
+    keywords = fast_path_keywords()
+    Planner.SYSTEM_PROMPT = prompt
+    Planner._FAST_PATH_KEYWORDS = keywords
+    _planner.SYSTEM_PROMPT = prompt
+    _planner._FAST_PATH_KEYWORDS = keywords
+    _executor._agent_map = enabled_call_map()
+    for name in _executor._agent_map:
+        ensure_agent(name)
+
+
+register_reload(_refresh_routing)
+
+
 # CONCURRENCY FIX: the handler below is `async def`, but authenticate(),
 # planner.create_plan() and executor.execute() are all *synchronous*
 # blocking network I/O (psycopg + the sync OpenAI client), and each request
@@ -372,7 +349,7 @@ def _run_authenticated_request(user_input, authentication_key, llm_api_key=""):
         if user is None:
             return "ERROR: KEY NOT FOUND", None
 
-        now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
+        now_ist = datetime.now(ZoneInfo(org_profile.ORG.timezone))
         user_metadata = {
             "role": user["role"],
             "name": user["name"],
@@ -381,6 +358,8 @@ def _run_authenticated_request(user_input, authentication_key, llm_api_key=""):
                 "%A, %Y-%m-%d %H:%M:%S IST"
             ),
         }
+        if user.get("person_id"):
+            user_metadata["person_id"] = user["person_id"]
         logger.info(
             "Request state role=%s name=%s roll=%s time=%s",
             user_metadata["role"],
@@ -398,7 +377,9 @@ def _run_authenticated_request(user_input, authentication_key, llm_api_key=""):
             started = time.time()
 
             with metrics.task_timer("planner"):
-                plan = _planner.create_plan(user_input)
+                plan = _planner.create_plan(
+                    user_input, role=user_metadata.get("role")
+                )
             rec["plan"] = plan
             logger.info(
                 "Planner took %.2fs plan=%s",
@@ -606,6 +587,7 @@ async def _lifespan(app):
     Starlette 1.x dropped the on_startup/on_shutdown kwargs in favor of a
     single lifespan context manager.
     """
+    await asyncio.to_thread(ensure_canonical_people)
     yield
     await asyncio.to_thread(db.close_all_pools)
 

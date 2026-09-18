@@ -1,7 +1,13 @@
-"""Attendance tools — roll_num identity schema.
+"""Attendance tools — roll_num roster schema.
+
+# SUPERSEDED as an identity store by campus_agent.people. person_id on
+# this people table links the roster row to the canonical person.
+# roll_num remains the PK this release because attendance/enrollments
+# still FK to it. Do not drop roll_num/name/role until those FKs are
+# confirmed in production for a full cycle.
 
 Tables:
-  people(roll_num, name, role)          # student | faculty | admin
+  people(roll_num, name, role, person_id)  # student | faculty | admin
   courses(code, name, professor_name, professor_roll, ...)
   enrollments(student_roll, course_code)
   attendance(student_roll, course_code, session_date, status, marked_by_roll, ...)

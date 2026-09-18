@@ -221,7 +221,7 @@ class ComplaintAgent:
         """Prevent the model from acting as another user."""
         return authenticated_identifier or requested_identifier
 
-    def execute_tool(self, name, arguments, authenticated_identifier=None):
+    def execute_tool(self, name, arguments, authenticated_identifier=None, person_id=None):
         """Execute tools and force the authenticated identity for actor actions."""
         args = dict(arguments or {})
 
@@ -230,14 +230,17 @@ class ComplaintAgent:
                 args.get("user_identifier"), authenticated_identifier
             )
             return create_complaint(
-                args["user_identifier"], args["title"], args["description"], args["category"]
+                args["user_identifier"], args["title"], args["description"],
+                args["category"], person_id=person_id,
             )
 
         if name == "get_complaint":
             args["user_identifier"] = self._authenticated_identifier(
                 args.get("user_identifier"), authenticated_identifier
             )
-            return get_complaint(args["complaint_number"], args["user_identifier"])
+            return get_complaint(
+                args["complaint_number"], args["user_identifier"], person_id=person_id
+            )
 
         if name == "list_complaints":
             args["user_identifier"] = self._authenticated_identifier(
@@ -248,15 +251,20 @@ class ComplaintAgent:
                 args.get("status"),
                 args.get("category"),
                 limit=args.get("limit", 50),
+                person_id=person_id,
             )
 
         if name == "verify_complaint":
             args["verifier_identifier"] = authenticated_identifier or args.get("verifier_identifier")
-            return verify_complaint(args["complaint_number"], args["verifier_identifier"])
+            return verify_complaint(
+                args["complaint_number"], args["verifier_identifier"], person_id=person_id
+            )
 
         if name == "complete_complaint":
             args["actor_identifier"] = authenticated_identifier or args.get("actor_identifier")
-            return complete_complaint(args["complaint_number"], args["actor_identifier"])
+            return complete_complaint(
+                args["complaint_number"], args["actor_identifier"], person_id=person_id
+            )
 
         if name == "search_duplicates":
             return search_duplicates(
@@ -289,6 +297,7 @@ class ComplaintAgent:
 
         role = ROLE_NAMES.get(str(role).strip().lower(), str(role).strip())
         user_metadata = user_metadata or {}
+        person_id = user_metadata.get("person_id")
 
         messages = [
             cached_system_message(SYSTEM_PROMPT),
@@ -323,6 +332,7 @@ class ComplaintAgent:
                         tool_call.function.name,
                         arguments,
                         authenticated_identifier=user_identifier,
+                        person_id=person_id,
                     )
                 except Exception as exc:
                     result = {"status": "error", "message": f"Tool execution failed: {exc}"}
