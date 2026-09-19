@@ -203,11 +203,16 @@
       } catch (err) {}
     };
     try {
-      const saved = sessionStorage.getItem("unihelp_llm_api_key");
-      if (saved) document.getElementById("llmKey").value = saved;
+      const saved = (sessionStorage.getItem("unihelp_llm_api_key") || "").trim();
+      if (saved.startsWith("sk-or-")) document.getElementById("llmKey").value = saved;
+      else if (saved) sessionStorage.removeItem("unihelp_llm_api_key");
     } catch (err) {}
     document.getElementById("llmKey").addEventListener("input", () => {
-      try { sessionStorage.setItem("unihelp_llm_api_key", document.getElementById("llmKey").value.trim()); } catch (err) {}
+      const k = document.getElementById("llmKey").value.trim();
+      try {
+        if (!k || k.startsWith("sk-or-")) sessionStorage.setItem("unihelp_llm_api_key", k);
+        else sessionStorage.removeItem("unihelp_llm_api_key");
+      } catch (err) {}
     });
     function tick() {
       document.getElementById("clock").textContent = new Date().toLocaleString("en-IN", {

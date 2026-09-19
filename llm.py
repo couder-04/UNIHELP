@@ -104,10 +104,32 @@ _CACHE_ERROR_HINTS = (
 )
 
 
+def _looks_like_auth_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return (
+        "401" in msg
+        or "authentication" in msg
+        or "api key" in msg
+        or "user not found" in msg
+        or "invalid api key" in msg
+    )
+
+
+def _normalize_request_api_key(api_key: Optional[str]) -> str:
+    """Drop stale Kado/Bifrost keys so the server OpenRouter key is used."""
+    key = (api_key or "").strip()
+    if not key:
+        return ""
+    if "openrouter.ai" in (LLM_BASE_URL or "").lower() and not key.startswith("sk-or-"):
+        logger.warning("Ignoring non-OpenRouter request LLM key")
+        return ""
+    return key
+
+
 @contextmanager
 def using_api_key(api_key: Optional[str]) -> Iterator[None]:
     """Use a caller-supplied LLM key for the current request, if provided."""
-    token = _request_api_key.set((api_key or "").strip())
+    token = _request_api_key.set(_normalize_request_api_key(api_key))
     try:
         yield
     finally:
@@ -120,14 +142,12 @@ def effective_api_key() -> str:
 
 def describe_llm_error(exc: BaseException) -> str:
     """Turn an LLM SDK failure into a short user-facing sentence."""
-    msg = str(exc)
-    low = msg.lower()
-    if "401" in msg or "authentication" in low or "api key" in low:
+    if _looks_like_auth_error(exc):
         return (
             "The LLM API key was rejected. Paste a valid OpenRouter key in Connect, "
             "or set LLM_API_KEY."
         )
-    return msg
+    return str(exc)
 
 
 def get_client() -> OpenAI:
@@ -318,7 +338,6 @@ def chat_create(
     """chat.completions.create with prompt-cache fields and a safe fallback."""
     global _cache_mode
 
-    client = get_client()
     resolved_model = model or LLM_MODEL
     prompt_chars = _messages_chars(messages)
     request: dict[str, Any] = {
@@ -378,7 +397,7 @@ def chat_create(
             LLM_FAST_MODEL,
             LLM_MODEL,
         )
-        return client.chat.completions.create(**body)
+        return get_client().chat.completions.create(**body)
 
     started = time.perf_counter()
     try:
@@ -408,7 +427,24 @@ def chat_create(
                 with _mode_lock:
                     _cache_mode = "plain"
                 response = _send("plain")
-    finally:
+    except Exception as exc:
+        req_key = _request_api_key.get()
+        if not (
+            req_key
+            and LLM_API_KEY
+            and req_key != LLM_API_KEY
+            and _looks_like_auth_error(exc)
+        ):
+            raise
+        logger.warning("Request LLM key rejected; retrying with server LLM_API_KEY")
+        _clients.pop(req_key, None)
+        token = _request_api_key.set("")
+        try:
+            response = _send(mode)
+        finally:
+            _request_api_key.reset(token)
+            latency_ms = (time.perf_counter() - started) * 1000
+    else:
         latency_ms = (time.perf_counter() - started) * 1000
 
     choice = (getattr(response, "choices", None) or [None])[0]

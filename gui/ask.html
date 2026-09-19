@@ -282,7 +282,14 @@
     }
 
     function llmKey() {
-      try { return sessionStorage.getItem("unihelp_llm_api_key") || ""; } catch (err) { return ""; }
+      try {
+        const k = (sessionStorage.getItem("unihelp_llm_api_key") || "").trim();
+        if (k.startsWith("sk-or-")) return k;
+        if (k) sessionStorage.removeItem("unihelp_llm_api_key");
+        return "";
+      } catch (err) {
+        return "";
+      }
     }
 
     async function send() {
