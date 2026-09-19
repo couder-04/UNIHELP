@@ -57,6 +57,10 @@ def _sslmode(host: str) -> str:
     return "disable" if host in _LOCAL_HOSTS else "require"
 
 
+def _on_vercel() -> bool:
+    return bool(os.getenv("VERCEL"))
+
+
 def _conninfo(dbname: str) -> str:
     host = os.getenv("PGHOST", DB_HOST)
     port = int(os.getenv("PGPORT", DB_PORT))
@@ -64,10 +68,31 @@ def _conninfo(dbname: str) -> str:
     password = os.getenv("PGPASSWORD", DB_PASSWORD)
     # dbname is always one of our own constants (AUTH_DB_NAME, MESS_DB_NAME,
     # ...), never user input, so plain interpolation here is safe.
+    # TCP keepalives catch idle drops from hosted Postgres (Neon, etc.).
     return (
         f"host={host} port={port} dbname={dbname} "
         f"user={user} password={password} sslmode={_sslmode(host)} "
-        f"client_encoding=UTF8"
+        f"client_encoding=UTF8 "
+        f"keepalives=1 keepalives_idle=30 keepalives_interval=10 keepalives_count=3"
+    )
+
+
+def _new_pool(dbname: str) -> "ConnectionPool":
+    # Vercel freezes the process between requests, so sockets in the pool
+    # are often already closed by the time the next invocation starts.
+    # min_size=0 avoids holding idle fds; check discards dead ones on
+    # checkout instead of handing them to callers (which 500s Ask/Users).
+    vercel = _on_vercel()
+    return ConnectionPool(
+        conninfo=_conninfo(dbname),
+        min_size=0 if vercel else POOL_MIN_SIZE,
+        max_size=POOL_MAX_SIZE,
+        open=True,
+        check=ConnectionPool.check_connection,
+        max_idle=30.0 if vercel else 600.0,
+        max_lifetime=300.0 if vercel else 3600.0,
+        timeout=10.0,
+        reconnect_timeout=10.0,
     )
 
 
@@ -75,13 +100,19 @@ def _get_pool(dbname: str) -> "ConnectionPool":
     if dbname not in _pools:
         with _pools_lock:
             if dbname not in _pools:  # re-check inside the lock
-                _pools[dbname] = ConnectionPool(
-                    conninfo=_conninfo(dbname),
-                    min_size=POOL_MIN_SIZE,
-                    max_size=POOL_MAX_SIZE,
-                    open=True,
-                )
+                _pools[dbname] = _new_pool(dbname)
     return _pools[dbname]
+
+
+def _drop_pool(dbname: str) -> None:
+    with _pools_lock:
+        pool = _pools.pop(dbname, None)
+    if pool is None:
+        return
+    try:
+        pool.close()
+    except Exception:
+        pass
 
 
 class _PooledConnection:
@@ -187,9 +218,27 @@ def get_connection(dbname: str):
     if not _POOLING_AVAILABLE:
         return _TrackedConnection(_fallback_connection(dbname), dbname)
 
-    pool = _get_pool(dbname)
-    conn = pool.getconn()
-    return _PooledConnection(pool, conn, dbname)
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        pool = _get_pool(dbname)
+        try:
+            conn = pool.getconn()
+        except Exception as exc:
+            last_exc = exc
+            _drop_pool(dbname)
+            continue
+        if getattr(conn, "closed", 0):
+            try:
+                pool.putconn(conn)
+            except Exception:
+                pass
+            if attempt == 2:
+                break
+            continue
+        return _PooledConnection(pool, conn, dbname)
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"could not get a live connection to {dbname}")
 
 
 def close_all_pools():
