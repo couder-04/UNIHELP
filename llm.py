@@ -145,8 +145,13 @@ def get_client() -> OpenAI:
                 base = LLM_BASE_URL or ""
                 # OpenRouter ranks apps that send these; they are optional
                 # but avoid some 4xx on otherwise valid keys.
+                if "kado" in base.lower():
+                    raise RuntimeError(
+                        "Kado/Bifrost is disabled. Set LLM_BASE_URL to "
+                        "https://openrouter.ai/api/v1"
+                    )
                 if "openrouter.ai" in base:
-                    headers["HTTP-Referer"] = "http://127.0.0.1:8002"
+                    headers["HTTP-Referer"] = "https://unihelp-coral.vercel.app"
                     headers["X-Title"] = "UniHelp"
                 if headers:
                     kwargs["default_headers"] = headers
