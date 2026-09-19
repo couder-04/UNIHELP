@@ -70,6 +70,10 @@ logger = logging.getLogger(__name__)
 _PRODUCTION_PUBLIC_ORIGIN = "https://unihelp-coral.vercel.app"
 
 
+def _listen_port() -> int:
+    return int(os.getenv("UNIHELP_PORT", "8002"))
+
+
 def _public_base_url() -> str:
     explicit = (os.getenv("PUBLIC_BASE_URL") or "").strip().rstrip("/")
     if explicit:
@@ -81,7 +85,7 @@ def _public_base_url() -> str:
         if vercel.startswith("http://") or vercel.startswith("https://"):
             return vercel
         return f"https://{vercel}"
-    return "http://127.0.0.1:8002"
+    return f"http://127.0.0.1:{_listen_port()}"
 
 
 def _connect_prompt_text() -> str:
@@ -610,5 +614,5 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="127.0.0.1",
-        port=8002,
+        port=_listen_port(),
     )

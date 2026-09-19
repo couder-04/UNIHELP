@@ -1,0 +1,373 @@
+IIT Mandi localhost setup log
+Date: 19 Sep 2026
+Goal: stand up a NEW university on localhost in a NEW YAML file, using the
+filled examples in unihelp-admin-setup-prompts.html (Prompt 1 then Prompt 2).
+Do not overwrite orgs/iit_patna.yaml. Do not put SQL in the admin prompts.
+
+This was a local run only. No Python/application code was changed. Nothing
+was committed or pushed. Production (unihelp-coral.vercel.app) was not
+touched.
+
+
+================================================================
+WHAT CHANGED ON DISK
+================================================================
+
+Created:
+  orgs/iit_mandi.yaml
+  orgs/iit_mandi.yaml.bak   (automatic backup written by update_org_profile)
+
+Unchanged:
+  orgs/iit_patna.yaml
+  all .py / gui / config files
+  .env  (still used for local Postgres + OpenRouter; not edited for this task)
+
+How the YAML is selected:
+  UniHelp loads one org per process via ORG_PROFILE_PATH.
+  Default is still orgs/iit_patna.yaml.
+  Mandi only loads if you start the server with:
+
+    ORG_PROFILE_PATH=orgs/iit_mandi.yaml .venv/bin/python main.py
+
+  Bind: http://127.0.0.1:8002
+  Ask UI: http://127.0.0.1:8002/ask
+
+update_org_profile cannot set org_id. That is why the new file was created
+first with org_id: iit_mandi, then Prompt 1 patched the rest in place.
+
+
+----------------------------------------------------------------
+1. Bootstrap YAML (so the server can start)
+----------------------------------------------------------------
+
+Wrote orgs/iit_mandi.yaml with a valid non-empty catalog (startup rejects
+empty hostels/rooms/buses/meals/complaint_categories):
+
+  org_id: iit_mandi
+  display_name: IIT Mandi
+  timezone: Asia/Kolkata
+  enabled_agents: mess, bus, complaint, room_booking, attendance, notice, timetable
+  catalog.hostels: Placeholder Hostel
+  catalog.rooms: SAC Hall, Guest House, CLH, Auditorium
+  catalog.buses: Bus 01
+  catalog.meals: breakfast, lunch, snacks (snack), dinner (supper)
+  catalog.complaint_categories: academic, hostel, mess
+  identity.student_id_field: roll_number
+  identity.student_id_pattern: ^[0-9]{4}[A-Z]{2}[0-9]{2}$
+
+Prompt 1 later replaced Placeholder Hostel and the one-bus catalog with the
+IIT Mandi lists from the admin sheet. Current file contents (after Prompt 1):
+
+  hostels: Chandra (aliases: C hostel), Suvalsar
+  rooms: SAC Hall, Guest House, CLH, Auditorium
+  buses: Bus 01, Bus 02, Bus 03, Bus 04
+  meals: breakfast, lunch, snacks (alias snack), dinner (alias supper)
+  complaint_categories: academic, hostel, mess
+
+
+================================================================
+WHAT CHANGED IN LOCAL POSTGRES
+================================================================
+
+Same local cluster as IIT Patna (from .env):
+  host=localhost port=5432 user=agentx
+  databases: campus_agent, mess_menu, bus_schedule, notice_board, ...
+
+There is no per-org database. Mandi rows sit next to existing Patna rows.
+
+
+----------------------------------------------------------------
+2. Mess menu rows for new hostels (NOT in the admin prompts)
+----------------------------------------------------------------
+
+mess.modify_menu only UPDATEs an existing (hostel, day) row. A brand-new
+hostel name returns "No menu row for Chandra". So before Prompt 1, Kalam's
+weekly rows were copied so today's breakfast could be overwritten:
+
+  INSERT INTO temporary  ... SELECT 'Chandra',  ... FROM temporary  WHERE LOWER(hostel)='kalam'
+  INSERT INTO temporary  ... SELECT 'Suvalsar', ... FROM temporary  WHERE LOWER(hostel)='kalam'
+  INSERT INTO permanent  ... SELECT 'Chandra',  ... FROM permanent  WHERE LOWER(hostel)='kalam'
+  INSERT INTO permanent  ... SELECT 'Suvalsar', ... FROM permanent  WHERE LOWER(hostel)='kalam'
+
+Result: 7 days each for Chandra and Suvalsar in both tables.
+
+This SQL was operator/infrastructure work. It was not pasted into Ask.
+
+
+----------------------------------------------------------------
+3. People (campus_agent.people) after Prompt 1 import_people
+----------------------------------------------------------------
+
+Added (keys taken from the CSV, none generated):
+
+  role     display_name    external_id   authentication_key
+  admin    Campus Admin    AD001         mandi-admin
+  faculty  Priya Patel     PF001         mandi-faculty
+  student  Asha Rao        2501CS99      mandi-asha
+
+Existing Patna demo keys were left in place (duplicate external_ids):
+
+  admin-demo     Rohan Verma   AD001
+  faculty-demo   Priya Patel   PF001
+
+admin-demo still works for setup. Use mandi-asha for the Mandi student.
+
+
+----------------------------------------------------------------
+4. Mess seed (after Prompt 1 clarification)
+----------------------------------------------------------------
+
+Prompt 1's mess agent asked temporary vs permanent. Follow-up as admin-demo:
+
+  "Temporary change: set today's Chandra breakfast to poha and tea."
+
+Wrote Chandra / Saturday 2026-09-19 / breakfast = "poha and tea"
+on the temporary table.
+
+
+----------------------------------------------------------------
+5. Bus seed (after Prompt 1 clarification)
+----------------------------------------------------------------
+
+Prompt 1's bus agent asked "each weekday or one day". Follow-up as admin-demo:
+
+  "Add Bus 01 for each weekday Monday through Friday at 08:00 from Chandra
+   to the academic block, driver Test, phone 9999999999."
+
+Inserted bus_schedule rows (ids 155-159):
+
+  day        time   bus_name  start     destination      driver  phone
+  Monday     08:00  Bus 01    Chandra   academic block   Test    9999999999
+  Tuesday    08:00  Bus 01    Chandra   academic block   Test    9999999999
+  Wednesday  08:00  Bus 01    Chandra   academic block   Test    9999999999
+  Thursday   08:00  Bus 01    Chandra   academic block   Test    9999999999
+  Friday     08:00  Bus 01    Chandra   academic block   Test    9999999999
+
+Older Patna bus rows remain in the same table.
+
+
+----------------------------------------------------------------
+6. Notice seed (from Prompt 1, succeeded first try)
+----------------------------------------------------------------
+
+Published in notice_board:
+
+  content: Orientation Monday 9am, Auditorium.
+  author: Rohan Verma (admin-demo)
+  date: 2026-09-19
+
+Older Patna notices remain and still show up in "latest notices".
+
+
+----------------------------------------------------------------
+7. Library feature (Prompt 2 + follow-up add_record)
+----------------------------------------------------------------
+
+custom_features row:
+
+  id/slug: library
+  title: Campus Library
+  description: Search and add holds for campus library books
+  keywords: library, book, isbn
+  roles: student, faculty, admin
+  fields:
+    title  string  required
+    author string  required
+    isbn   string  optional
+
+Prompt 2 told setup to add the books, but setup has no add_record tool, so
+those two inserts failed in that turn. Follow-up as mandi-admin to the live
+library agent:
+
+  1) Introduction to Algorithms / Cormen / 9780262033848
+     id 299a6fc1-742a-4767-8ba0-ded538b65960
+  2) Operating Systems / Galvin / 9781118063330
+     id b876c452-f3c4-4155-ae7e-55921dcc2ad2
+
+Stored as JSON in custom_feature_records (no CREATE TABLE, no new .py file).
+
+
+================================================================
+HOW IT WAS DRIVEN (PROMPTS)
+================================================================
+
+Auth for Prompt 1 / 2 / mess+bus follow-ups: authentication_key=admin-demo
+POST http://127.0.0.1:8002/api/ask
+Source of the two long prompts: unihelp-admin-setup-prompts.html
+  "Filled example · IIT Mandi"
+  "Filled example · campus library"
+
+No SQL in either pasted prompt.
+
+
+----------------------------------------------------------------
+Prompt 1 (one admin message)
+----------------------------------------------------------------
+
+SETUP CAMPUS DATABASE. I am an authenticated admin.
+Execute every section in order. Do not invent names I did not list.
+Do not run SQL or CREATE TABLE. Use setup for A and B. Use the
+matching domain agents for C (only for agents I enabled).
+When done, quote: saved display_name, enabled_agents, catalog names,
+every generated authentication_key, and which seed writes succeeded.
+
+A. PROFILE (update_org_profile)
+- display_name: IIT Mandi
+- timezone: Asia/Kolkata
+- student_id_field: roll_number
+- student_id_pattern: ^[0-9]{4}[A-Z]{2}[0-9]{2}$
+- enabled_agents: mess, bus, complaint, room_booking, attendance, notice, timetable
+- replace_hostels: Chandra (aliases: C hostel), Suvalsar
+- replace_rooms: SAC Hall, Guest House, CLH, Auditorium
+- replace_buses: Bus 01, Bus 02, Bus 03, Bus 04
+- replace_meals: breakfast, lunch, snacks (alias snack), dinner (alias supper)
+- replace_complaint_categories: academic, hostel, mess
+
+B. PEOPLE (import_people, csv_text). Abort the batch if any student
+roll fails the regex. Max 500 rows.
+role,name,roll_number,authentication_key
+admin,Campus Admin,AD001,mandi-admin
+faculty,Priya Patel,PF001,mandi-faculty
+student,Asha Rao,2501CS99,mandi-asha
+
+C. SEED
+Mess: set today's Chandra breakfast to poha and tea.
+Bus: add Bus 01 weekdays 08:00 from Chandra to the academic block, driver Test, phone 9999999999.
+Notice: publish "Orientation Monday 9am, Auditorium."
+
+Planner split that into: setup profile, setup import, mess, bus, notice.
+
+Result of that one turn:
+  A profile  OK
+  B people   OK  (no generated keys)
+  C notice   OK
+  C mess     incomplete (asked temporary vs permanent)
+  C bus      incomplete (asked weekdays vs one day)
+
+Follow-ups (still admin-demo, still no SQL in chat):
+  Temporary change: set today's Chandra breakfast to poha and tea.
+  Add Bus 01 for each weekday Monday through Friday at 08:00 from Chandra
+  to the academic block, driver Test, phone 9999999999.
+
+
+----------------------------------------------------------------
+Prompt 2 (one admin message, after Prompt 1 succeeded)
+----------------------------------------------------------------
+
+DEFINE A NEW CAMPUS AGENT. I am an authenticated admin.
+Use add_feature only. Do not run SQL, do not CREATE TABLE, do not
+reuse a built-in name (mess, bus, complaint, room_booking, attendance,
+notice, timetable, setup). Then add the seed records onto that feature.
+Finally tell me the slug, keywords, field list, and one student
+smoke-test phrase.
+
+- name: library
+- title: Campus Library
+- description: Search and add holds for campus library books
+- keywords: library, book, isbn
+- roles that may use it: student, faculty, admin
+- fields:
+  - title (string, required) — book title
+  - author (string, required) — author name
+  - isbn (string, optional) — ISBN-13
+- seed records (add_record on the new agent):
+  1) title=Introduction to Algorithms; author=Cormen; isbn=9780262033848
+  2) title=Operating Systems; author=Galvin; isbn=9781118063330
+
+Result of that one turn:
+  add_feature library  OK
+  seed books           failed (setup has no add_record)
+
+Follow-up as mandi-admin to the library agent added both books.
+
+
+================================================================
+SMOKE TESTS (student key mandi-asha)
+================================================================
+
+  Search the library for algorithms.
+    -> Introduction to Algorithms / Cormen / 9780262033848
+
+  What is breakfast at Chandra today?
+    -> poha and tea  (Saturday 2026-09-19)
+
+  When is Bus 01 from Chandra on Monday?
+    -> 08:00 Chandra -> academic block
+       (Patna Bus 01 trips still listed on the same day)
+
+  Show me the latest notices.
+    -> includes "Orientation Monday 9am, Auditorium."
+       plus older Patna notices
+
+
+================================================================
+ISOLATED DEMO DATABASES (same day, after the shared-DB run)
+================================================================
+
+Mandi now has its own eight Postgres databases on the same cluster
+(not a second Postgres install):
+
+  mandi_campus_agent
+  mandi_mess_menu
+  mandi_room_booking
+  mandi_bus_schedule
+  mandi_complaints
+  mandi_organization_agent
+  mandi_notice_board
+  mandi_timetable
+
+Patna databases (campus_agent, mess_menu, …) are unchanged.
+
+Create/recreate Mandi DBs (drops mandi_* only):
+
+  .venv/bin/python scripts/create_iit_mandi_demo_db.py
+
+Start Mandi (loads .env for PG*/LLM, then overrides DB names):
+
+  bash scripts/run_iit_mandi.sh
+
+Ask UI: http://127.0.0.1:8002/ask
+Keys (admin-demo does NOT work here): mandi-admin / mandi-faculty / mandi-asha
+
+To run Patna beside Mandi, start a second process with the original
+.env names and UNIHELP_PORT=8003.
+
+Verified after isolation:
+  /api/users                 3 Mandi people only
+  notices                    Orientation only (no Patna notices)
+  Bus 01 Monday              Chandra 08:00 only (no Asima trips)
+  Kalam dinner               "Which hostel? Chandra or Suvalsar."
+  admin-demo                 KEY NOT FOUND
+  CS101 attendance           91.67% for Asha
+  library algorithms         Cormen
+
+
+================================================================
+HOW TO RUN THIS AGAIN
+================================================================
+
+1. Local Postgres up, .env pointing at it, OpenRouter key in .env.
+2. .venv/bin/python scripts/create_iit_mandi_demo_db.py
+   (if mandi_* databases are missing)
+3. bash scripts/run_iit_mandi.sh
+4. Open http://127.0.0.1:8002/ask
+5. Admin: mandi-admin
+   Student: mandi-asha
+   Faculty: mandi-faculty
+
+To go back to IIT Patna, stop the Mandi process and start
+`.venv/bin/python main.py` with the default .env (no ORG_PROFILE_PATH,
+original *_DB_NAME values).
+
+
+================================================================
+CAVEATS
+================================================================
+
+- Isolation is by database name, not a second Postgres server.
+- admin-demo / student-demo / faculty-demo live only in the Patna DBs.
+- Mess seed for a new hostel will fail unless a (hostel, day) row already
+  exists (the Mandi provisioner inserts Chandra and Suvalsar weeks).
+- Library books are JSON feature rows, not a new SQL table.
+- iit_mandi.yaml.bak is an intermediate save from update_org_profile;
+  the live file is orgs/iit_mandi.yaml.
