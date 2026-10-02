@@ -14,6 +14,24 @@ It started as a single-campus (IIT Patna) prototype. It is now a
 on the same codebase from its own YAML profile, provisioned by an
 admin chatting with a setup agent — no code changes, no fork.
 
+## Screenshots
+
+![UniHelp system architecture](pics/UNIHELP.png)
+
+![Connect page with the personal-agent prompt](pics/Pasted%20Graphic%206.png)
+
+![Personal agent connected as the demo student](pics/Pasted%20Graphic.png)
+
+![Ask page answering a bus question](pics/Pasted%20Graphic%202.png)
+
+![Bus schedule in a personal agent](pics/Pasted%20Graphic%201.png)
+
+![Command catalog](pics/Pasted%20Graphic%204.png)
+
+![Campus users and authentication keys](pics/Pasted%20Graphic%207.png)
+
+![Activity dashboard](pics/UniHelp%20simm.png)
+
 ## Why this is more than a chatbot wrapper
 
 - **Deterministic first, LLM only when needed.** Common queries (today's
